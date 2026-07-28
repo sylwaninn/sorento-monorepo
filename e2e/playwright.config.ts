@@ -6,7 +6,7 @@ const isCI = Boolean(process.env["CI"]);
 /**
  * End-to-end journeys against the real stack: the built app in a browser, a local Supabase, real
  * RLS, real Edge Functions. Nothing is mocked, because the point of these is the part no other
- * suite sees — a screen, a policy and a function disagreeing about what a user may do.
+ * suite sees: a screen, a policy and a function disagreeing about what a user may do.
  *
  * The app is served from a production build rather than the dev server: a journey that only
  * works with hot reload and unminified React is not the journey users get.
