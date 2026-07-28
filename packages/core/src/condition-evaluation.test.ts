@@ -81,7 +81,7 @@ describe("numeric comparisons", () => {
     expect(at(operator, answer, value)).toBe(expected);
   });
 
-  // Both sides have to be numbers, or the comparison is meaningless rather than coerced —
+  // Both sides have to be numbers, or the comparison is meaningless rather than coerced:
   // "60" > 55 in JavaScript, and an age answered as text must not grant a benefit.
   it("refuses to compare when the answer is not a number", () => {
     expect(evaluate(comparison("age", "gt", 55), { age: "60" })).toBe(false);
