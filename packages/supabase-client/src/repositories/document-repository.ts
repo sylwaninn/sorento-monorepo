@@ -25,7 +25,9 @@ export class DocumentRepository implements DocumentPort {
     file: File,
     addedBy: string,
   ): Promise<Document> => {
-    if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
+    // Widened to string on purpose: the check narrows, a cast would assert what it verifies.
+    const allowedMimeTypes: readonly string[] = ALLOWED_MIME_TYPES;
+    if (!allowedMimeTypes.includes(file.type)) {
       throw new SupabaseRepositoryError(`Unsupported file type: ${file.type}`, null);
     }
     if (file.size <= 0) {

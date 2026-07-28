@@ -1,15 +1,18 @@
+import { z } from "zod";
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
 import { serviceClient, type EdgeSupabaseClient } from "@shared/supabase.ts";
 
 const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
 
-interface DueDossier {
-  id: string;
-  subject_first_name: string;
-  subject_last_name: string;
-  pending_activation_death_date: string | null;
-}
+// The client is untyped, so the rows are validated instead of asserted.
+const dueDossierSchema = z.object({
+  id: z.string(),
+  subject_first_name: z.string(),
+  subject_last_name: z.string(),
+  pending_activation_death_date: z.string().nullable(),
+});
+type DueDossier = z.infer<typeof dueDossierSchema>;
 
 const activate = async (client: EdgeSupabaseClient, dossier: DueDossier): Promise<boolean> => {
   const { data: activated, error } = await client
@@ -65,7 +68,7 @@ Deno.serve(async (request) => {
       .is("activation_frozen_at", null)
       .lte("pending_activation_effective_at", new Date().toISOString());
 
-    const dossiers = (due ?? []) as DueDossier[];
+    const dossiers = z.array(dueDossierSchema).parse(due ?? []);
     let activated = 0;
     for (const dossier of dossiers) {
       if (await activate(client, dossier)) activated += 1;

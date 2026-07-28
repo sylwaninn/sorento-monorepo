@@ -86,7 +86,7 @@ export const TrustedContactPage = () => {
                 <div className="flex flex-col">
                   <Typography weight="medium">{designation.email}</Typography>
                   <Typography type="body-sm" color="muted">
-                    {dossierContent.trustedContact.futureRoleOptions[designation.futureRole]} —{" "}
+                    {dossierContent.trustedContact.futureRoleOptions[designation.futureRole]} ·{" "}
                     {designation.consentedAt
                       ? dossierContent.trustedContact.statusConsented
                       : dossierContent.trustedContact.statusPending}
@@ -200,7 +200,9 @@ const DesignateForm = ({ dossierId }: { dossierId: string }) => {
 
           <Select
             value={futureRole}
-            onChange={(value) => setFutureRole(value as TrustedContactFutureRole)}
+            onChange={(value) =>
+              setFutureRole(designateTrustedContactInputSchema.shape.futureRole.parse(value))
+            }
           >
             <Label>{dossierContent.trustedContact.futureRoleLabel}</Label>
             <Select.Trigger>

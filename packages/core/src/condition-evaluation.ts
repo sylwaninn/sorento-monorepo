@@ -35,7 +35,7 @@ const evaluateComparison = (expression: Comparison, answers: DiagnosticAnswers):
   }
 };
 
-// A missing field always fails the comparison — no eligibility is granted on unknown data.
+// A missing field always fails the comparison: no eligibility is granted on unknown data.
 export const evaluateCondition = (
   expression: ConditionExpression,
   answers: DiagnosticAnswers,

@@ -2,10 +2,10 @@ import { Bell } from "@gravity-ui/icons";
 import { useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge, Button, Dropdown, Label } from "@heroui/react";
-import { NotificationRepository } from "@sorento/supabase-client";
 import type { Notification } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
-import { supabase } from "@/lib/supabase-client";
+import { repositories } from "@/lib/repositories";
+import { queryKeys } from "@/lib/query-keys";
 import { notificationsContent } from "@/features/notifications/content";
 
 const targetPath = (notification: Notification): string | null => {
@@ -24,19 +24,20 @@ export const NotificationBell = () => {
   const queryClient = useQueryClient();
 
   const notificationsQuery = useQuery({
-    queryKey: ["notifications", user?.id],
-    queryFn: () => new NotificationRepository(supabase).listForCurrentUser(),
+    queryKey: queryKeys.account.notifications(),
+    queryFn: () => repositories.notifications.listForCurrentUser(),
     enabled: Boolean(user),
   });
 
   const notifications = notificationsQuery.data ?? [];
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.account.notifications() });
 
   const openNotification = async (notification: Notification) => {
     if (!notification.read) {
-      await new NotificationRepository(supabase).markRead(notification.id);
+      await repositories.notifications.markRead(notification.id);
       invalidate();
     }
     const path = targetPath(notification);
@@ -45,7 +46,7 @@ export const NotificationBell = () => {
 
   const markAllRead = async () => {
     if (!user) return;
-    await new NotificationRepository(supabase).markAllRead(user.id);
+    await repositories.notifications.markAllRead(user.id);
     invalidate();
   };
 

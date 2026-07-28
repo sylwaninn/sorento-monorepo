@@ -386,8 +386,8 @@ allow_dynamic_registration = false
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
-# `per_worker` (default) — enables hot reload during local development.
-# `oneshot` — fallback mode if hot reload causes issues (e.g. in large repos or with symlinks).
+# `per_worker` (default): enables hot reload during local development.
+# `oneshot`: fallback mode if hot reload causes issues (e.g. in large repos or with symlinks).
 policy = "per_worker"
 # Port to attach the Chrome inspector for debugging edge functions.
 inspector_port = 8083
@@ -411,7 +411,7 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/deno.json"
 
-# Guarded by CRON_SECRET (shared-secret header), not a user JWT — there's no user to
+# Guarded by CRON_SECRET (shared-secret header), not a user JWT: there's no user to
 # verify_jwt as for a scheduled service job.
 [functions.send-pending-emails]
 enabled = true
@@ -438,6 +438,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/deno.json"
 
+# No JWT: the trusted contact may hold no account session. The function authenticates the
+# caller through the long-lived activation token issued at consent time (hashed in
+# trusted_contact_designations), the same guard the integration suite asserts.
 [functions.request-dossier-activation]
 enabled = true
 verify_jwt = false
@@ -459,7 +462,7 @@ verify_jwt = false
 import_map = "./functions/deno.json"
 
 # Development-only signup shortcut (creates an already-confirmed account). No JWT: there is no
-# user yet. The endpoint guards itself — it refuses unless APP_ENV=development *and*
+# user yet. The endpoint guards itself: it refuses unless APP_ENV=development *and*
 # SUPABASE_URL belongs to a local stack, so deploying it changes nothing in production.
 [functions.dev-signup]
 enabled = true

@@ -7,7 +7,7 @@ import type { TypedSupabaseClient } from "#client/client";
 import { assertNoError } from "#client/errors";
 import { mapNotificationPreferenceRow } from "#client/mappers";
 
-// Only overrides are stored — an absent row means "use the default" (see
+// Only overrides are stored: an absent row means "use the default" (see
 // resolve_notification_preference() in the migration).
 export class NotificationPreferenceRepository implements NotificationPreferencePort {
   constructor(private readonly client: TypedSupabaseClient) {}

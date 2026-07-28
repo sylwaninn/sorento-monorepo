@@ -77,7 +77,7 @@ describe("adminMetricsSchema", () => {
     ).toBe(false);
   });
 
-  // The admin reads aggregates only — never a dossier, user, or content identifier.
+  // The admin reads aggregates only: never a dossier, user, or content identifier.
   it("exposes counters only, no identifiers", () => {
     expect(Object.keys(adminMetricsSchema.shape).sort()).toEqual(
       [...COUNTERS, "dossiersByStatus", "trackingCompletionRatePercent"].sort(),

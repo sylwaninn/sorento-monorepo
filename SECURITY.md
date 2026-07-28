@@ -16,8 +16,8 @@ is the intended default behaviour.
   really does revoke access, it does not merely hide the row.
 - The `trusted_contact` role maps to no minimum at all: the trusted contact
   sees nothing. When the dossier is activated, its membership row is promoted
-  to `owner` or `collaborator`, and it is that promotion — not an exception
-  inside the function — that opens access.
+  to `owner` or `collaborator`, and it is that promotion (not an exception
+  inside the function) that opens access.
 - The same matrix is transcribed in `packages/core/src/permissions.ts`, tested
   case by case. The interface hides, RLS forbids. **Any divergence between the
   two is a blocking bug**: the test table in `permissions.test.ts` is the
@@ -32,7 +32,7 @@ The log is written server-side, never client-side: database triggers for status,
 assignment, document and answer changes; Edge Functions (`service_role`) for
 invitations and activations. The only client-triggerable entry is letter
 generation (`log_letter_generation`), because the PDF is produced in the
-browser — and that RPC still stamps `actor_id` from `auth.uid()` and re-checks
+browser, and that RPC still stamps `actor_id` from `auth.uid()` and re-checks
 access to the dossier.
 
 Intended consequence: no client insert policy on `activity_log`. A member can
@@ -56,7 +56,7 @@ link: it may sit unused for years, and making it consumable once would make it
 unusable at the precise moment it matters. The trade-offs: it is issued only
 after explicit consent, it is sent only to the address that consented, it
 expires after a year, it can be revoked by the owner at any time, and above all
-**it switches nothing on its own** — it opens a 48 h grace period during which
+**it switches nothing on its own**: it opens a 48 h grace period during which
 every member is notified and can object.
 
 Invitation and consent both check that the signed-in account's email address
@@ -75,8 +75,8 @@ disagree about whether a person has died.
 Sessions are stored by the Supabase client in `localStorage`.
 
 **The risk is real and known**: an XSS flaw would allow the access token to be
-exfiltrated. This choice is accepted for a web V1 because the alternative —
-`HttpOnly` cookies — requires an intermediate backend the architecture does not
+exfiltrated. This choice is accepted for a web V1 because the alternative,
+`HttpOnly` cookies, requires an intermediate backend the architecture does not
 have, and because the access token is short-lived (1 h) with refresh token
 rotation.
 
@@ -106,7 +106,7 @@ Compensating measures in place:
   back to `site_url`, landing the person somewhere other than where the link
   promised.
 - Password policy of 12 characters minimum and a check against known breaches
-  ("leaked password protection" option, to enable on the hosted project — it
+  ("leaked password protection" option, to enable on the hosted project; it
   does not exist in the CLI's local configuration).
 
 To revisit if the service gains a backend of its own: move sessions to
@@ -121,7 +121,7 @@ To revisit if the service gains a backend of its own: move sessions to
   It is never client-side.
 - The cron jobs' shared secret lives in Vault (`cron_secret`), read at job
   execution time. No migration contains a secret. In local development,
-  `seed.sql` — which never runs on a hosted environment — pins it to a known
+  `seed.sql`, which never runs on a hosted environment, pins it to a known
   value so that local jobs work.
 - `gitleaks` blocks any commit containing a secret (pre-commit and CI).
 
@@ -132,7 +132,7 @@ opening the confirmation email. It runs as `service_role`: its environment
 guard is therefore its entire security.
 
 That guard requires two independent signals, and it is evaluated **before** the
-request body is read — nothing in the request can influence it:
+request body is read; nothing in the request can influence it:
 
 - `APP_ENV=development`. The variable only lives in `supabase/functions/.env`,
   gitignored and never deployed: a hosted environment has no `APP_ENV`, so the
@@ -145,7 +145,7 @@ A single signal would leave the door one configuration mistake away from
 unlocking `service_role` on a real environment. Outside development the
 function answers `404` and not `403`: the caller does not learn that the
 endpoint exists. On the browser side, the matching checkbox is rendered under
-`import.meta.env.DEV`, which Vite inlines — the production bundle does not
+`import.meta.env.DEV`, which Vite inlines: the production bundle does not
 contain the branch. This client-side check is a convenience, not a guarantee:
 the only one that counts is the function's.
 

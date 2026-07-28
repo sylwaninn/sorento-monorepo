@@ -98,14 +98,14 @@ Deno.serve(async (request) => {
     // The email above promises the team was notified; this is what makes that true.
     if (env.supportEmail) {
       await sendEmail(env.supportEmail, {
-        subject: `Opposition à une activation — dossier ${dossierId}`,
+        subject: `Opposition à une activation, dossier ${dossierId}`,
         bodyHtml: `<p>Dossier ${dossierId} (${escapeHtml(dossier.subject_first_name)}) : activation gelée suite à une opposition.</p>
          <p>Motif indiqué : ${escapeHtml(reason ?? "non précisé")}</p>
          <p>Levée de gel : release_activation_freeze('${dossierId}') côté administration.</p>`,
       });
     } else {
       console.warn(
-        `activation frozen for dossier ${dossierId} but SUPPORT_EMAIL is unset — nobody was notified`,
+        `activation frozen for dossier ${dossierId} but SUPPORT_EMAIL is unset: nobody was notified`,
       );
     }
 

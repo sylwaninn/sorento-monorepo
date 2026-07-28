@@ -107,7 +107,7 @@ export const DocumentsPage = () => {
                 <div className="flex flex-col">
                   <span>{document_.originalName}</span>
                   <Typography color="muted">
-                    {document_.category} — {dossierContent.documents.addedBy}{" "}
+                    {document_.category} · {dossierContent.documents.addedBy}{" "}
                     {access.firstNameOf(document_.addedBy)}
                   </Typography>
                 </div>

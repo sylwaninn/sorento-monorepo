@@ -10,7 +10,7 @@ export const authContent = {
     submitButton: "Créer mon compte",
     alreadyHaveAccount: "Vous avez déjà un compte ?",
     loginLink: "Se connecter",
-    devSkipConfirmationLabel: "DEV — créer le compte sans email de confirmation",
+    devSkipConfirmationLabel: "DEV : créer le compte sans email de confirmation",
     devSkipConfirmationHint:
       "Visible uniquement en développement local. Le compte est créé déjà confirmé et la session est ouverte immédiatement.",
   },

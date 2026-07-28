@@ -1,13 +1,13 @@
 # @sorento/core
 
-**Pure business logic.** The rules engine that turns a dossier's answers into a personalised journey — procedures, ordering, deadlines, possible benefits, letter templates — plus the permission matrix and every other business rule of the product.
+**Pure business logic.** The rules engine that turns a dossier's answers into a personalised journey (procedures, ordering, deadlines, possible benefits, letter templates), plus the permission matrix and every other business rule of the product.
 
 Pure means enforced-pure: zero React imports, zero Supabase imports, zero I/O, and time arrives through an injected clock. The ESLint boundaries and `pnpm check:tests` keep it that way.
 
 ## What lives here
 
 - The journey engine: which procedures apply, in which order, with which deadlines.
-- `permissions.ts`: the role/permission matrix. It mirrors the RLS policies — the interface hides, RLS forbids — and any divergence between the two is a blocking bug (see [SECURITY.md](../../SECURITY.md)).
+- `permissions.ts`: the role/permission matrix. It mirrors the RLS policies (the interface hides, RLS forbids), and any divergence between the two is a blocking bug (see [SECURITY.md](../../SECURITY.md)).
 - Deadline and date computations (injected clock, so every rule is testable at any date).
 
 ## Testing bar

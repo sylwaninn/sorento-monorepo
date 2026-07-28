@@ -7,6 +7,7 @@ import {
   dossierStatus,
   expireActivationGrace,
   membershipRole,
+  notificationCount,
   requestActivation,
   runCronJob,
 } from "#e2e/support/backend";
@@ -51,6 +52,11 @@ test.describe("activation and its 48-hour grace period", () => {
     expect(await dossierStatus(dossierId)).toBe("ACTIVE");
     expect(await membershipRole(dossierId, ownerId)).toBe("collaborator");
     expect(await membershipRole(dossierId, trustedId)).toBe("owner");
+
+    // Every member is told the dossier activated, the demoted owner and the promoted
+    // trusted contact alike: an activation nobody hears about defeats the grace period.
+    expect(await notificationCount(dossierId, ownerId, "dossier_activated")).toBeGreaterThan(0);
+    expect(await notificationCount(dossierId, trustedId, "dossier_activated")).toBeGreaterThan(0);
   });
 
   test("an objection within the grace period stops the activation", async ({ page }) => {

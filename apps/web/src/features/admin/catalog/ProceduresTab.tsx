@@ -73,7 +73,7 @@ export const ProceduresTab = () => {
                     {procedure.active ? "" : `(${adminContent.catalog.inactiveLabel})`}
                   </Typography>
                   <Typography type="body-sm" color="muted">
-                    {procedure.code} — {procedure.organization}
+                    {procedure.code} · {procedure.organization}
                   </Typography>
                 </div>
                 <div className="flex gap-2">

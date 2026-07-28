@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { env } from "@shared/env.ts";
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
 import {
@@ -6,7 +7,6 @@ import {
   genericContent,
   reminderContent,
   withDossierLink,
-  type DigestPayload,
   type ReminderItem,
 } from "@shared/emails.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
@@ -17,21 +17,35 @@ const BATCH_SIZE = 50;
 const MAX_ATTEMPTS = 5;
 const SETTLED_STATUSES = new Set(["done", "not_applicable"]);
 
-interface PendingNotification {
-  id: string;
-  user_id: string;
-  dossier_id: string | null;
-  type: string;
-  payload:
-    | ({
-        deadlines?: ReminderItem[];
-        waiting?: ReminderItem[];
-        emailDeadlines?: ReminderItem[];
-        emailWaiting?: ReminderItem[];
-        phase?: string;
-      } & DigestPayload)
-    | null;
-}
+const reminderItemSchema = z.object({
+  trackingId: z.string(),
+  title: z.string(),
+});
+
+const digestFieldsSchema = z.object({
+  percentage: z.number().optional(),
+  completedThisWeek: z.number().optional(),
+  remaining: z.number().optional(),
+});
+
+// The client is untyped, so the rows are validated instead of asserted. A malformed payload
+// falls back to null rather than wedging the whole batch behind one poisoned row.
+const pendingNotificationSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  dossier_id: z.string().nullable(),
+  type: z.string(),
+  payload: digestFieldsSchema
+    .extend({
+      deadlines: z.array(reminderItemSchema).optional(),
+      waiting: z.array(reminderItemSchema).optional(),
+      emailDeadlines: z.array(reminderItemSchema).optional(),
+      emailWaiting: z.array(reminderItemSchema).optional(),
+      phase: z.string().optional(),
+    })
+    .nullable()
+    .catch(null),
+});
 
 const isReminder = (type: string): boolean =>
   type === "deadline_approaching" || type === "prolonged_waiting";
@@ -39,7 +53,7 @@ const isReminder = (type: string): boolean =>
 /**
  * A procedure can be completed between the moment the reminder is planned and the moment it
  * is sent. The status is therefore re-read here, at send time, and the reminder is dropped
- * if nothing is left — nobody should be chased about work they already did.
+ * if nothing is left: nobody should be chased about work they already did.
  */
 const stillOpen = async (
   client: EdgeSupabaseClient,
@@ -79,7 +93,7 @@ Deno.serve(async (request) => {
 
     if (error) return json(request, { error: error.message }, 500);
 
-    const notifications = (pending ?? []) as PendingNotification[];
+    const notifications = z.array(pendingNotificationSchema).parse(pending ?? []);
     const emails = await emailsByUserId(
       client,
       notifications.map((notification) => notification.user_id),
