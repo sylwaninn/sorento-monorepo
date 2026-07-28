@@ -43,7 +43,7 @@ export default defineConfig({
     // Through turbo, so the workspace packages the app imports are built first: `vite build`
     // resolves them to their dist, which a plain filtered build never produces.
     command:
-      "pnpm turbo run build --filter @sorento/web && pnpm --filter @sorento/web preview --port 5173 --host 127.0.0.1",
+      "pnpm turbo run build --filter @sorento/web && pnpm --filter @sorento/web preview --port 5273 --host localhost",
     url: APP_URL,
     reuseExistingServer: !isCI,
     // The first run pays for a full production build of the app.
