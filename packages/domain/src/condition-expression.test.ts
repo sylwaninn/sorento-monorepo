@@ -49,7 +49,7 @@ describe("conditionExpressionSchema", () => {
 
 /**
  * Every operator is exercised individually. The engine in core dispatches on this exact set, so
- * an operator silently dropped here becomes a catalog condition that never matches — and a
+ * an operator silently dropped here becomes a catalog condition that never matches, and a
  * benefit nobody is ever told about.
  */
 describe("comparison operators", () => {

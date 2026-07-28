@@ -64,7 +64,7 @@ const byDueDate =
     // Stryker disable next-line ConditionalExpression,EqualityOperator: equivalent mutants.
     // Returning 0 for two undated items is the correct comparator contract, but this closure
     // is only ever handed to Array.sort, and a stable sort leaves equal elements alone whether
-    // the answer is 0 or 1 — no input can distinguish the two.
+    // the answer is 0 or 1: no input can distinguish the two.
     if (dueA === null) return dueB === null ? 0 : 1;
     if (dueB === null) return -1;
     return compareCalendarDates(dueA, dueB);
@@ -79,7 +79,7 @@ export interface FocusInput<T> {
 
 /**
  * "À faire maintenant": the two or three closest unfinished items, never the wall of thirty
- * tasks. Overdue items sort first but carry no penalty flag — the UI must not shame anyone.
+ * tasks. Overdue items sort first but carry no penalty flag: the UI must not shame anyone.
  */
 export const focusItems = <T>({ items, isDone, dueDateOf, limit = 3 }: FocusInput<T>): T[] =>
   items
@@ -105,7 +105,7 @@ export const nextDueDate = <T>(
 export const completionPercentage = <T>(items: T[], isDone: (item: T) => boolean): number =>
   items.length === 0 ? 0 : Math.round((items.filter(isDone).length / items.length) * 100);
 
-/** A window folds away once everything in it is settled — the "you've handled it" state. */
+/** A window folds away once everything in it is settled: the "you've handled it" state. */
 export const isTimeWindowSettled = <T>(
   group: TimeWindowGroup<T>,
   isDone: (item: T) => boolean,

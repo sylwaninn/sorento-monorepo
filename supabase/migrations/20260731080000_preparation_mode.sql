@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Preparation-mode data: contract inventory, guided wishes, trusted-contact
 -- designation, and the pending-activation grace period. Trusted-contact
--- designation/activation deliberately has NO client RLS path at all — like
+-- designation/activation deliberately has NO client RLS path at all: like
 -- invitations, it only ever goes through Edge Functions (service_role) because
 -- an unauthenticated or not-yet-a-member contact has nothing has_dossier_access
 -- could check yet.
@@ -38,7 +38,7 @@ create policy contracts_delete on contracts for delete to authenticated
   using (has_dossier_access(dossier_id, 'collaborator'));
 
 -- ----------------------------------------------------------------------------
--- preparation_wishes: one row per dossier, guided instructions. Not a will —
+-- preparation_wishes: one row per dossier, guided instructions. Not a will:
 -- E25's notice makes that explicit in the UI. Owner-only write: personal and
 -- sensitive, unlike the shared collaborative data elsewhere.
 -- ----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ create policy preparation_wishes_update on preparation_wishes for update to auth
 --  - activation_token_hash (long-lived, generated only once consent happens):
 --    the actual "in case of death" link. A single-use-48h token can't be the
 --    one used for an event that may happen years later, so it's a distinct,
---    longer-lived credential — re-requestable if it's ever lost or expires.
+--    longer-lived credential, re-requestable if it's ever lost or expires.
 -- ----------------------------------------------------------------------------
 
 create table trusted_contact_designations (
@@ -106,7 +106,7 @@ create policy trusted_contact_designations_revoke on trusted_contact_designation
 
 -- ----------------------------------------------------------------------------
 -- Pending activation (48h grace period, section 8.3). One pending activation at
--- a time per dossier — starting a new one while another is pending is rejected
+-- a time per dossier: starting a new one while another is pending is rejected
 -- at the Edge Function level.
 -- ----------------------------------------------------------------------------
 

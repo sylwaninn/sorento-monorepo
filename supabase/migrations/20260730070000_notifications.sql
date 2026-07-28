@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Notification preferences + reactive triggers that create in-app rows and flag
--- immediate emails. Deadline/waiting reminders are NOT created here — they're
+-- immediate emails. Deadline/waiting reminders are NOT created here: they are
 -- computed entirely by the daily-reminders Edge Function (grouping + the
 -- one-email-per-dossier-per-day cap only make sense computed in one pass).
 -- ============================================================================
@@ -36,7 +36,7 @@ create policy notification_preferences_delete on notification_preferences for de
 
 -- ----------------------------------------------------------------------------
 -- Preference resolution: explicit override row > role-aware default.
--- "A viewer receives only mentions and activation by default" (spec 8.2) — a
+-- "A viewer receives only mentions and activation by default" (spec 8.2): a
 -- viewer's default is silence except for those two types, unless they opt in.
 -- ----------------------------------------------------------------------------
 
