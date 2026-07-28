@@ -1,0 +1,20 @@
+{
+  "name": "@sorento/config",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./eslint-base": "./eslint/base.js",
+    "./eslint-boundaries": "./eslint/boundaries.js",
+    "./tsconfig-base.json": "./tsconfig/base.json",
+    "./tsconfig-react.json": "./tsconfig/react.json",
+    "./prettier": "./prettier.config.js",
+    "./vitest-coverage": "./vitest/coverage.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-boundaries": "^5.0.1",
+    "typescript-eslint": "^8.19.0"
+  }
+}
