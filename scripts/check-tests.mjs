@@ -1,0 +1,230 @@
+#!/usr/bin/env node
+/**
+ * Structural test-suite audit. Runs without a database, without a browser and without
+ * executing a single test, so it can sit at the front of `pnpm verify` and in the pre-commit
+ * hook where a full suite would be too slow.
+ *
+ * It answers the two questions coverage cannot:
+ *   - does every module that must be tested actually have a test file? (a new rule shipped
+ *     without one raises coverage nowhere, so no threshold catches it)
+ *   - does every test still describe something that exists? (a test file left behind after
+ *     its subject was deleted keeps passing forever and is read as evidence)
+ *
+ * Every rule is deliberately structural: it compares the file tree against itself. Anything
+ * that needs a running system belongs in the integration or E2E suites instead.
+ */
+
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, dirname, extname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+const IGNORED_DIRS = new Set([
+  "node_modules",
+  "dist",
+  ".turbo",
+  ".git",
+  "coverage",
+  "reports",
+  ".stryker-tmp",
+  "test-results",
+  "playwright-report",
+]);
+
+/**
+ * Modules whose behaviour must be asserted by a sibling `<name>.test.ts`. These are the layers
+ * where an untested change is a silent change: business rules, the validation boundary, the
+ * row-to-domain translation, and the shared code every Edge Function runs before anything else.
+ */
+const REQUIRE_SIBLING_TEST = [
+  { dir: "packages/core/src", exclude: ["index.ts", "test-fixtures.ts"] },
+  { dir: "packages/domain/src", exclude: ["index.ts", "ports.ts", "test-fixtures.ts"] },
+  { dir: "packages/supabase-client/src/mappers", exclude: ["index.ts"] },
+  // supabase.ts is client construction with no branch of its own; it is exercised end to end
+  // by the Edge Function HTTP tests instead.
+  { dir: "supabase/functions/_shared", exclude: ["supabase.ts"] },
+];
+
+/**
+ * Test files that cover a theme rather than one module, so they have no sibling source. Each
+ * entry is a decision: the list stays short precisely because adding to it is visible in review.
+ */
+const SUITE_TESTS = new Set([
+  "packages/core/src/engine-ordering.test.ts",
+  "packages/core/src/diagnostic-questions.test.ts",
+  "packages/supabase-client/src/integration-tests/rls.integration.test.ts",
+  "packages/supabase-client/src/integration-tests/hardening.integration.test.ts",
+  "packages/supabase-client/src/integration-tests/policy-snapshot.integration.test.ts",
+  "packages/supabase-client/src/integration-tests/sql-mirrors.integration.test.ts",
+  "packages/supabase-client/src/integration-tests/edge-functions.integration.test.ts",
+]);
+
+/** Where the suites live. Anything matching TEST_FILE outside these roots is unowned. */
+const TEST_ROOTS = ["packages", "apps", "supabase/functions", "e2e"];
+
+const TEST_FILE = /\.(test|spec)\.(ts|tsx)$/;
+const E2E_FILE = /\.e2e\.ts$/;
+
+const failures = [];
+const fail = (rule, file, message) => failures.push({ rule, file, message });
+
+const walk = (dir) => {
+  const absolute = join(ROOT, dir);
+  let entries;
+  try {
+    entries = readdirSync(absolute, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.flatMap((entry) => {
+    if (entry.name.startsWith(".") && entry.name !== ".") return [];
+    const child = join(dir, entry.name);
+    if (entry.isDirectory()) return IGNORED_DIRS.has(entry.name) ? [] : walk(child);
+    return [child];
+  });
+};
+
+const exists = (relativePath) => {
+  try {
+    statSync(join(ROOT, relativePath));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const allFiles = TEST_ROOTS.flatMap(walk);
+const testFiles = allFiles.filter((file) => TEST_FILE.test(file) || E2E_FILE.test(file));
+const read = (file) => readFileSync(join(ROOT, file), "utf8");
+
+// ---------------------------------------------------------------------------
+// R1 — every test file still has a subject
+// ---------------------------------------------------------------------------
+
+const subjectCandidates = (testFile) => {
+  const stem = basename(testFile).replace(TEST_FILE, "").replace(E2E_FILE, "");
+  const dir = dirname(testFile);
+  return [".ts", ".tsx"].map((ext) => join(dir, `${stem}${ext}`));
+};
+
+for (const testFile of testFiles) {
+  if (SUITE_TESTS.has(testFile)) continue;
+  if (testFile.startsWith("e2e/")) continue; // journeys, not modules
+  if (subjectCandidates(testFile).some(exists)) continue;
+  fail(
+    "orphan-test",
+    testFile,
+    "no sibling module with this name. Either the subject was deleted and this file should go, or it is a themed suite and belongs in SUITE_TESTS in scripts/check-tests.mjs.",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// R2 — every module that must be tested has a test
+// ---------------------------------------------------------------------------
+
+for (const { dir, exclude } of REQUIRE_SIBLING_TEST) {
+  const excluded = new Set(exclude);
+  for (const file of walk(dir)) {
+    const name = basename(file);
+    if (extname(file) !== ".ts" || TEST_FILE.test(file) || excluded.has(name)) continue;
+    if (name === "test-fixtures.ts" || name.endsWith(".d.ts") || name.endsWith(".types.ts")) {
+      continue;
+    }
+    const expected = file.replace(/\.ts$/, ".test.ts");
+    if (!exists(expected)) {
+      fail("untested-module", file, `expected ${expected}. Every rule arrives with its tests.`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// R3 — every Edge Function is named by a test
+// ---------------------------------------------------------------------------
+
+const functionNames = readdirSync(join(ROOT, "supabase/functions"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name !== "_shared")
+  .map((entry) => entry.name);
+
+const functionTestCorpus = testFiles
+  .filter((file) => file.includes("edge-functions") || file.startsWith("supabase/functions/"))
+  .map(read)
+  .join("\n");
+
+for (const name of functionNames) {
+  if (!functionTestCorpus.includes(name)) {
+    fail(
+      "untested-edge-function",
+      `supabase/functions/${name}/index.ts`,
+      "runs with service_role and no test names it. Add a case to the Edge Function suite.",
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// R4 — no test silently survives a deleted key
+// ---------------------------------------------------------------------------
+
+/**
+ * `content.questions["mode"]?.title ?? ""` keeps passing after `mode` is removed from the copy
+ * dictionary: the assertion just compares against the empty string. Same for `!` and for a
+ * `?? []` around a list. Tests must read through a helper that throws on a missing key, so a
+ * removed key fails loudly at the first test that wanted it.
+ */
+const MASKING_PATTERNS = [
+  { pattern: /\?\?\s*""/g, hint: 'use must(...) instead of ?? ""' },
+  { pattern: /\?\?\s*\[\]/g, hint: "use must(...) instead of ?? []" },
+  { pattern: /\?\?\s*\{\}/g, hint: "use must(...) instead of ?? {}" },
+];
+
+const FOCUS_PATTERNS = [
+  { pattern: /\b(?:describe|it|test)\.only\s*\(/g, hint: ".only silently skips the rest of the file" },
+  { pattern: /\b(?:describe|it|test)\.skip\s*\(/g, hint: "a skipped test is a test that does not exist" },
+  { pattern: /\bx(?:describe|it)\s*\(/g, hint: "a skipped test is a test that does not exist" },
+];
+
+for (const testFile of testFiles) {
+  const source = read(testFile);
+  const lines = source.split("\n");
+
+  lines.forEach((line, index) => {
+    if (line.trimStart().startsWith("//") || line.trimStart().startsWith("*")) return;
+    for (const { pattern, hint } of [...MASKING_PATTERNS, ...FOCUS_PATTERNS]) {
+      pattern.lastIndex = 0;
+      if (pattern.test(line)) {
+        const rule = MASKING_PATTERNS.some((entry) => entry.hint === hint)
+          ? "masked-lookup"
+          : "focused-or-skipped-test";
+        fail(rule, `${testFile}:${index + 1}`, hint);
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Report
+// ---------------------------------------------------------------------------
+
+if (failures.length === 0) {
+  const counted = `${testFiles.length} test files, ${functionNames.length} Edge Functions`;
+  console.log(`check-tests: OK (${counted})`);
+  process.exit(0);
+}
+
+const byRule = new Map();
+for (const failure of failures) {
+  const bucket = byRule.get(failure.rule) ?? [];
+  bucket.push(failure);
+  byRule.set(failure.rule, bucket);
+}
+
+console.error(`check-tests: ${failures.length} problem(s)\n`);
+for (const [rule, bucket] of byRule) {
+  console.error(`  [${rule}]`);
+  for (const { file, message } of bucket) {
+    console.error(`    ${relative(".", file)}`);
+    console.error(`      ${message}`);
+  }
+  console.error("");
+}
+process.exit(1);
