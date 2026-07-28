@@ -155,6 +155,14 @@ jobs:
         with:
           version: 2.110.0
 
+      # The functions read their secrets from supabase/functions/.env, which is gitignored, so a
+      # fresh checkout has none and every cron-guarded job answers 401. Not a credential: it
+      # guards a stack that lives for the length of this job, and it matches the value
+      # e2e/support/env.ts falls back to. APP_ENV stays out, so the development-only endpoints
+      # remain shut here exactly as they are on a deployed environment.
+      - name: Write the function environment the local stack needs
+        run: echo "CRON_SECRET=local-dev-cron-secret" > supabase/functions/.env
+
       # Replays every migration from nothing and seeds. A migration that only applies on top of
       # an existing database fails here rather than on the next developer's machine.
       - name: Start Supabase
