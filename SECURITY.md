@@ -87,6 +87,14 @@ Compensating measures in place:
   `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`.
 - No `dangerouslySetInnerHTML` anywhere in the code base. Comments are plain
   text, never HTML.
+- Outbound emails are assembled by interpolation, so every value coming from a
+  user is passed through `escapeHtml`
+  (`supabase/functions/_shared/html.ts`) before it reaches `bodyHtml`. The
+  values that matter are the ones one person types and another reads: the
+  subject's first and last name, an inviter's name, and the free-text reason on
+  an activation opposition. The recipient of those emails (a trusted contact,
+  or the support inbox) has every reason to trust them, which is precisely
+  what an injected link would exploit.
 - Strict allow-list of authentication redirects on the Supabase side, never a
   wildcard.
 - Password policy of 12 characters minimum and a check against known breaches
