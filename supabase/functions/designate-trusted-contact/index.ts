@@ -12,13 +12,13 @@ Deno.serve(async (request) => {
   if (preflightResponse) return preflightResponse;
 
   try {
+    const user = await currentUser(request);
+    if (!user) return json(request, { error: "unauthorized" }, 401);
+
     const parsed = await parseBody(request, designateTrustedContactPayloadSchema);
     if (!parsed.ok) return parsed.response;
     const { dossierId, futureRole } = parsed.value;
     const normalizedEmail = parsed.value.email.trim().toLowerCase();
-
-    const user = await currentUser(request);
-    if (!user) return json(request, { error: "unauthorized" }, 401);
 
     const { data: membership } = await callerClient(request)
       .from("memberships")
