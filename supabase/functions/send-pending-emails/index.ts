@@ -1,6 +1,14 @@
 import { env } from "@shared/env.ts";
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
-import { escapeHtml } from "@shared/html.ts";
+import {
+  activationContent,
+  digestContent,
+  genericContent,
+  reminderContent,
+  withDossierLink,
+  type DigestPayload,
+  type ReminderItem,
+} from "@shared/emails.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
 import { sendEmail, type EmailContent } from "@shared/mailer.ts";
 import { emailsByUserId, serviceClient, type EdgeSupabaseClient } from "@shared/supabase.ts";
@@ -8,29 +16,6 @@ import { emailsByUserId, serviceClient, type EdgeSupabaseClient } from "@shared/
 const BATCH_SIZE = 50;
 const MAX_ATTEMPTS = 5;
 const SETTLED_STATUSES = new Set(["done", "not_applicable"]);
-
-const SUBJECTS: Record<string, string> = {
-  procedure_assigned: "Une démarche vous a été assignée",
-  mention: "Vous avez été mentionné dans un commentaire",
-  comment_on_assigned_procedure: "Nouveau commentaire sur une démarche assignée",
-  status_changed_on_assigned_procedure: "Statut mis à jour",
-  invitation: "Invitation à rejoindre un dossier",
-  member_joined: "Nouveau membre sur un dossier",
-  member_left: "Un membre a quitté un dossier",
-  dossier_activated: "Dossier activé",
-  weekly_digest: "Votre dossier : le point de la semaine",
-};
-
-interface ReminderItem {
-  trackingId: string;
-  title: string;
-}
-
-interface DigestPayload {
-  percentage?: number;
-  completedThisWeek?: number;
-  remaining?: number;
-}
 
 interface PendingNotification {
   id: string;
@@ -74,55 +59,6 @@ const stillOpen = async (
     (data ?? []).filter((row) => !SETTLED_STATUSES.has(row.status)).map((row) => row.id),
   );
   return items.filter((item) => openIds.has(item.trackingId));
-};
-
-const pluralize = (count: number, singular: string): string =>
-  `${count} ${singular}${count > 1 ? "s" : ""}`;
-
-const reminderContent = (
-  deadlines: ReminderItem[],
-  waiting: ReminderItem[],
-  type: string,
-): EmailContent => {
-  const parts: string[] = [];
-  if (deadlines.length > 0) parts.push(pluralize(deadlines.length, "échéance"));
-  if (waiting.length > 0) parts.push(pluralize(waiting.length, "démarche en attente"));
-
-  const list = (label: string, items: ReminderItem[]): string =>
-    items.length === 0
-      ? ""
-      : `<p>${label} : ${items.map((item) => escapeHtml(item.title)).join(", ")}.</p>`;
-
-  return {
-    // No deceased name in the subject.
-    subject: `Votre dossier : ${parts.join(" et ")}`,
-    bodyHtml: `${list("Échéances proches", deadlines)}${list("En attente depuis un moment", waiting)}`,
-    unsubscribeType: type,
-  };
-};
-
-// Progress, never pressure: what advanced this week, and what is left. No overdue counter.
-const digestContent = (payload: DigestPayload): EmailContent => ({
-  subject: SUBJECTS["weekly_digest"] ?? "Votre dossier",
-  bodyHtml: `<p>${payload.completedThisWeek ?? 0} démarche(s) traitée(s) cette semaine.</p>
-   <p>${payload.percentage ?? 0} % du dossier est traité, ${payload.remaining ?? 0} démarche(s) restante(s).</p>`,
-  unsubscribeType: "weekly_digest",
-});
-
-const activationContent = (phase: string | undefined): EmailContent => {
-  if (phase === "pending") {
-    return {
-      subject: "Activation d'un dossier en cours",
-      bodyHtml:
-        "<p>Le contact de confiance a signalé un décès. Sauf opposition, l'activation sera effective dans 48 heures.</p>",
-      unsubscribeType: "dossier_activated",
-    };
-  }
-  return {
-    subject: "Dossier activé",
-    bodyHtml: "<p>Le dossier est maintenant actif.</p>",
-    unsubscribeType: "dossier_activated",
-  };
 };
 
 Deno.serve(async (request) => {
@@ -192,17 +128,13 @@ Deno.serve(async (request) => {
       } else if (notification.type === "dossier_activated") {
         content = activationContent(notification.payload?.phase);
       } else {
-        const subject = SUBJECTS[notification.type] ?? "Nouvelle notification";
-        content = { subject, bodyHtml: `<p>${subject}.</p>`, unsubscribeType: notification.type };
+        content = genericContent(notification.type);
       }
 
       const link = notification.dossier_id
         ? `${env.siteUrl}/dossiers/${notification.dossier_id}`
         : env.siteUrl;
-      const result = await sendEmail(email, {
-        ...content,
-        bodyHtml: `${content.bodyHtml}<p><a href="${link}">Voir le dossier</a></p>`,
-      });
+      const result = await sendEmail(email, withDossierLink(content, link));
 
       if (result === "sent") {
         await client
