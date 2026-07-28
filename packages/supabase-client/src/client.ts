@@ -3,7 +3,15 @@ import type { Database } from "#client/database.types";
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
-export type { AuthChangeEvent, AuthError, Session, User } from "@supabase/supabase-js";
+export type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
+
+/**
+ * The class, not only its type. apps/web must not import @supabase/supabase-js (the boundaries
+ * rule), so without this no test in the app can build the error an auth call actually rejects
+ * with: AuthError carries a protected member, which no object literal satisfies and no cast is
+ * allowed to fake. The screens that translate those errors were untestable for that reason.
+ */
+export { AuthError } from "@supabase/supabase-js";
 
 // Browser/app client, scoped by the anon key — all security relies on RLS policies.
 export const createBrowserSupabaseClient = (url: string, anonKey: string): TypedSupabaseClient =>

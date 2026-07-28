@@ -44,6 +44,16 @@ if (!globalThis.HTMLElement.prototype.scrollTo) {
 }
 
 /**
+ * The Web Animations API, which react-aria's shared-element transition calls when a tab or an
+ * accordion changes. jsdom has none of it, and the throw lands in React Router's error
+ * boundary: the screen is replaced by the fallback while the test that clicked reports only
+ * that what it expected is missing. Nothing here animates, so an empty list is the whole stub.
+ */
+if (!globalThis.Element.prototype.getAnimations) {
+  globalThis.Element.prototype.getAnimations = (): Animation[] => [];
+}
+
+/**
  * React Router builds a `Request` for every navigation and hands it the current AbortSignal.
  * Under vitest that signal comes from jsdom while `Request` comes from Node's undici, which
  * rejects it as a foreign type — every `navigate()` in a test then produces an unhandled
