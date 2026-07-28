@@ -113,7 +113,7 @@ const testFiles = allFiles.filter((file) => TEST_FILE.test(file) || E2E_FILE.tes
 const read = (file) => readFileSync(join(ROOT, file), "utf8");
 
 // ---------------------------------------------------------------------------
-// R1 — every test file still has a subject
+// R1: every test file still has a subject
 // ---------------------------------------------------------------------------
 
 const subjectCandidates = (testFile) => {
@@ -134,7 +134,7 @@ for (const testFile of testFiles) {
 }
 
 // ---------------------------------------------------------------------------
-// R2 — every module that must be tested has a test
+// R2: every module that must be tested has a test
 // ---------------------------------------------------------------------------
 
 for (const { dir, exclude } of REQUIRE_SIBLING_TEST) {
@@ -153,7 +153,7 @@ for (const { dir, exclude } of REQUIRE_SIBLING_TEST) {
 }
 
 // ---------------------------------------------------------------------------
-// R3 — every Edge Function is named by a test
+// R3: every Edge Function is named by a test
 // ---------------------------------------------------------------------------
 
 const functionNames = readdirSync(join(ROOT, "supabase/functions"), { withFileTypes: true })
@@ -210,7 +210,9 @@ const CONFIG = "supabase/config.toml";
 const declaredVerifyJwt = new Map(
   exists(CONFIG)
     ? Array.from(
-        read(CONFIG).matchAll(/^\[functions\.([^\]]+)\]$([\s\S]*?)(?=^\[|\Z)/gm),
+        // (?![\s\S]) is end-of-input: JavaScript has no \Z, which would match a literal "Z"
+        // and silently drop a [functions.*] block sitting at the end of the file.
+        read(CONFIG).matchAll(/^\[functions\.([^\]]+)\]$([\s\S]*?)(?=^\[|(?![\s\S]))/gm),
         (match) => [match[1], /^verify_jwt\s*=\s*(true|false)/m.exec(match[2])?.[1]],
       )
     : [],
@@ -238,7 +240,7 @@ for (const [name, guard] of tabledFunctions) {
 }
 
 // ---------------------------------------------------------------------------
-// R4 — no test silently survives a deleted key
+// R4: no test silently survives a deleted key
 // ---------------------------------------------------------------------------
 
 /**
@@ -284,7 +286,7 @@ for (const testFile of testFiles) {
 }
 
 // ---------------------------------------------------------------------------
-// R5 — the journeys' French copy still exists in the app
+// R5: the journeys' French copy still exists in the app
 // ---------------------------------------------------------------------------
 
 /**
