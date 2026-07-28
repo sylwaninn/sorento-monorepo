@@ -2,8 +2,10 @@ import { expect, test } from "@playwright/test";
 import { createDossier, logIn, TEST_PASSWORD, uniqueEmail } from "#e2e/support/app";
 import {
   createConfirmedAccount,
+  designateConsentedTrustedContact,
   dossierStatus,
   expireActivationGrace,
+  membershipRole,
   requestActivation,
   runCronJob,
 } from "#e2e/support/backend";
@@ -26,11 +28,14 @@ import {
 test.describe("activation and its 48-hour grace period", () => {
   test("a dossier activates once the grace period has elapsed", async ({ page }) => {
     const ownerEmail = uniqueEmail("grace-owner");
-    await createConfirmedAccount(ownerEmail, TEST_PASSWORD, "Camille");
+    const ownerId = await createConfirmedAccount(ownerEmail, TEST_PASSWORD, "Camille");
+    const trustedEmail = uniqueEmail("grace-trusted");
+    const trustedId = await createConfirmedAccount(trustedEmail, TEST_PASSWORD, "Claude");
     await logIn(page, ownerEmail);
 
     const dossierId = await createDossier(page, "preparation");
     expect(await dossierStatus(dossierId)).toBe("PREPARATION");
+    await designateConsentedTrustedContact(dossierId, trustedId, trustedEmail, ownerId, "owner");
 
     await requestActivation(dossierId, "2026-05-04");
 
@@ -43,6 +48,8 @@ test.describe("activation and its 48-hour grace period", () => {
     await runCronJob("process-dossier-activations");
 
     expect(await dossierStatus(dossierId)).toBe("ACTIVE");
+    expect(await membershipRole(dossierId, ownerId)).toBe("collaborator");
+    expect(await membershipRole(dossierId, trustedId)).toBe("owner");
   });
 
   test("an objection within the grace period stops the activation", async ({ page }) => {

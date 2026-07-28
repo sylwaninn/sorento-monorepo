@@ -91,19 +91,52 @@ export const requestActivation = async (dossierId: string, deathDate: string): P
   await response.body?.cancel();
 };
 
+export const designateConsentedTrustedContact = async (
+  dossierId: string,
+  trustedUserId: string,
+  trustedEmail: string,
+  invitedBy: string,
+  futureRole: "owner" | "collaborator",
+): Promise<void> => {
+  await rest("/rest/v1/memberships", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      dossier_id: dossierId,
+      user_id: trustedUserId,
+      role: "trusted_contact",
+      invited_by: invitedBy,
+    }),
+  });
+  await rest("/rest/v1/trusted_contact_designations", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      dossier_id: dossierId,
+      email: trustedEmail,
+      future_role: futureRole,
+      invited_by: invitedBy,
+      consented_by: trustedUserId,
+      consented_at: new Date().toISOString(),
+    }),
+  });
+};
+
 /**
  * Brings the activation deadline forward instead of waiting out the 48-hour grace period. The
  * freeze is a timestamp the job compares against now(), so moving it into the past puts the
  * dossier in the state it would reach on its own two days later.
  */
 export const expireActivationGrace = async (dossierId: string): Promise<void> => {
-  await fetch(`${SUPABASE_URL}/rest/v1/dossiers?id=eq.${dossierId}`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/dossiers?id=eq.${dossierId}`, {
     method: "PATCH",
     headers: { ...serviceHeaders, Prefer: "return=minimal" },
     body: JSON.stringify({
       pending_activation_effective_at: new Date(Date.now() - 60_000).toISOString(),
     }),
   });
+  if (!response.ok) throw new Error(`could not expire activation grace: ${response.status}`);
+  await response.body?.cancel();
 };
 
 /** Runs a cron-guarded job the way the scheduler does, with the shared secret. */
