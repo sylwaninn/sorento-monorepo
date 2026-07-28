@@ -58,6 +58,7 @@ const SUITE_TESTS = new Set([
   "packages/supabase-client/src/integration-tests/policy-snapshot.integration.test.ts",
   "packages/supabase-client/src/integration-tests/sql-mirrors.integration.test.ts",
   "packages/supabase-client/src/integration-tests/edge-functions.integration.test.ts",
+  "packages/supabase-client/src/integration-tests/jobs.integration.test.ts",
 ]);
 
 /** Where the suites live. Anything matching TEST_FILE outside these roots is unowned. */
