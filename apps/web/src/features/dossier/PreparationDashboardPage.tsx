@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQueries } from "@tanstack/react-query";
+import { canOpposeActivation } from "@sorento/core";
 import {
   Alert,
   AlertDialog,
@@ -97,7 +98,7 @@ export const PreparationDashboardPage = () => {
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
         <Typography.Heading level={1}>
-          {dossierContent.preparation.title} — {access.dossier?.subjectFirstName}{" "}
+          {dossierContent.preparation.title} · {access.dossier?.subjectFirstName}{" "}
           {access.dossier?.subjectLastName}
         </Typography.Heading>
         <RouterLink className="link text-sm" to="/mes-dossiers">
@@ -113,13 +114,13 @@ export const PreparationDashboardPage = () => {
         <ActivationPendingBanner
           dossierId={dossierId}
           effectiveAt={access.dossier.pendingActivationEffectiveAt}
-          canOppose={access.role !== null && access.role !== "trusted_contact"}
+          canOppose={canOpposeActivation(access.role)}
         />
       ) : null}
 
       <div className="flex flex-col gap-1">
         <Typography type="body-sm" color="muted">
-          {dossierContent.preparation.progressLabel} — {doneCount}/{blocks.length}
+          {dossierContent.preparation.progressLabel} · {doneCount}/{blocks.length}
         </Typography>
         <ProgressBar
           value={(doneCount / blocks.length) * 100}
