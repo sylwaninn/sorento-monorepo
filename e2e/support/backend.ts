@@ -1,0 +1,137 @@
+import { CRON_SECRET, SERVICE_ROLE_KEY, SUPABASE_URL } from "#e2e/support/env";
+
+/**
+ * The parts of a journey a browser cannot reach.
+ *
+ * Three of them, precisely: a confirmation email, a token that only exists inside one, and the
+ * passage of time. Everything else goes through the UI — a helper that created a dossier with
+ * service_role would be testing the fixture, not the app.
+ *
+ * Spoken to over plain HTTP rather than through @sorento/supabase-client. These journeys are a
+ * black box around the built application: linking them against the app's own packages would let
+ * a shared bug hide itself, and would make the suite need a workspace build before it can run.
+ */
+
+const serviceHeaders = {
+  apikey: SERVICE_ROLE_KEY,
+  Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+  "Content-Type": "application/json",
+} as const;
+
+const rest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+  const response = await fetch(`${SUPABASE_URL}${path}`, {
+    ...init,
+    headers: { ...serviceHeaders, ...init.headers },
+  });
+  if (!response.ok) {
+    throw new Error(`${init.method ?? "GET"} ${path} answered ${response.status}`);
+  }
+  return (await response.json()) as T;
+};
+
+/**
+ * Creates an already-confirmed account, standing in for the confirmation email.
+ *
+ * The signup screen offers a development shortcut for exactly this, but Vite strips it from a
+ * production build and these journeys run against the production build on purpose. So the
+ * account is provisioned here and the journey signs in through the real login screen.
+ */
+export const createConfirmedAccount = async (
+  email: string,
+  password: string,
+  firstName: string,
+): Promise<string> => {
+  const body = JSON.stringify({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { first_name: firstName },
+  });
+
+  // Workers create their accounts at the same moment and GoTrue rate-limits that, which shows up
+  // as a 500 with nothing wrong in the request. Retried with a growing pause rather than by
+  // serialising the whole suite, which would cost far more than the occasional second wasted.
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return (await rest<{ id: string }>("/auth/v1/admin/users", { method: "POST", body })).id;
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+    }
+  }
+  throw new Error(`could not create ${email}: ${String(lastError)}`);
+};
+
+/**
+ * Puts the dossier in the state a trusted contact's report leaves it in.
+ *
+ * The real path is a link sent by email, and local development sends none — the mailer skips
+ * silently without a provider key, so the token that link carries never exists anywhere a test
+ * could read it. This writes the same columns request-dossier-activation writes, and nothing
+ * else: the freeze the job later reads, and the death date it will apply.
+ */
+export const requestActivation = async (dossierId: string, deathDate: string): Promise<void> => {
+  const GRACE_HOURS = 48;
+  const requestedAt = new Date();
+  const effectiveAt = new Date(requestedAt.getTime() + GRACE_HOURS * 60 * 60 * 1000);
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/dossiers?id=eq.${dossierId}`, {
+    method: "PATCH",
+    headers: { ...serviceHeaders, Prefer: "return=minimal" },
+    body: JSON.stringify({
+      pending_activation_death_date: deathDate,
+      pending_activation_requested_at: requestedAt.toISOString(),
+      pending_activation_effective_at: effectiveAt.toISOString(),
+      pending_activation_opposed_at: null,
+      pending_activation_opposed_by: null,
+    }),
+  });
+  if (!response.ok) throw new Error(`could not open an activation: ${response.status}`);
+  await response.body?.cancel();
+};
+
+/**
+ * Brings the activation deadline forward instead of waiting out the 48-hour grace period. The
+ * freeze is a timestamp the job compares against now(), so moving it into the past puts the
+ * dossier in the state it would reach on its own two days later.
+ */
+export const expireActivationGrace = async (dossierId: string): Promise<void> => {
+  await fetch(`${SUPABASE_URL}/rest/v1/dossiers?id=eq.${dossierId}`, {
+    method: "PATCH",
+    headers: { ...serviceHeaders, Prefer: "return=minimal" },
+    body: JSON.stringify({
+      pending_activation_effective_at: new Date(Date.now() - 60_000).toISOString(),
+    }),
+  });
+};
+
+/** Runs a cron-guarded job the way the scheduler does, with the shared secret. */
+export const runCronJob = async (name: string): Promise<void> => {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: "POST",
+    headers: { ...serviceHeaders, "x-cron-secret": CRON_SECRET },
+    body: "{}",
+  });
+  if (!response.ok) throw new Error(`${name} answered ${response.status}`);
+  await response.body?.cancel();
+};
+
+export const dossierStatus = async (dossierId: string): Promise<string> => {
+  const rows = await rest<{ status: string }[]>(
+    `/rest/v1/dossiers?select=status&id=eq.${dossierId}`,
+  );
+  const row = rows[0];
+  if (!row) throw new Error(`dossier ${dossierId} not found`);
+  return row.status;
+};
+
+export const membershipRole = async (
+  dossierId: string,
+  userId: string,
+): Promise<string | undefined> => {
+  const rows = await rest<{ role: string }[]>(
+    `/rest/v1/memberships?select=role&dossier_id=eq.${dossierId}&user_id=eq.${userId}`,
+  );
+  return rows[0]?.role;
+};
