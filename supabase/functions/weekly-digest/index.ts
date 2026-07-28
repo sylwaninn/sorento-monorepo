@@ -1,8 +1,15 @@
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
 import { serviceClient, type EdgeSupabaseClient } from "@shared/supabase.ts";
-import { completionPercentage, isSettled } from "@sorento/core";
-import type { Tracking } from "@sorento/domain";
+import { completionPercentage } from "@sorento/core";
+
+interface TrackingDigestRow {
+  status: string;
+  updated_at: string;
+}
+
+const isSettled = (entry: TrackingDigestRow): boolean =>
+  entry.status === "done" || entry.status === "not_applicable";
 
 /**
  * Opt-in only (default off in resolve_notification_preference), and a progress summary
@@ -13,12 +20,12 @@ const digestFor = async (
   dossierId: string,
 ): Promise<{ percentage: number; completedThisWeek: number; remaining: number } | null> => {
   const { data } = await client.from("tracking").select().eq("dossier_id", dossierId);
-  const entries = (data ?? []) as Tracking[];
+  const entries = (data ?? []) as TrackingDigestRow[];
   if (entries.length === 0) return null;
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const completedThisWeek = entries.filter(
-    (entry) => isSettled(entry) && entry.updatedAt >= oneWeekAgo,
+    (entry) => isSettled(entry) && entry.updated_at >= oneWeekAgo,
   ).length;
 
   return {

@@ -1,8 +1,6 @@
-import { env } from "@shared/env.ts";
 import { internalError, json, parseBody, preflight } from "@shared/http.ts";
-import { sendEmail } from "@shared/mailer.ts";
 import { requestActivationPayloadSchema } from "@shared/schemas.ts";
-import { emailsByUserId, serviceClient } from "@shared/supabase.ts";
+import { serviceClient } from "@shared/supabase.ts";
 import { hashToken } from "@shared/token.ts";
 
 const GRACE_PERIOD_HOURS = 48;
@@ -53,7 +51,7 @@ Deno.serve(async (request) => {
     const requestedAt = new Date();
     const effectiveAt = new Date(requestedAt.getTime() + GRACE_PERIOD_HOURS * 60 * 60 * 1000);
 
-    const { error: updateError } = await service
+    const { data: updated, error: updateError } = await service
       .from("dossiers")
       .update({
         pending_activation_death_date: deathDate,
@@ -64,8 +62,14 @@ Deno.serve(async (request) => {
         pending_activation_opposed_at: null,
         pending_activation_opposed_by: null,
       })
-      .eq("id", designation.dossier_id);
+      .eq("id", designation.dossier_id)
+      .eq("status", "PREPARATION")
+      .is("pending_activation_effective_at", null)
+      .is("activation_frozen_at", null)
+      .select("id")
+      .maybeSingle();
     if (updateError) return json(request, { error: "update_failed" }, 500);
+    if (!updated) return json(request, { error: "activation_already_pending" }, 409);
 
     await service.from("activity_log").insert({
       dossier_id: designation.dossier_id,
@@ -82,11 +86,6 @@ Deno.serve(async (request) => {
       .eq("dossier_id", designation.dossier_id);
 
     const recipients = (members ?? []).filter((member) => member.role !== "trusted_contact");
-    const emails = await emailsByUserId(
-      service,
-      recipients.map((member) => member.user_id),
-    );
-    const opposeUrl = `${env.siteUrl}/dossiers/${designation.dossier_id}`;
 
     await Promise.all(
       recipients.map(async (member) => {
@@ -97,17 +96,6 @@ Deno.serve(async (request) => {
           p_type: "dossier_activated",
           p_target_id: null,
           p_payload: { phase: "pending", effectiveAt: effectiveAt.toISOString() },
-        });
-
-        const email = emails.get(member.user_id);
-        if (!email) return;
-
-        await sendEmail(email, {
-          subject: "Activation d'un dossier en cours",
-          bodyHtml: `<p>Le contact de confiance a signalé un décès pour le dossier de ${dossier.subject_first_name} ${dossier.subject_last_name}.</p>
-           <p>Sauf opposition de votre part, l'activation sera effective dans 48 heures.</p>
-           <p><a href="${opposeUrl}">Voir le dossier / signaler un problème</a></p>`,
-          unsubscribeType: "dossier_activated",
         });
       }),
     );

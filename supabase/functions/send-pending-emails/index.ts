@@ -36,7 +36,15 @@ interface PendingNotification {
   user_id: string;
   dossier_id: string | null;
   type: string;
-  payload: ({ deadlines?: ReminderItem[]; waiting?: ReminderItem[] } & DigestPayload) | null;
+  payload:
+    | ({
+        deadlines?: ReminderItem[];
+        waiting?: ReminderItem[];
+        emailDeadlines?: ReminderItem[];
+        emailWaiting?: ReminderItem[];
+        phase?: string;
+      } & DigestPayload)
+    | null;
 }
 
 const isReminder = (type: string): boolean =>
@@ -98,6 +106,22 @@ const digestContent = (payload: DigestPayload): EmailContent => ({
   unsubscribeType: "weekly_digest",
 });
 
+const activationContent = (phase: string | undefined): EmailContent => {
+  if (phase === "pending") {
+    return {
+      subject: "Activation d'un dossier en cours",
+      bodyHtml:
+        "<p>Le contact de confiance a signalé un décès. Sauf opposition, l'activation sera effective dans 48 heures.</p>",
+      unsubscribeType: "dossier_activated",
+    };
+  }
+  return {
+    subject: "Dossier activé",
+    bodyHtml: "<p>Le dossier est maintenant actif.</p>",
+    unsubscribeType: "dossier_activated",
+  };
+};
+
 Deno.serve(async (request) => {
   const preflightResponse = preflight(request);
   if (preflightResponse) return preflightResponse;
@@ -141,8 +165,14 @@ Deno.serve(async (request) => {
       let content: EmailContent;
       if (isReminder(notification.type)) {
         const [deadlines, waiting] = await Promise.all([
-          stillOpen(client, notification.payload?.deadlines ?? []),
-          stillOpen(client, notification.payload?.waiting ?? []),
+          stillOpen(
+            client,
+            notification.payload?.emailDeadlines ?? notification.payload?.deadlines ?? [],
+          ),
+          stillOpen(
+            client,
+            notification.payload?.emailWaiting ?? notification.payload?.waiting ?? [],
+          ),
         ]);
 
         if (deadlines.length === 0 && waiting.length === 0) {
@@ -156,6 +186,8 @@ Deno.serve(async (request) => {
         content = reminderContent(deadlines, waiting, notification.type);
       } else if (notification.type === "weekly_digest") {
         content = digestContent(notification.payload ?? {});
+      } else if (notification.type === "dossier_activated") {
+        content = activationContent(notification.payload?.phase);
       } else {
         const subject = SUBJECTS[notification.type] ?? "Nouvelle notification";
         content = { subject, bodyHtml: `<p>${subject}.</p>`, unsubscribeType: notification.type };

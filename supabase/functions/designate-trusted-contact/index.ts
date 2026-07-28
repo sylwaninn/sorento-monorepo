@@ -38,6 +38,16 @@ Deno.serve(async (request) => {
     if (dossier?.status !== "PREPARATION")
       return json(request, { error: "dossier_not_in_preparation" }, 409);
 
+    const { data: currentDesignation } = await service
+      .from("trusted_contact_designations")
+      .select("id")
+      .eq("dossier_id", dossierId)
+      .is("revoked_at", null)
+      .maybeSingle();
+    if (currentDesignation) {
+      return json(request, { error: "trusted_contact_already_designated" }, 409);
+    }
+
     const consentToken = generateToken();
     const consentTokenHash = await hashToken(consentToken);
     const consentExpiresAt = new Date(
@@ -56,6 +66,9 @@ Deno.serve(async (request) => {
       })
       .select("id")
       .single();
+    if (insertError?.code === "23505") {
+      return json(request, { error: "trusted_contact_already_designated" }, 409);
+    }
     if (insertError || !designation) return json(request, { error: "insert_failed" }, 500);
 
     const consentUrl = `${env.siteUrl}/contact-confiance/confirmer?token=${consentToken}`;
@@ -70,7 +83,7 @@ Deno.serve(async (request) => {
        <p style="font-size:12px;color:#666">Ce lien expire dans 48 heures.</p>`,
     });
 
-    return json(request, { designationId: designation.id }, 200);
+    return json(request, { designationId: designation.id, consentUrl }, 200);
   } catch (error) {
     return internalError(request, "designate-trusted-contact", error);
   }

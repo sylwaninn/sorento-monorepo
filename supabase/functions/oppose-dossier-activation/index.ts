@@ -41,7 +41,7 @@ Deno.serve(async (request) => {
 
     // Cancel the pending activation and freeze the dossier: a new attempt is refused until
     // support releases the freeze, so the objection actually holds.
-    await service
+    const { data: opposed, error: opposeError } = await service
       .from("dossiers")
       .update({
         pending_activation_death_date: null,
@@ -54,7 +54,12 @@ Deno.serve(async (request) => {
         activation_frozen_at: opposedAt,
         activation_frozen_reason: reason ?? null,
       })
-      .eq("id", dossierId);
+      .eq("id", dossierId)
+      .not("pending_activation_effective_at", "is", null)
+      .select("id")
+      .maybeSingle();
+    if (opposeError) return json(request, { error: "update_failed" }, 500);
+    if (!opposed) return json(request, { error: "no_pending_activation" }, 409);
 
     await service.from("activity_log").insert({
       dossier_id: dossierId,

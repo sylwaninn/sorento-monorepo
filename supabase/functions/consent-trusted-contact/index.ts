@@ -72,7 +72,7 @@ Deno.serve(async (request) => {
 
     // The consent token is burned here: consented_at is what makes the lookup above fail on
     // a replay.
-    await service
+    const { error: consentError } = await service
       .from("trusted_contact_designations")
       .update({
         consented_at: new Date().toISOString(),
@@ -82,6 +82,7 @@ Deno.serve(async (request) => {
         activation_expires_at: activationExpiresAt,
       })
       .eq("id", designation.id);
+    if (consentError) return json(request, { error: "consent_failed" }, 500);
 
     const activationUrl = `${env.siteUrl}/contact-confiance/activer?token=${activationToken}`;
     if (user.email) {
@@ -93,7 +94,7 @@ Deno.serve(async (request) => {
       });
     }
 
-    return json(request, { dossierId: designation.dossier_id }, 200);
+    return json(request, { dossierId: designation.dossier_id, activationUrl }, 200);
   } catch (error) {
     return internalError(request, "consent-trusted-contact", error);
   }

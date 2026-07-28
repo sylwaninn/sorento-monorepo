@@ -23,12 +23,18 @@ interface ReminderGroup {
   waiting: ReminderItem[];
 }
 
+interface CatalogRow {
+  title: string;
+  delay_days: number | null;
+  time_window: string;
+}
+
 interface TrackingRow {
   id: string;
   status: string;
   assigned_to: string | null;
   updated_at: string;
-  procedures: { title: string; delay_days: number | null; time_window: string } | null;
+  catalog: CatalogRow | null;
 }
 
 const emptyGroup = (): ReminderGroup => ({ deadlines: [], waiting: [] });
@@ -44,8 +50,8 @@ const collectByRecipient = (
   const groups = new Map<string, ReminderGroup>();
 
   for (const row of rows) {
-    const procedure = row.procedures;
-    if (!procedure) continue;
+    const catalog = row.catalog;
+    if (!catalog) continue;
 
     // The assignee owns the reminder; an unassigned procedure falls back to the owner.
     const recipient = row.assigned_to ?? ownerId;
@@ -56,17 +62,17 @@ const collectByRecipient = (
 
     const dueDate = calculateDueDate(
       {
-        delayDays: procedure.delay_days,
-        timeWindow: procedure.time_window as "24h" | "7d" | "30d" | "6m",
+        delayDays: catalog.delay_days,
+        timeWindow: catalog.time_window as "24h" | "7d" | "30d" | "6m",
       },
       deathDate,
     );
     if (daysBetween(dueDate, approachingCutoff) >= 0) {
-      group.deadlines.push({ trackingId: row.id, title: procedure.title });
+      group.deadlines.push({ trackingId: row.id, title: catalog.title });
     }
 
     if (row.status === "waiting" && toCalendarDate(new Date(row.updated_at)) <= staleBefore) {
-      group.waiting.push({ trackingId: row.id, title: procedure.title });
+      group.waiting.push({ trackingId: row.id, title: catalog.title });
     }
   }
 
@@ -119,9 +125,10 @@ Deno.serve(async (request) => {
       const [{ data: tracking }, { data: owner }] = await Promise.all([
         client
           .from("tracking")
-          .select("id, status, assigned_to, updated_at, procedures(title, delay_days, time_window)")
+          .select(
+            "id, status, assigned_to, updated_at, procedures(title, delay_days, time_window), benefits(title, time_window)",
+          )
           .eq("dossier_id", dossier.id)
-          .not("procedure_id", "is", null)
           .not("status", "in", `(${SETTLED_STATUSES.join(",")})`),
         client
           .from("memberships")
@@ -131,10 +138,19 @@ Deno.serve(async (request) => {
           .maybeSingle(),
       ]);
 
-      const rows = (tracking ?? []).map((row): TrackingRow => ({
-        ...row,
-        procedures: Array.isArray(row.procedures) ? (row.procedures[0] ?? null) : row.procedures,
-      })) as TrackingRow[];
+      const rows = (tracking ?? []).map((row): TrackingRow => {
+        const procedure = Array.isArray(row.procedures)
+          ? (row.procedures[0] ?? null)
+          : row.procedures;
+        const benefit = Array.isArray(row.benefits) ? (row.benefits[0] ?? null) : row.benefits;
+        return {
+          id: row.id,
+          status: row.status,
+          assigned_to: row.assigned_to,
+          updated_at: row.updated_at,
+          catalog: procedure ?? (benefit ? { ...benefit, delay_days: null } : null),
+        };
+      });
 
       const groups = collectByRecipient(rows, owner?.user_id, deathDate, today);
 
@@ -148,6 +164,8 @@ Deno.serve(async (request) => {
           deadlinePreference.p_in_app || deadlinePreference.p_email ? group.deadlines : [];
         const waiting =
           waitingPreference.p_in_app || waitingPreference.p_email ? group.waiting : [];
+        const emailDeadlines = deadlinePreference.p_email ? group.deadlines : [];
+        const emailWaiting = waitingPreference.p_email ? group.waiting : [];
         if (deadlines.length === 0 && waiting.length === 0) continue;
 
         // One row per dossier per recipient per day, carrying both lists: the anti-noise cap
@@ -162,16 +180,14 @@ Deno.serve(async (request) => {
           .maybeSingle();
         if (alreadyToday) continue;
 
-        const wantsEmail =
-          (deadlines.length > 0 && deadlinePreference.p_email) ||
-          (waiting.length > 0 && waitingPreference.p_email);
+        const wantsEmail = emailDeadlines.length > 0 || emailWaiting.length > 0;
 
         await client.from("notifications").insert({
           user_id: recipientId,
           dossier_id: dossier.id,
           type: deadlines.length > 0 ? "deadline_approaching" : "prolonged_waiting",
           target_id: null,
-          payload: { deadlines, waiting },
+          payload: { deadlines, waiting, emailDeadlines, emailWaiting },
           email_status: wantsEmail ? "pending" : "not_applicable",
         });
 
