@@ -27,6 +27,8 @@ that existed at the time.
 
 Ordered by how close they run to production. Each answers a question the ones above it cannot.
 
+The journeys cover every screen the route table declares, driven the way a person drives them.
+
 | Layer             | Where                                            | Runs with               | Answers                                               |
 | ----------------- | ------------------------------------------------ | ----------------------- | ----------------------------------------------------- |
 | Unit, rules       | `packages/core`                                  | `pnpm test`             | does the rule compute the right thing?                |
@@ -61,7 +63,21 @@ Ordered by how close they run to production. Each answers a question the ones ab
   machine: the local stack has no provider key, so a send is observable only as delivery
   bookkeeping.
 - **Journeys** are a black box. They import none of the app's packages and speak HTTP to the
-  running stack, so a bug shared with the app cannot hide itself.
+  running stack, so a bug shared with the app cannot hide itself. They also open the mailbox:
+  signing up, resetting a password and asking for a magic link all end with a person leaving the
+  browser, and a journey stopping at "the screen said an email was sent" proves the screen rather
+  than the flow.
+
+### A journey that records a defect instead of hiding it
+
+Five journeys are marked `test.fail()`. Each asserts what a person is entitled to expect, meets a
+real defect, and says so in a comment naming why the fix is a separate change: French email
+templates, re-evaluating a journey after its answers are corrected, guides that were never
+written, and the missing `main` landmark.
+
+The marker is not a `skip`. Playwright fails the run the moment one of them starts passing, so the
+annotation cannot outlive the defect it records, and the assertion is never weakened to match what
+the code happens to do.
 
 ## Keeping the suites honest
 

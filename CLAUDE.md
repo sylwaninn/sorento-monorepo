@@ -96,7 +96,15 @@ keep the packages reusable.
 - Generated letters are templates for the user to review and sign.
 - Components displaying a piece of catalog data require source_url,
   last_verified_date and caution_text as non-optional props.
-- Deletions: soft delete + 30-day bin. Never a direct hard delete.
+- Deletions of content a person can regret losing (dossiers, comments,
+  documents): soft delete + 30-day bin, purged by purge_soft_deleted().
+  Never a direct hard delete.
+- Closing an account is the exception, and it is an erasure, not a bin:
+  someone asking to be forgotten is not asking to be kept for thirty days.
+  profiles has no deleted_at on purpose. The shared history other members
+  rely on survives because the foreign keys null out, so a dossier keeps its
+  comments and its trace without naming whoever left. Deletion is refused
+  while the person still owns a dossier, which would otherwise be orphaned.
 - Emails: sober, no name of the deceased in the subject, one-click unsubscribe.
 - UI never guilt-inducing: no aggressive red on overdue items, no overdue
   counter, at most 2-3 "to do now" items highlighted.
