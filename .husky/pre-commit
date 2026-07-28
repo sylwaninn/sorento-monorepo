@@ -1,0 +1,16 @@
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact -v
+else
+  echo "gitleaks is not installed — install it (brew install gitleaks) for the pre-commit secret scan." >&2
+  exit 1
+fi
+
+pnpm exec lint-staged
+
+# Structural audit of the suites: an orphan test left behind by a deleted module, a module
+# shipped without one, a `.only` that would silently skip a file. Reads the file tree and runs
+# nothing, so it costs milliseconds and belongs here rather than at push time, by which point
+# the mistake is already committed.
+pnpm check:tests
+
+pnpm typecheck
