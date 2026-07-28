@@ -164,9 +164,12 @@ const functionNames = readdirSync(join(ROOT, "supabase/functions"), { withFileTy
  * comment, or in the prose explaining why some other function behaves as it does, would
  * otherwise count as covered and the rule would pass for a function no case ever calls.
  */
-const tabledFunctions = new Set(
+const tabledFunctions = new Map(
   exists(EDGE_FUNCTION_TABLE)
-    ? Array.from(read(EDGE_FUNCTION_TABLE).matchAll(/\bname:\s*"([^"]+)"/g), (match) => match[1])
+    ? Array.from(
+        read(EDGE_FUNCTION_TABLE).matchAll(/\bname:\s*"([^"]+)",\s*guard:\s*"([^"]+)"/g),
+        (match) => [match[1], match[2]],
+      )
     : [],
 );
 
@@ -175,17 +178,60 @@ for (const name of functionNames) {
     fail(
       "untested-edge-function",
       `supabase/functions/${name}/index.ts`,
-      `runs with service_role and the table in ${EDGE_FUNCTION_TABLE} does not name it. Add a case with the guard it uses.`,
+      `runs with service_role and the table in ${EDGE_FUNCTION_TABLE} does not name it with a guard. Add a case.`,
     );
   }
 }
 
-for (const name of tabledFunctions) {
+for (const name of tabledFunctions.keys()) {
   if (!exists(`supabase/functions/${name}`)) {
     fail(
       "phantom-edge-function",
-      `${EDGE_FUNCTION_TABLE}`,
+      EDGE_FUNCTION_TABLE,
       `the table names "${name}", which no longer exists under supabase/functions. A case against a deleted endpoint asserts nothing.`,
+    );
+  }
+}
+
+/**
+ * The guard each function is tested under is stated twice: as a tag in the suite's table, and as
+ * `verify_jwt` in supabase/config.toml, which is what the gateway actually enforces. Only one of
+ * the two is real, and they fail in opposite directions when they disagree. A function tested as
+ * jwt-guarded but deployed with `verify_jwt = false` is an endpoint whose guard nobody enforces;
+ * one tested as token-guarded but deployed with `verify_jwt = true` is unreachable by the
+ * anonymous caller its whole design assumes, and its refusal tests keep passing because the
+ * gateway is the one refusing.
+ *
+ * A function missing from config.toml entirely is the same bug with a default in front of it.
+ */
+const CONFIG = "supabase/config.toml";
+
+const declaredVerifyJwt = new Map(
+  exists(CONFIG)
+    ? Array.from(
+        read(CONFIG).matchAll(/^\[functions\.([^\]]+)\]$([\s\S]*?)(?=^\[|\Z)/gm),
+        (match) => [match[1], /^verify_jwt\s*=\s*(true|false)/m.exec(match[2])?.[1]],
+      )
+    : [],
+);
+
+for (const [name, guard] of tabledFunctions) {
+  const declared = declaredVerifyJwt.get(name);
+  if (declared === undefined) {
+    fail(
+      "undeclared-edge-function",
+      CONFIG,
+      `has no [functions.${name}] block, so the gateway falls back to its default rather than to a decision. Declare it.`,
+    );
+    continue;
+  }
+
+  const expected = guard === "jwt" ? "true" : "false";
+  if (declared !== expected) {
+    fail(
+      "guard-disagreement",
+      CONFIG,
+      `[functions.${name}] sets verify_jwt = ${declared}, and the suite tests it as "${guard}", which implies ${expected}. One of the two is wrong about who may reach this endpoint.`,
     );
   }
 }
