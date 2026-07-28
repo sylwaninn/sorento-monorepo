@@ -25,6 +25,12 @@ const LCOV_FILES = [
   "packages/domain/coverage/lcov.info",
   "packages/supabase-client/coverage/lcov.info",
   "apps/web/coverage/lcov.info",
+  // Produced by `pnpm test:functions`, which runs under Deno rather than vitest. Without it the
+  // shared code every Edge Function executes before anything else would be the one layer running
+  // as service_role and facing no coverage gate at all. It is written beside supabase/functions
+  // rather than inside it because two scripts read that directory's entries as the list of
+  // deployed endpoints, and a coverage folder there reads as a fourteenth function.
+  "supabase/coverage/lcov.info",
 ];
 
 /**
@@ -33,7 +39,10 @@ const LCOV_FILES = [
  * suites run outside vitest — or holds no behaviour to cover.
  */
 const NOT_MEASURED = [
-  /^supabase\//,
+  // Everything under supabase/ except the shared Edge Function code, which now reports lcov of
+  // its own. The handlers themselves stay out: they are covered by the HTTP integration suite,
+  // which runs them in the Edge runtime and reports no coverage from there.
+  /^supabase\/(?!functions\/_shared\/)/,
   /^e2e\//,
   /^scripts\//,
   /^packages\/config\//,
