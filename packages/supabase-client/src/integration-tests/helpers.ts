@@ -8,6 +8,8 @@ import {
   LOCAL_SERVICE_ROLE_KEY,
   LOCAL_SUPABASE_URL,
 } from "#client/integration-tests/env";
+import type { Dossier } from "@sorento/domain";
+import { DossierRepository } from "#client/repositories/dossier-repository";
 
 export const serviceRoleClient = (): TypedSupabaseClient =>
   createServiceRoleSupabaseClient(LOCAL_SUPABASE_URL, LOCAL_SERVICE_ROLE_KEY);
@@ -59,6 +61,20 @@ export const createTestUser = async (firstName: string): Promise<TestUser> => {
   }
 
   return { id: data.user.id, email, client };
+};
+
+export const createActiveTestDossier = async (
+  owner: TestUser,
+  subjectFirstName: string,
+  subjectLastName: string,
+): Promise<Dossier> => {
+  const repository = new DossierRepository(owner.client);
+  const dossier = await repository.create({
+    subjectFirstName,
+    subjectLastName,
+    status: "PREPARATION",
+  });
+  return repository.activate(dossier.id, "2026-01-15");
 };
 
 // A seeded catalog procedure, used as a tracking target in tests.

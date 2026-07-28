@@ -10,6 +10,7 @@ import { TrackingRepository } from "#client/repositories/tracking-repository";
 import { TrustedContactRepository } from "#client/repositories/trusted-contact-repository";
 import {
   anonClient,
+  createActiveTestDossier,
   createTestUser,
   fetchAProcedureId,
   must,
@@ -70,11 +71,7 @@ describe("RLS — a viewer cannot change a status", () => {
     owner = await createTestUser("Owner");
     viewer = await createTestUser("Viewer");
 
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Mary",
-      subjectLastName: "Smith",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Mary", "Smith");
     dossierId = dossier.id;
 
     await new MembershipRepository(owner.client).addMember(
@@ -224,11 +221,7 @@ describe("RLS — a procedure can never be assigned to a viewer", () => {
     owner = await createTestUser("Owner3");
     viewer = await createTestUser("Viewer2");
 
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Luke",
-      subjectLastName: "Robert",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Luke", "Robert");
     dossierId = dossier.id;
 
     await new MembershipRepository(owner.client).addMember(
@@ -264,11 +257,7 @@ describe("RLS — removing a member unassigns their tracking and logs the event"
     owner = await createTestUser("Owner4");
     collaborator = await createTestUser("Collab2");
 
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Nina",
-      subjectLastName: "Bernard",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Nina", "Bernard");
     dossierId = dossier.id;
 
     const membership = await new MembershipRepository(owner.client).addMember(

@@ -1,10 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { AccountRepository } from "#client/repositories/account-repository";
+import { AnswerRepository } from "#client/repositories/answer-repository";
 import { CommentRepository } from "#client/repositories/comment-repository";
 import { DossierRepository } from "#client/repositories/dossier-repository";
 import { MembershipRepository } from "#client/repositories/membership-repository";
 import { TrackingRepository } from "#client/repositories/tracking-repository";
+import { query } from "#client/integration-tests/database";
 import {
+  createActiveTestDossier,
   createTestUser,
   fetchAProcedureId,
   must,
@@ -34,11 +37,7 @@ describe("RLS — the activity log cannot be written by a client", () => {
   beforeAll(async () => {
     owner = await createTestUser("Olivia");
     collaborator = await createTestUser("Colin");
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Jean",
-      subjectLastName: "Durand",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Jean", "Durand");
     dossierId = dossier.id;
     await addCollaborator(dossierId, collaborator);
   });
@@ -82,11 +81,7 @@ describe("RLS — a soft-deleted dossier revokes access to its content", () => {
 
   beforeAll(async () => {
     owner = await createTestUser("Oscar");
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Marie",
-      subjectLastName: "Petit",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Marie", "Petit");
     dossierId = dossier.id;
     await new TrackingRepository(owner.client).createForProcedure(
       dossierId,
@@ -148,11 +143,7 @@ describe("RLS — notifications are strictly personal", () => {
   it("a member never reads another member's notifications", async () => {
     const owner = await createTestUser("Noa");
     const other = await createTestUser("Nina");
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Luc",
-      subjectLastName: "Bernard",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Luc", "Bernard");
     await addCollaborator(dossier.id, other);
 
     await serviceRoleClient().from("notifications").insert({
@@ -187,11 +178,7 @@ describe("RLS — comment deletion follows the matrix", () => {
   beforeAll(async () => {
     owner = await createTestUser("Ophélie");
     viewer = await createTestUser("Victor");
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Anne",
-      subjectLastName: "Leroy",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Anne", "Leroy");
     dossierId = dossier.id;
     await serviceRoleClient()
       .from("memberships")
@@ -268,11 +255,7 @@ describe("account deletion", () => {
   it("goes through once no dossier is owned, and keeps the thread readable", async () => {
     const owner = await createTestUser("Théo");
     const leaver = await createTestUser("Léa");
-    const dossier = await new DossierRepository(owner.client).create({
-      subjectFirstName: "Sophie",
-      subjectLastName: "Roux",
-      status: "ACTIVE",
-    });
+    const dossier = await createActiveTestDossier(owner, "Sophie", "Roux");
     await addCollaborator(dossier.id, leaver);
 
     const comment = await new CommentRepository(leaver.client).create(
@@ -291,5 +274,165 @@ describe("account deletion", () => {
     expect(data?.author_id).toBeNull();
     expect(data?.content).toBe("");
     expect(data?.deleted_at).not.toBeNull();
+  });
+});
+
+describe("database authorization invariants", () => {
+  it("does not expose server-only security-definer functions to API roles", async () => {
+    const functions = [
+      "create_notification",
+      "invoke_edge_function",
+      "log_activity",
+      "purge_soft_deleted",
+      "resolve_notification_preference",
+    ];
+    const rows = await query<{ function_name: string; role_name: string; allowed: boolean }>(
+      `select p.proname as function_name,
+              r.rolname as role_name,
+              has_function_privilege(r.oid, p.oid, 'EXECUTE') as allowed
+         from pg_proc p
+         join pg_namespace n on n.oid = p.pronamespace
+        cross join pg_roles r
+        where n.nspname = 'public'
+          and p.proname = any($1::text[])
+          and r.rolname in ('anon', 'authenticated')
+        order by p.proname, r.rolname`,
+      [functions],
+    );
+
+    expect(rows).toHaveLength(functions.length * 2);
+    expect(rows.every((row) => row.allowed === false)).toBe(true);
+  });
+
+  it("prevents a user from promoting their own profile to admin", async () => {
+    const user = await createTestUser("Regular");
+    const { error } = await user.client
+      .from("profiles")
+      .update({ role: "admin" })
+      .eq("id", user.id);
+    expect(error).not.toBeNull();
+
+    const { data } = await serviceRoleClient()
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    expect(data?.role).toBe("user");
+  });
+
+  it("prevents the sole owner from deleting or demoting their membership", async () => {
+    const owner = await createTestUser("Owner invariant");
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Claire",
+      subjectLastName: "Martin",
+      status: "PREPARATION",
+    });
+
+    const { data: membership } = await owner.client
+      .from("memberships")
+      .select("id")
+      .eq("dossier_id", dossier.id)
+      .eq("user_id", owner.id)
+      .single();
+    const membershipId = must(membership, "owner membership").id;
+
+    const { error: demoteError } = await owner.client
+      .from("memberships")
+      .update({ role: "collaborator" })
+      .eq("id", membershipId);
+    const { error: deleteError } = await owner.client
+      .from("memberships")
+      .delete()
+      .eq("id", membershipId);
+
+    expect(demoteError).not.toBeNull();
+    expect(deleteError).not.toBeNull();
+  });
+
+  it("rejects mentions of people who are not active dossier members", async () => {
+    const owner = await createTestUser("Mention owner");
+    const outsider = await createTestUser("Mention outsider");
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Élise",
+      subjectLastName: "Robert",
+      status: "PREPARATION",
+    });
+
+    await expect(
+      new CommentRepository(owner.client).create(
+        {
+          dossierId: dossier.id,
+          procedureId: null,
+          content: "Ce message ne doit pas sortir du dossier.",
+          mentions: [outsider.id],
+        },
+        owner.id,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("removes answers that disappeared after a diagnostic branch changed", async () => {
+    const owner = await createTestUser("Branch owner");
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Marc",
+      subjectLastName: "Faure",
+      status: "PREPARATION",
+    });
+    const answers = new AnswerRepository(owner.client);
+
+    await answers.save(dossier.id, {
+      maritalStatus: "married",
+      survivingSpouseAge: 64,
+    });
+    await answers.save(dossier.id, { maritalStatus: "single" });
+
+    const persisted = await answers.listForDossier(dossier.id);
+    expect(persisted.map((answer) => answer.key)).toEqual(["maritalStatus"]);
+  });
+
+  it("promotes a consented trusted contact atomically when the dossier activates", async () => {
+    const owner = await createTestUser("Activation owner");
+    const trusted = await createTestUser("Activation trusted");
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Lucie",
+      subjectLastName: "Mercier",
+      status: "PREPARATION",
+    });
+    const service = serviceRoleClient();
+
+    await service.from("memberships").insert({
+      dossier_id: dossier.id,
+      user_id: trusted.id,
+      role: "trusted_contact",
+      invited_by: owner.id,
+    });
+    await service.from("trusted_contact_designations").insert({
+      dossier_id: dossier.id,
+      email: trusted.email,
+      future_role: "owner",
+      invited_by: owner.id,
+      consented_by: trusted.id,
+      consented_at: new Date().toISOString(),
+    });
+
+    await new DossierRepository(owner.client).activate(dossier.id, "2026-01-15");
+
+    const { data: memberships } = await service
+      .from("memberships")
+      .select("user_id, role")
+      .eq("dossier_id", dossier.id);
+    expect(memberships).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ user_id: owner.id, role: "collaborator" }),
+        expect.objectContaining({ user_id: trusted.id, role: "owner" }),
+      ]),
+    );
+
+    const { count } = await service
+      .from("activity_log")
+      .select("id", { count: "exact", head: true })
+      .eq("dossier_id", dossier.id)
+      .eq("action_type", "dossier_activated");
+    expect(count).toBe(1);
   });
 });
