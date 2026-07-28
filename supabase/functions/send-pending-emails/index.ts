@@ -1,5 +1,6 @@
 import { env } from "@shared/env.ts";
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
+import { escapeHtml } from "@shared/html.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
 import { sendEmail, type EmailContent } from "@shared/mailer.ts";
 import { emailsByUserId, serviceClient, type EdgeSupabaseClient } from "@shared/supabase.ts";
@@ -88,7 +89,9 @@ const reminderContent = (
   if (waiting.length > 0) parts.push(pluralize(waiting.length, "démarche en attente"));
 
   const list = (label: string, items: ReminderItem[]): string =>
-    items.length === 0 ? "" : `<p>${label} : ${items.map((item) => item.title).join(", ")}.</p>`;
+    items.length === 0
+      ? ""
+      : `<p>${label} : ${items.map((item) => escapeHtml(item.title)).join(", ")}.</p>`;
 
   return {
     // No deceased name in the subject.
