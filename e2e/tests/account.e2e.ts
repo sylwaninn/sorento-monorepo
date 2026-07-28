@@ -76,11 +76,11 @@ test.describe("creating an account", () => {
 
   test("the confirmation email is one a bereaved French reader can act on", async ({ page }) => {
     // Known defect, deliberately recorded rather than deleted. supabase/config.toml declares no
-    // [auth.email.template.*], so GoTrue sends its stock template: "Confirm Your Email", from
-    // "Admin", in English. That is the first message this service ever sends someone, and the one
-    // that decides whether they can get in at all. Writing the French templates is its own change,
-    // with its own copy review. Playwright fails this run the day it starts passing, so the marker
-    // cannot outlive the defect.
+    // [auth.email.template.*] and no sender, so GoTrue sends its stock template from
+    // "Admin <admin@email.com>", in English. That is the first message this service ever sends
+    // someone, and the one that decides whether they can get in at all. Writing the French
+    // templates is its own change, with its own copy review. Playwright fails this run the day it
+    // starts passing, so the marker cannot outlive the defect.
     test.fail();
     const email = uniqueEmail("sober");
 
@@ -90,18 +90,22 @@ test.describe("creating an account", () => {
     await signUpThroughTheForm(page, email, TEST_PASSWORD);
     await expect(page).toHaveURL(/\/verification-email$/);
 
-    const { subject, body } = await waitForEmail(email);
+    const { subject, body, from } = await waitForEmail(email);
 
     // CLAUDE.md, "Emails: sober, no name of the deceased in the subject". The person has just
     // typed that name into the diagnostic, so this is the moment it could leak into an inbox
     // other people read over a shoulder.
     expect(subject).not.toContain(DIAGNOSTIC_SUBJECT_NAME);
 
-    // The whole product is written in French for people in no state to translate anything. The
-    // first message the service ever sends them is the one that decides whether they get in at
-    // all, so it cannot be GoTrue's stock English template left unconfigured.
-    expect(subject).not.toContain("Confirm Your Email");
-    expect(body).not.toContain("Follow this link to confirm your email");
+    // Asserted as properties of the message rather than against GoTrue's stock wording: the
+    // wording is a dependency's default, it changes between CLI versions, and an assertion
+    // naming one of them passes on the version that phrases it differently while the mail stays
+    // just as English. This test did exactly that, green in CI and red locally.
+    //
+    // What a person is owed is that the mail says who wrote to them, and does so from the
+    // service rather than from an unconfigured stack.
+    expect(from).not.toContain("admin@email.com");
+    expect(`${subject} ${body}`).toContain("Sorento");
   });
 
   test("a password the rules refuse does not create an account", async ({ page }) => {

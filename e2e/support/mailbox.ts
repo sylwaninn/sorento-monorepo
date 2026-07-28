@@ -13,10 +13,16 @@ import { APP_URL, MAILPIT_URL } from "#e2e/support/env";
  * what a person would click.
  */
 
+interface MailpitAddress {
+  Name: string;
+  Address: string;
+}
+
 interface MailpitSummary {
   ID: string;
   Subject: string;
   Created: string;
+  From: MailpitAddress | null;
 }
 
 const inboxOf = async (address: string): Promise<MailpitSummary[]> => {
@@ -48,13 +54,26 @@ const until = async <T>(what: string, read: () => Promise<T | null>): Promise<T>
   }
 };
 
+export interface ReceivedEmail {
+  subject: string;
+  body: string;
+  /** Who it says it is from, which is the first thing a recipient reads and the last thing a
+   * default configuration gets right. */
+  from: string;
+}
+
 /** The most recent message sent to an address, whatever it is about. */
-export const waitForEmail = async (address: string): Promise<{ subject: string; body: string }> => {
+export const waitForEmail = async (address: string): Promise<ReceivedEmail> => {
   const summary = await until(`an email to ${address}`, async () => {
     const messages = await inboxOf(address);
     return messages[0] ?? null;
   });
-  return { subject: summary.Subject, body: await bodyOf(summary.ID) };
+  const from = summary.From;
+  return {
+    subject: summary.Subject,
+    body: await bodyOf(summary.ID),
+    from: from === null ? "" : `${from.Name} <${from.Address}>`,
+  };
 };
 
 /**
