@@ -53,8 +53,17 @@ describe("conditionExpressionSchema", () => {
  * benefit nobody is ever told about.
  */
 describe("comparison operators", () => {
-  it.each(["eq", "neq", "gt", "gte", "lt", "lte", "in", "contains"])("accepts %s", (operator) => {
-    expect(conditionExpressionSchema.safeParse(comparison({ operator })).success).toBe(true);
+  it.each([
+    ["eq", "married"],
+    ["neq", true],
+    ["gt", 55],
+    ["gte", 55],
+    ["lt", 55],
+    ["lte", 55],
+    ["in", ["employee", "selfEmployed"]],
+    ["contains", "employee"],
+  ])("accepts %s with its supported value type", (operator, value) => {
+    expect(conditionExpressionSchema.safeParse(comparison({ operator, value })).success).toBe(true);
   });
 
   it("rejects an operator the engine cannot evaluate", () => {
@@ -74,15 +83,31 @@ describe("comparison values", () => {
     ["text", "married"],
     ["a number", 55],
     ["a boolean", true],
-    ["a list of choices", ["employee", "selfEmployed"]],
   ])("accepts %s", (_label, value) => {
     expect(conditionExpressionSchema.safeParse(comparison({ value })).success).toBe(true);
+  });
+
+  it("accepts a list of choices for membership", () => {
+    expect(
+      conditionExpressionSchema.safeParse(
+        comparison({ operator: "in", value: ["employee", "selfEmployed"] }),
+      ).success,
+    ).toBe(true);
   });
 
   it("rejects an object, which no answer produces", () => {
     expect(
       conditionExpressionSchema.safeParse(comparison({ value: { nested: true } })).success,
     ).toBe(false);
+  });
+
+  it.each([
+    ["ordered comparison with text", { operator: "gt", value: "55" }],
+    ["membership with a scalar", { operator: "in", value: "employee" }],
+    ["containment with a list", { operator: "contains", value: ["employee"] }],
+    ["equality with a list", { operator: "eq", value: ["employee"] }],
+  ])("rejects %s", (_label, invalid) => {
+    expect(conditionExpressionSchema.safeParse(comparison(invalid)).success).toBe(false);
   });
 });
 
