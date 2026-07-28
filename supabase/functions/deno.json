@@ -1,0 +1,54 @@
+{
+  "imports": {
+    "@shared/": "./_shared/",
+    "@sorento/domain": "../../packages/domain/src/index.ts",
+    "#domain/activity-log": "../../packages/domain/src/activity-log.ts",
+    "#domain/admin-metrics": "../../packages/domain/src/admin-metrics.ts",
+    "#domain/answer": "../../packages/domain/src/answer.ts",
+    "#domain/auth": "../../packages/domain/src/auth.ts",
+    "#domain/catalog": "../../packages/domain/src/catalog.ts",
+    "#domain/comment": "../../packages/domain/src/comment.ts",
+    "#domain/condition-expression": "../../packages/domain/src/condition-expression.ts",
+    "#domain/contract": "../../packages/domain/src/contract.ts",
+    "#domain/document": "../../packages/domain/src/document.ts",
+    "#domain/dossier": "../../packages/domain/src/dossier.ts",
+    "#domain/enums": "../../packages/domain/src/enums.ts",
+    "#domain/invitation": "../../packages/domain/src/invitation.ts",
+    "#domain/membership": "../../packages/domain/src/membership.ts",
+    "#domain/notification": "../../packages/domain/src/notification.ts",
+    "#domain/ports": "../../packages/domain/src/ports.ts",
+    "#domain/preparation-wishes": "../../packages/domain/src/preparation-wishes.ts",
+    "#domain/primitives": "../../packages/domain/src/primitives.ts",
+    "#domain/profile": "../../packages/domain/src/profile.ts",
+    "#domain/tracking": "../../packages/domain/src/tracking.ts",
+    "#domain/trusted-contact": "../../packages/domain/src/trusted-contact.ts",
+    "@sorento/core": "../../packages/core/src/index.ts",
+    "#core/calendar-date": "../../packages/core/src/calendar-date.ts",
+    "#core/condition-evaluation": "../../packages/core/src/condition-evaluation.ts",
+    "#core/deadlines": "../../packages/core/src/deadlines.ts",
+    "#core/diagnostic": "../../packages/core/src/diagnostic.ts",
+    "#core/eligibility": "../../packages/core/src/eligibility.ts",
+    "#core/engine": "../../packages/core/src/engine.ts",
+    "#core/letters": "../../packages/core/src/letters.ts",
+    "#core/permissions": "../../packages/core/src/permissions.ts",
+    "#core/trackable": "../../packages/core/src/trackable.ts",
+    "zod": "npm:zod@^3.24.1",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.47.10"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "eqeqeq",
+        "explicit-function-return-type",
+        "no-non-null-assertion",
+        "no-throw-literal"
+      ]
+    }
+  },
+  "tasks": {
+    "check": "deno check --allow-import **/index.ts",
+    "lint": "deno lint",
+    "test": "deno test --env-file=.env.test --allow-env --allow-net _shared/"
+  }
+}
