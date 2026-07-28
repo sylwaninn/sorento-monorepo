@@ -37,6 +37,17 @@ const asText = (error: unknown): string => {
 };
 
 /**
+ * A link the server refused as spent or out of date.
+ *
+ * Screens built around one kind of link have copy of their own for this, naming what to ask for
+ * next, which is more use than the generic sentence. They still need the classification to happen
+ * here: a screen matching on the server's wording itself would be a second place to update the
+ * day that wording changes.
+ */
+export const isExpiredLinkError = (error: unknown): boolean =>
+  /invalid_or_expired/i.test(asText(error));
+
+/**
  * Technical failures never reach the screen verbatim. Auth errors keep their own dictionary;
  * everything else is matched against the handful of server responses a user can act on, and
  * falls back to a neutral sentence.

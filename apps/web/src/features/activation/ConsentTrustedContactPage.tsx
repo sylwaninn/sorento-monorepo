@@ -5,6 +5,7 @@ import { TrustedContactRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
 import { savePendingConsentToken } from "@/features/activation/pending-consent";
+import { isExpiredLinkError, userFacingErrorMessage } from "@/lib/error-messages";
 import { activationContent } from "@/features/activation/content";
 import { sharedContent } from "@/components/content";
 
@@ -31,10 +32,13 @@ export const ConsentTrustedContactPage = () => {
       setDossierId(result.dossierId);
       setActivationUrl(result.activationUrl);
     } catch (confirmError) {
+      // A spent link has copy written for it here, naming what to ask the owner for next, which
+      // is more use than the generic sentence. Anything else goes through the shared translator:
+      // the raw message used to reach the screen, in English, on a page about someone's death.
       setError(
-        confirmError instanceof Error
-          ? confirmError.message
-          : activationContent.consent.invalidDescription,
+        isExpiredLinkError(confirmError)
+          ? activationContent.consent.invalidDescription
+          : userFacingErrorMessage(confirmError),
       );
     } finally {
       setIsConfirming(false);
