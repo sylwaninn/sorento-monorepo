@@ -2,7 +2,7 @@
 -- Member invitations. Application-level tokens, never Supabase auth links: only
 -- the hash is stored, the raw token only ever exists in the invite link itself.
 -- Generation/verification happens in Edge Functions (service_role), not via
--- client RLS — an unauthenticated invitee has no session to check has_dossier_access
+-- client RLS: an unauthenticated invitee has no session to check has_dossier_access
 -- against yet.
 -- ============================================================================
 
@@ -25,7 +25,7 @@ alter table invitations enable row level security;
 create policy invitations_select on invitations for select to authenticated
   using (has_dossier_access(dossier_id, 'owner'));
 
--- Revocation only (owner sets revoked_at) — generation/consumption of tokens always goes
+-- Revocation only (owner sets revoked_at): generation/consumption of tokens always goes
 -- through the Edge Functions via service_role.
 create policy invitations_revoke on invitations for update to authenticated
   using (has_dossier_access(dossier_id, 'owner'))
