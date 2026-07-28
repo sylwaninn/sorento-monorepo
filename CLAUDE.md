@@ -1,4 +1,4 @@
-# CLAUDE.md — Project rules
+# CLAUDE.md: project rules
 
 ## Context
 
@@ -69,7 +69,22 @@ keep the packages reusable.
   class fields (`myMethod = () => {}`), never `myMethod() {}`.
 - Comments in English, and exceptional: only to explain the "why" (hidden
   constraint, subtle invariant, workaround for a specific bug). Never to explain
-  the "what" or the "how" — clear naming already covers that.
+  the "what" or the "how": clear naming already covers that.
+
+### Writing
+
+- **Never an em dash (U+2014). No exception, anywhere.** Not in code comments,
+  not in Markdown, not in SQL comments, not in commit messages, not in pull
+  request descriptions, not in user-facing French copy or catalog data. This
+  file names the character by code point rather than printing it, so the rule
+  survives a grep for its own violation.
+- Rewrite instead of substituting. An em dash almost always marks a sentence
+  doing two jobs: use a colon when what follows explains what precedes, a comma
+  or parentheses for an aside, a full stop when the two halves are separate
+  thoughts. A hyphen swapped in for the dash is not a fix, it is the same
+  sentence punctuated worse.
+- The en dash (U+2013) and the horizontal bar (U+2015) fall under the same rule.
+  A hyphen in a compound word (`thirty-day`, `service-role`) is unaffected.
 
 ### Domain and compliance (sensitive context: bereavement)
 
@@ -108,7 +123,7 @@ keep the packages reusable.
   TESTING.md.
 - Documentation follows the change that makes it stale, in the same PR.
   pnpm check:docs guards README.md's generated blocks (versions, packages,
-  scripts, Edge Functions, env vars) — regenerate with pnpm sync:docs, never
+  scripts, Edge Functions, env vars). Regenerate with pnpm sync:docs, never
   by hand. Prose sections and per-workspace READMEs are updated by hand.
 - When torn between two approaches: pick the simplest one that respects
   these rules, and record the choice in a short comment.
