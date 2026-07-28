@@ -171,9 +171,13 @@ is a copy of a content dictionary rather than a reference to one. Left uncompare
 drifts, and it surfaces as the worst failure a suite can produce: a selector finding nothing,
 minutes into CI, pointing at the test rather than at the wording that moved.
 
-Every entry in `e2e/support/copy.ts` names the dictionary it came from, and `check:tests` refuses
-one whose dictionary no longer contains that text. A rewording then fails in milliseconds, before
-the commit, naming both sides.
+Every string is declared through `mirrors(...)`, which names the dictionary it came from, and
+`check:tests` reads every such call under `e2e/` and refuses one whose dictionary no longer
+contains that text. A rewording then fails in milliseconds, before the commit, naming both sides.
+
+`e2e/support/copy.ts` holds what the shared helpers drive the app through; copy belonging to one
+area lives beside that area's journey, in its own `copy-<area>.ts`, so two journeys never queue
+behind the same file.
 
 Inside the app the same problem is solved by the compiler: a test asserts on `authContent.login.
 submitButtonPassword`, never on the sentence, so a renamed key does not build and a removed one
@@ -251,4 +255,6 @@ started from nothing, mutation testing, a build, and a secret scan.
   is how three escaping holes were fixed without a test noticing.
 - **A rule stated in both SQL and TypeScript**: add the pair to the mirror suite. Do not write the
   same list twice and hope.
-- **Copy an E2E journey clicks on**: add it to `e2e/support/copy.ts` naming its dictionary.
+- **Copy an E2E journey clicks on**: declare it with `mirrors(...)`, naming its dictionary, in
+  `e2e/support/copy.ts` if the shared helpers use it and in the area's own `copy-<area>.ts`
+  otherwise.

@@ -125,10 +125,12 @@ keep the packages reusable.
   at a deleted function, and a verify_jwt that disagrees with the tested guard.
 - A rule stated in both SQL and TypeScript is compared by the mirror suite.
   Never write the same list twice and hope.
-- User-facing copy an E2E journey clicks on is repeated in e2e/support/copy.ts,
-  because the journeys import none of the app's packages. Every entry names the
-  dictionary it came from and check:tests refuses one that has drifted. Change
-  the wording in both, in the same commit.
+- User-facing copy an E2E journey clicks on is repeated in e2e/support/copy.ts
+  for the shared helpers, or in the copy-<area>.ts module beside the journey
+  that uses it, because the journeys import none of the app's packages. Every
+  entry goes through mirrors(), which names the dictionary it came from, and
+  check:tests refuses one that has drifted. Change the wording in both, in the
+  same commit.
 - Email bodies interpolating anything a user typed go through escapeHtml, and
   the builder lives in _shared/emails.ts with its escaping asserted. An
   interpolation added straight into a function body is untestable by

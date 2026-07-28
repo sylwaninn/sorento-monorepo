@@ -94,9 +94,17 @@ Compensating measures in place:
   subject's first and last name, an inviter's name, and the free-text reason on
   an activation opposition. The recipient of those emails (a trusted contact,
   or the support inbox) has every reason to trust them, which is precisely
-  what an injected link would exploit.
-- Strict allow-list of authentication redirects on the Supabase side, never a
-  wildcard.
+  what an injected link would exploit. The notification bodies are pure
+  builders in `supabase/functions/_shared/emails.ts` rather than strings
+  assembled inside `send-pending-emails`: a body nothing can read back is a body
+  whose escaping nothing asserts, and each interpolation site is tested there.
+- Strict allow-list of authentication redirects on the Supabase side
+  (`supabase/config.toml`), never a wildcard. Every callback route is declared
+  explicitly, including the origin the end-to-end suite serves the app from
+  (port 5273), because a route missing from the list is not refused loudly: the
+  app builds those URLs from `window.location.origin`, and GoTrue silently falls
+  back to `site_url`, landing the person somewhere other than where the link
+  promised.
 - Password policy of 12 characters minimum and a check against known breaches
   ("leaked password protection" option, to enable on the hosted project — it
   does not exist in the CLI's local configuration).
@@ -155,18 +163,24 @@ level, at the column level and on the client.
 
 ## Deletion and retention
 
-Soft delete everywhere (`deleted_at`), purged after 30 days by
-`purge_soft_deleted()` (daily cron), storage objects included.
+Soft delete (`deleted_at`) for the content a person can regret losing: dossiers,
+comments and documents, purged after 30 days by `purge_soft_deleted()` (daily
+cron), storage objects included.
+
+Closing an account is the exception, and it is an erasure rather than a bin:
+someone asking to be forgotten is not asking to be kept for thirty days.
+`profiles` has no `deleted_at`, and `delete_own_account()` removes the
+`auth.users` row, which cascades to the profile and to the memberships.
 
 Account deletion is refused while the person owns a dossier: erasing their
 membership would leave that dossier without an owner and unreachable for the
-relatives who depend on it. Comments are not erased but emptied and marked
-deleted, with `author_id` set to null: the thread stays coherent for the other
-members without naming someone who has left.
+relatives who depend on it. What the other members rely on survives because the
+foreign keys null out. Comments are not erased but emptied and marked deleted,
+with `author_id` set to null: the thread stays coherent for the other members
+without naming someone who has left.
 
 ## Still to do
 
-- RLS integration tests on documents and notification isolation.
 - Captcha (Turnstile) on sign-up and password reset: the hook is planned, not
   enabled in V1.
 - Documented rotation of the cron secret.
