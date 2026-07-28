@@ -25,6 +25,9 @@ interface MailpitSummary {
   From: MailpitAddress | null;
 }
 
+// Asserted, not validated, for the same reason as rest() in backend.ts: the journeys import
+// no schema package, and Mailpit's response shape is pinned by its own API. The suite's casts
+// live at its two HTTP boundaries, here and there, where they are visible.
 const inboxOf = async (address: string): Promise<MailpitSummary[]> => {
   const query = encodeURIComponent(`to:"${address}"`);
   const response = await fetch(`${MAILPIT_URL}/api/v1/search?query=${query}&limit=20`);

@@ -31,7 +31,8 @@ const serviceHeaders = {
  *
  * The generic is asserted, not validated: the journeys import none of the app's packages, so
  * there is no schema to parse with, and PostgREST's shapes are pinned by the select strings a
- * line above each call. The one cast in the suite lives here, on purpose, where it is visible.
+ * line above each call. The suite's casts live at its two HTTP boundaries, here and in
+ * mailbox.ts, on purpose, where they are visible.
  */
 export const rest = async <T = unknown>(path: string, init: RequestInit = {}): Promise<T> => {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
