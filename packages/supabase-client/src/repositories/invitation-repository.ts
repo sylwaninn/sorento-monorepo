@@ -21,6 +21,7 @@ export class InvitationRepository implements InvitationPort {
       .eq("dossier_id", dossierId)
       .is("used_at", null)
       .is("revoked_at", null)
+      .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
     assertNoError(error, "list pending invitations");

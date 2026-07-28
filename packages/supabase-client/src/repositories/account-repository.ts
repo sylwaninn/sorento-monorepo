@@ -49,6 +49,15 @@ export class AccountRepository implements AccountPort {
       this.client.from("notification_preferences").select(),
     ]);
 
+    assertNoError(dossiers.error, "export dossiers");
+    assertNoError(memberships.error, "export memberships");
+    assertNoError(answers.error, "export answers");
+    assertNoError(tracking.error, "export tracking");
+    assertNoError(comments.error, "export comments");
+    assertNoError(documents.error, "export documents");
+    assertNoError(contracts.error, "export contracts");
+    assertNoError(preferences.error, "export notification preferences");
+
     return {
       profile: mapProfileRow(requireRow(profile.data, profile.error, "export profile")),
       dossiers: (dossiers.data ?? []).map(mapDossierRow),

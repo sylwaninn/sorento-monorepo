@@ -6,13 +6,10 @@ import { mapCommentRow } from "#client/mappers";
 export class CommentRepository implements CommentPort {
   constructor(private readonly client: TypedSupabaseClient) {}
 
-  // procedureId omitted => the dossier's general thread.
+  // procedureId omitted => every thread in the dossier (used for dashboard counts).
   listForDossier = async (dossierId: string, procedureId?: string): Promise<Comment[]> => {
     let query = this.client.from("comments").select().eq("dossier_id", dossierId);
-    query =
-      procedureId === undefined
-        ? query.is("procedure_id", null)
-        : query.eq("procedure_id", procedureId);
+    if (procedureId !== undefined) query = query.eq("procedure_id", procedureId);
 
     const { data, error } = await query.order("created_at", { ascending: true });
     assertNoError(error, "list comments");

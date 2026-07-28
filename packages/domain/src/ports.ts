@@ -152,8 +152,10 @@ export interface PreparationWishesPort {
 export interface TrustedContactPort {
   listForDossier(dossierId: string): Promise<TrustedContactDesignation[]>;
   revoke(id: string): Promise<void>;
-  designate(input: DesignateTrustedContactInput): Promise<{ designationId: string }>;
-  consent(token: string): Promise<{ dossierId: string }>;
+  designate(
+    input: DesignateTrustedContactInput,
+  ): Promise<{ designationId: string; consentUrl: string }>;
+  consent(token: string): Promise<{ dossierId: string; activationUrl: string }>;
   resolveActivation(token: string): Promise<ResolveTrustedContactActivationResult>;
   requestActivation(
     token: string,

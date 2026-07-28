@@ -981,6 +981,35 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      activate_dossier: {
+        Args: { p_death_date: string; p_dossier_id: string };
+        Returns: {
+          activation_frozen_at: string | null;
+          activation_frozen_reason: string | null;
+          created_at: string;
+          created_by: string | null;
+          death_date: string | null;
+          deleted_at: string | null;
+          id: string;
+          pending_activation_death_date: string | null;
+          pending_activation_document_path: string | null;
+          pending_activation_effective_at: string | null;
+          pending_activation_opposed_at: string | null;
+          pending_activation_opposed_by: string | null;
+          pending_activation_requested_at: string | null;
+          pending_activation_requested_by: string | null;
+          status: string;
+          subject_first_name: string;
+          subject_last_name: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "dossiers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_dossier: {
         Args: {
           p_status?: string;
@@ -1064,6 +1093,10 @@ export type Database = {
       restore_dossier: { Args: { p_dossier_id: string }; Returns: undefined };
       soft_delete_dossier: {
         Args: { p_dossier_id: string };
+        Returns: undefined;
+      };
+      sync_diagnostic_answers: {
+        Args: { p_answers: Json; p_dossier_id: string };
         Returns: undefined;
       };
       transfer_dossier_ownership: {

@@ -14,16 +14,10 @@ export class AnswerRepository implements AnswerPort {
 
   // Persists the full diagnostic answer set for a dossier (post-signup attachment flow).
   save = async (dossierId: string, answers: DiagnosticAnswers): Promise<void> => {
-    const rows = Object.entries(answers).map(([key, value]) => ({
-      dossier_id: dossierId,
-      key,
-      value,
-    }));
-    if (rows.length === 0) return;
-
-    const { error } = await this.client
-      .from("answers")
-      .upsert(rows, { onConflict: "dossier_id,key" });
+    const { error } = await this.client.rpc("sync_diagnostic_answers", {
+      p_dossier_id: dossierId,
+      p_answers: answers,
+    });
     assertNoError(error, "save diagnostic answers");
   };
 }

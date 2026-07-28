@@ -28,6 +28,9 @@ export class DocumentRepository implements DocumentPort {
     if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
       throw new SupabaseRepositoryError(`Unsupported file type: ${file.type}`, null);
     }
+    if (file.size <= 0) {
+      throw new SupabaseRepositoryError("Empty files cannot be uploaded", null);
+    }
     if (file.size > MAX_SIZE_BYTES) {
       throw new SupabaseRepositoryError(`File too large: ${file.size} bytes`, null);
     }

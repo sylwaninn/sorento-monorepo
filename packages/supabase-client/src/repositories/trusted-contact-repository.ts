@@ -31,25 +31,27 @@ export class TrustedContactRepository implements TrustedContactPort {
     assertNoError(error, "revoke trusted contact designation");
   };
 
-  designate = async (input: DesignateTrustedContactInput): Promise<{ designationId: string }> => {
-    const { data, error } = await this.client.functions.invoke<{ designationId: string }>(
-      "designate-trusted-contact",
-      {
-        body: input,
-      },
-    );
+  designate = async (
+    input: DesignateTrustedContactInput,
+  ): Promise<{ designationId: string; consentUrl: string }> => {
+    const { data, error } = await this.client.functions.invoke<{
+      designationId: string;
+      consentUrl: string;
+    }>("designate-trusted-contact", {
+      body: input,
+    });
     assertNoError(error, "designate trusted contact");
     if (!data) throw new Error("designate trusted contact: no data returned");
     return data;
   };
 
-  consent = async (token: string): Promise<{ dossierId: string }> => {
-    const { data, error } = await this.client.functions.invoke<{ dossierId: string }>(
-      "consent-trusted-contact",
-      {
-        body: { token },
-      },
-    );
+  consent = async (token: string): Promise<{ dossierId: string; activationUrl: string }> => {
+    const { data, error } = await this.client.functions.invoke<{
+      dossierId: string;
+      activationUrl: string;
+    }>("consent-trusted-contact", {
+      body: { token },
+    });
     assertNoError(error, "consent to trusted contact designation");
     if (!data) throw new Error("consent to trusted contact designation: no data returned");
     return data;

@@ -53,12 +53,10 @@ export class DossierRepository implements DossierPort {
   };
 
   activate = async (id: string, deathDate: string): Promise<Dossier> => {
-    const { data, error } = await this.client
-      .from("dossiers")
-      .update({ status: "ACTIVE", death_date: deathDate })
-      .eq("id", id)
-      .select()
-      .single();
+    const { data, error } = await this.client.rpc("activate_dossier", {
+      p_dossier_id: id,
+      p_death_date: deathDate,
+    });
 
     return mapDossierRow(requireRow(data, error, "activate dossier"));
   };
