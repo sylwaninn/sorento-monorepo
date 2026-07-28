@@ -1,3 +1,11 @@
+// Indexed by the profession string carried by catalog rows, hence the open key set.
+const professionArticles: Record<string, string> = {
+  notaire: "d'un notaire",
+  avocat: "d'un avocat",
+  "conseiller retraite": "d'un conseiller retraite",
+  "conseiller bancaire": "d'un conseiller bancaire",
+};
+
 export const sharedContent = {
   loading: "Chargement",
   back: "Retour",
@@ -14,12 +22,7 @@ export const sharedContent = {
     professionPrefix: "Information générale. Pour votre situation précise, rapprochez-vous",
     // Used when the catalog entry names no specific profession.
     defaultProfession: "d'un professionnel qualifié",
-    professionArticles: {
-      notaire: "d'un notaire",
-      avocat: "d'un avocat",
-      "conseiller retraite": "d'un conseiller retraite",
-      "conseiller bancaire": "d'un conseiller bancaire",
-    } as Record<string, string>,
+    professionArticles,
   },
 
   legalNotice:

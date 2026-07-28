@@ -25,7 +25,7 @@ export class TrackingRepository implements TrackingPort {
   /**
    * Adding the same item twice is a double click, not an error. The uniqueness is enforced by
    * two partial indexes (a row targets a procedure or a benefit, never both), which PostgREST
-   * cannot use as an upsert conflict target — so the duplicate is caught and the existing row
+   * cannot use as an upsert conflict target, so the duplicate is caught and the existing row
    * returned instead.
    */
   private createOnce = async (

@@ -3,6 +3,10 @@ export interface Article {
   paragraphs: readonly string[];
 }
 
+// Editorial content lands here later; the route and layout exist so an article is a data
+// entry rather than a new page to build.
+const articles: Record<string, Article | undefined> = {};
+
 export const contentPagesContent = {
   notFoundTitle: "Article introuvable",
   notFoundBody: "Cet article n'existe pas ou n'est pas encore publié.",
@@ -14,7 +18,5 @@ export const contentPagesContent = {
     button: "Commencer mon diagnostic",
   },
 
-  // Editorial content lands here later; the route and layout exist so an article is a data
-  // entry rather than a new page to build.
-  articles: {} as Record<string, Article | undefined>,
+  articles,
 } as const;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ALLOWED_MIME_TYPES,
   DEFAULT_NOTIFICATION_PREFERENCES,
+  defaultNotificationPreference,
   catalogHistoryActionSchema,
   catalogTableSchema,
   dossierRoleSchema,
@@ -24,7 +25,7 @@ import { DossierRepository } from "#client/repositories/dossier-repository";
  *
  * The pattern that made these tests necessary: a migration widened
  * notifications_email_status_check to allow 'failed', the Zod enum was never widened, and the
- * first notification that exhausted its retries made the whole list unreadable — because the
+ * first notification that exhausted its retries made the whole list unreadable, because the
  * mapper parses, and parsing a value the schema does not know throws. Nothing in the repo
  * compared the two sides, so nothing failed until a user hit it.
  *
@@ -63,7 +64,7 @@ describe("enum schemas mirror their check constraints", () => {
 
 describe("notification defaults mirror resolve_notification_preference()", () => {
   /**
-   * The plpgsql function is the authority — it is what decides whether a row is inserted at all.
+   * The plpgsql function is the authority: it is what decides whether a row is inserted at all.
    * DEFAULT_NOTIFICATION_PREFERENCES only exists so the settings screen can show the effective
    * default before any override, and it was carrying a hand-written copy of that CASE block.
    */
@@ -82,7 +83,7 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
 
   /**
    * `invitation` is the one type the function does not govern: invite-member sends its email
-   * itself, in the same call that creates the invitation, without consulting preferences — so
+   * itself, in the same call that creates the invitation, without consulting preferences, so
    * the CASE block has no branch for it and falls through to the all-off default, while the
    * constant describes what the invitee actually receives.
    *
@@ -101,7 +102,7 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
       return;
     }
 
-    // No membership row for this user, so the function falls through to the plain defaults —
+    // No membership row for this user, so the function falls through to the plain defaults,
     // which is exactly what the constant claims to describe.
     expect(resolved).toEqual(DEFAULT_NOTIFICATION_PREFERENCES[eventType]);
   });
@@ -113,8 +114,9 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
   });
 
   /**
-   * A viewer receives nothing but a direct mention and the dossier's activation. That rule lives
-   * only in SQL, so it is asserted against the database rather than mirrored into TypeScript.
+   * A viewer receives nothing but a direct mention and the dossier's activation. The settings
+   * screen shows that default through defaultNotificationPreference(), so the helper is the
+   * TypeScript copy this mirror compares against the plpgsql authority.
    */
   it("silences everything but mentions and activation for a viewer", async () => {
     const owner = await createTestUser("Owner");
@@ -132,12 +134,7 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
 
     for (const eventType of notificationTypeSchema.options) {
       const resolved = await resolveInDatabase(viewer.id, dossier.id, eventType);
-      const expected =
-        eventType === "mention" || eventType === "dossier_activated"
-          ? DEFAULT_NOTIFICATION_PREFERENCES[eventType]
-          : { inApp: false, email: false };
-
-      expect(resolved, eventType).toEqual(expected);
+      expect(resolved, eventType).toEqual(defaultNotificationPreference(eventType, true));
     }
   });
 

@@ -76,7 +76,7 @@ const renderPage = () =>
 
 // The prompt makes these non-negotiable: no benefit may be shown without its prudent wording,
 // its official source and the date it was last verified.
-describe("BenefitsPage — mandatory notices", () => {
+describe("BenefitsPage: mandatory notices", () => {
   it("renders the catalog's prudent wording verbatim", async () => {
     stubRepositories();
     renderPage();

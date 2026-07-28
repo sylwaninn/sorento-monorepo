@@ -18,15 +18,15 @@ import type { Dossier } from "@sorento/domain";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 
-export interface ParcoursGroup extends TimeWindowGroup<TrackedItem> {
+export interface JourneyGroup extends TimeWindowGroup<TrackedItem> {
   /** Fully handled windows fold away with a reassuring message instead of a red list. */
   settled: boolean;
 }
 
-export interface Parcours {
+export interface Journey {
   isLoading: boolean;
   items: TrackedItem[];
-  groups: ParcoursGroup[];
+  groups: JourneyGroup[];
   /** Two or three items at most: never the wall of thirty tasks. */
   focus: TrackedItem[];
   nextDueDate: CalendarDate | null;
@@ -44,11 +44,11 @@ export interface Parcours {
  * against the death date, then grouped, prioritised and summarised by packages/core. The
  * screens receive a finished result and decide nothing about eligibility or deadlines.
  */
-export const useParcours = (
+export const useJourney = (
   dossierId: string,
   dossier: Dossier | null,
   assignedTo?: string | null,
-): Parcours => {
+): Journey => {
   const results = useQueries({
     queries: [
       {
@@ -86,7 +86,7 @@ export const useParcours = (
     const allItems = buildTrackedItems(
       trackingQuery?.data ?? [],
       itemsById,
-      (dossier?.deathDate as CalendarDate | null) ?? null,
+      dossier?.deathDate ?? null,
     );
     const items =
       assignedTo === undefined || assignedTo === null
@@ -99,7 +99,7 @@ export const useParcours = (
         timeWindow: entry.item.timeWindow,
         delayDays: entry.item.delayDays,
       })),
-    ).map((group): ParcoursGroup => ({
+    ).map((group): JourneyGroup => ({
       ...group,
       settled: isTimeWindowSettled(group, (entry) => isSettled(entry.tracking)),
     }));

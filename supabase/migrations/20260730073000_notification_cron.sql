@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Schedules the two notification jobs. URL/secret below target the local dev
 -- stack (kong gateway's in-network hostname); a hosted environment must update
--- both via a follow-up migration or `cron.alter_job` — they differ per project.
+-- both via a follow-up migration or `cron.alter_job`: they differ per project.
 -- ============================================================================
 
 create extension if not exists pg_cron;

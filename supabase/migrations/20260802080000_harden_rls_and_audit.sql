@@ -73,7 +73,8 @@ begin
 end;
 $$;
 
-revoke execute on function create_dossier(text, text, text) from anon;
+revoke execute on function create_dossier(text, text, text) from public, anon;
+grant execute on function create_dossier(text, text, text) to authenticated, service_role;
 
 drop policy dossiers_insert on dossiers;
 
@@ -225,7 +226,8 @@ begin
 end;
 $$;
 
-revoke execute on function log_letter_generation(uuid, uuid) from anon;
+revoke execute on function log_letter_generation(uuid, uuid) from public, anon;
+grant execute on function log_letter_generation(uuid, uuid) to authenticated, service_role;
 
 -- The removal trigger predates log_activity(); route it through the same helper so the
 -- actor is stamped identically everywhere.

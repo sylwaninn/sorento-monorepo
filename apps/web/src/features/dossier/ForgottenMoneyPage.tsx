@@ -131,7 +131,7 @@ export const ForgottenMoneyPage = () => {
                 className="flex items-center justify-between gap-3 border-b pb-2 text-sm"
               >
                 <span>
-                  {contract.contractType} — {contract.company}
+                  {contract.contractType} · {contract.company}
                 </span>
                 <Typography color="muted">{contract.contractNumber ?? ""}</Typography>
               </div>

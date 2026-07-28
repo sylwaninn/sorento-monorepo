@@ -8,13 +8,13 @@ import { applicableQuestions, evaluateJourney } from "@sorento/core";
 import { CatalogRepository } from "@sorento/supabase-client";
 import { supabase } from "@/lib/supabase-client";
 import { QuestionField } from "@/features/diagnostic/QuestionField";
-import { diagnosticContent } from "@/features/diagnostic/content";
+import { questionContentFor } from "@/features/diagnostic/content";
 import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
 import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
 
-// mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic —
+// mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic;
 // this sandbox has its own death-date field and doesn't create an account or a dossier.
 const PROFILE_QUESTION_IDS = new Set([
   "maritalStatus",
@@ -110,11 +110,7 @@ export const ProfileTestingPage = () => {
                 <QuestionField
                   key={question.id}
                   question={question}
-                  content={
-                    diagnosticContent.questions[
-                      question.id as keyof typeof diagnosticContent.questions
-                    ]
-                  }
+                  content={questionContentFor(question.id)}
                   value={answers[question.id]}
                   onChange={(value) => onAnswerChange(question.id, value)}
                 />

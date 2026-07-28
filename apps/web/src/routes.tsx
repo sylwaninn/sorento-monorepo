@@ -36,7 +36,7 @@ import { MetricsPage } from "@/features/admin/MetricsPage";
 
 /**
  * Exported as data, not only as a built router, so the smoke suite can walk the table and
- * render every screen. A route added here is smoke-tested the moment it is added — which is
+ * render every screen. A route added here is smoke-tested the moment it is added, which is
  * the only version of "every page has a test" that survives the page count growing.
  */
 export const routes: RouteObject[] = [

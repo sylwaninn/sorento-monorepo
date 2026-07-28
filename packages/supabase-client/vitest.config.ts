@@ -6,7 +6,7 @@ import { coverageConfig } from "@sorento/config/vitest-coverage";
  * vitest.integration.config.ts and need a local `supabase start`.
  *
  * Only the pure part of the package is measured. Repositories and client.ts are query builders
- * whose behaviour is whatever Postgres does with them — a unit test would assert against a mock
+ * whose behaviour is whatever Postgres does with them; a unit test would assert against a mock
  * of the fluent API, which passes just as happily when a policy denies the read. They are
  * covered by the integration suites instead, against a real database.
  *

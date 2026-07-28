@@ -2,7 +2,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { AdminMetricsRepository } from "#client/repositories/admin-metrics-repository";
 import { CatalogHistoryRepository } from "#client/repositories/catalog-history-repository";
 import { CatalogRepository } from "#client/repositories/catalog-repository";
+import { CommentRepository } from "#client/repositories/comment-repository";
 import { ContractRepository } from "#client/repositories/contract-repository";
+import { DocumentRepository } from "#client/repositories/document-repository";
 import { DossierRepository } from "#client/repositories/dossier-repository";
 import { MembershipRepository } from "#client/repositories/membership-repository";
 import { PreparationWishesRepository } from "#client/repositories/preparation-wishes-repository";
@@ -30,7 +32,7 @@ const promoteToAdmin = async (userId: string): Promise<void> => {
 // the permission matrix from CLAUDE.md section 5.2, not just application code: an
 // untested policy is an assumed policy.
 
-describe("RLS — isolation between users", () => {
+describe("RLS: isolation between users", () => {
   let userA: TestUser;
   let userB: TestUser;
   let dossierAId: string;
@@ -61,7 +63,7 @@ describe("RLS — isolation between users", () => {
   });
 });
 
-describe("RLS — a viewer cannot change a status", () => {
+describe("RLS: a viewer cannot change a status", () => {
   let owner: TestUser;
   let viewer: TestUser;
   let dossierId: string;
@@ -106,7 +108,7 @@ describe("RLS — a viewer cannot change a status", () => {
   });
 });
 
-describe("RLS — a trusted contact sees nothing while the dossier is in PREPARATION", () => {
+describe("RLS: a trusted contact sees nothing while the dossier is in PREPARATION", () => {
   let owner: TestUser;
   let trustedContact: TestUser;
   let dossierId: string;
@@ -148,7 +150,7 @@ describe("RLS — a trusted contact sees nothing while the dossier is in PREPARA
   });
 });
 
-describe("RLS — the catalog is publicly readable, never writable by anon", () => {
+describe("RLS: the catalog is publicly readable, never writable by anon", () => {
   it("anon can read procedures", async () => {
     const { data, error } = await anonClient().from("procedures").select("id").limit(1);
     expect(error).toBeNull();
@@ -173,7 +175,7 @@ describe("RLS — the catalog is publicly readable, never writable by anon", () 
   });
 });
 
-describe("RLS — only the owner updates dossier information", () => {
+describe("RLS: only the owner updates dossier information", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
@@ -211,7 +213,7 @@ describe("RLS — only the owner updates dossier information", () => {
   });
 });
 
-describe("RLS — a procedure can never be assigned to a viewer", () => {
+describe("RLS: a procedure can never be assigned to a viewer", () => {
   let owner: TestUser;
   let viewer: TestUser;
   let dossierId: string;
@@ -246,7 +248,7 @@ describe("RLS — a procedure can never be assigned to a viewer", () => {
   });
 });
 
-describe("RLS — removing a member unassigns their tracking and logs the event", () => {
+describe("RLS: removing a member unassigns their tracking and logs the event", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
@@ -296,7 +298,7 @@ describe("RLS — removing a member unassigns their tracking and logs the event"
   });
 });
 
-describe("RLS — contracts require at least collaborator to write, viewer to read", () => {
+describe("RLS: contracts require at least collaborator to write, viewer to read", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let viewer: TestUser;
@@ -366,7 +368,7 @@ describe("RLS — contracts require at least collaborator to write, viewer to re
   });
 });
 
-describe("RLS — preparation wishes are owner-only to write", () => {
+describe("RLS: preparation wishes are owner-only to write", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
@@ -411,7 +413,7 @@ describe("RLS — preparation wishes are owner-only to write", () => {
   });
 });
 
-describe("RLS — trusted contact designations are owner-only, no client insert", () => {
+describe("RLS: trusted contact designations are owner-only, no client insert", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
@@ -480,7 +482,7 @@ describe("RLS — trusted contact designations are owner-only, no client insert"
   });
 });
 
-describe("RLS — only is_admin() can write the catalog, and it logs to catalog_history", () => {
+describe("RLS: only is_admin() can write the catalog, and it logs to catalog_history", () => {
   let admin: TestUser;
   let regularUser: TestUser;
   let procedureId: string;
@@ -564,7 +566,7 @@ describe("RLS — only is_admin() can write the catalog, and it logs to catalog_
   });
 });
 
-describe("RLS — get_admin_metrics is admin-only and returns aggregates only", () => {
+describe("RLS: get_admin_metrics is admin-only and returns aggregates only", () => {
   it("a regular user is rejected", async () => {
     const regularUser = await createTestUser("Regular2");
     await expect(new AdminMetricsRepository(regularUser.client).get()).rejects.toThrow();
@@ -578,5 +580,61 @@ describe("RLS — get_admin_metrics is admin-only and returns aggregates only", 
     expect(metrics.totalUsers).toBeGreaterThan(0);
     expect(typeof metrics.totalDossiers).toBe("number");
     expect(typeof metrics.trackingCompletionRatePercent).toBe("number");
+  });
+});
+
+describe("RLS: the platform admin has no access to users' dossiers", () => {
+  let admin: TestUser;
+  let owner: TestUser;
+  let dossierId: string;
+
+  beforeAll(async () => {
+    admin = await createTestUser("AdminIsolation");
+    await promoteToAdmin(admin.id);
+    owner = await createTestUser("OwnerIsolation");
+
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Jeanne",
+      subjectLastName: "Martin",
+      status: "PREPARATION",
+    });
+    dossierId = dossier.id;
+
+    const procedureId = await fetchAProcedureId();
+    await new TrackingRepository(owner.client).createForProcedure(dossierId, procedureId);
+    const service = serviceRoleClient();
+    const { error: commentError } = await service.from("comments").insert({
+      dossier_id: dossierId,
+      author_id: owner.id,
+      content: "visible aux membres seulement",
+    });
+    if (commentError) throw commentError;
+    const { error: documentError } = await service.from("documents").insert({
+      dossier_id: dossierId,
+      category: "administratif",
+      storage_path: `${dossierId}/administratif/${crypto.randomUUID()}.pdf`,
+      original_name: "attestation.pdf",
+      mime_type: "application/pdf",
+      size_bytes: 1024,
+      added_by: owner.id,
+    });
+    if (documentError) throw documentError;
+  });
+
+  it("the owner sees the seeded content, so the admin assertions below are not vacuous", async () => {
+    expect(await new TrackingRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(
+      0,
+    );
+    expect(await new CommentRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(0);
+    expect(await new DocumentRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(
+      0,
+    );
+  });
+
+  it("the admin reads neither the dossier nor its tracking, comments or documents", async () => {
+    await expect(new DossierRepository(admin.client).getById(dossierId)).resolves.toBeNull();
+    expect(await new TrackingRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
+    expect(await new CommentRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
+    expect(await new DocumentRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
   });
 });

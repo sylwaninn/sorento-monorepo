@@ -1,6 +1,6 @@
 import { Link as RouterLink } from "react-router";
 import { Avatar, Card, Chip, Typography } from "@heroui/react";
-import { daysUntilDue, type CalendarDate, type TrackedItem } from "@sorento/core";
+import { dueDateCategory, type CalendarDate, type TrackedItem } from "@sorento/core";
 import type { TrackingStatus } from "@sorento/domain";
 import { dossierContent } from "@/features/dossier/content";
 
@@ -12,8 +12,6 @@ const STATUS_COLOR: Record<TrackingStatus, "default" | "accent" | "success" | "w
   not_applicable: "default",
 };
 
-const DUE_SOON_DAYS = 7;
-
 const formatDate = (isoDate: CalendarDate): string => {
   const [year, month, day] = isoDate.split("-");
   return year !== undefined && month !== undefined && day !== undefined
@@ -24,12 +22,13 @@ const formatDate = (isoDate: CalendarDate): string => {
 /**
  * Deadline wording, deliberately unalarming: no counter of days late, no red. An overdue
  * procedure reads "à traiter dès que possible", which is information, not a reproach.
+ * The categorisation itself comes from core; only the wording lives here.
  */
 const deadlineLabel = (dueDate: CalendarDate | null, today: CalendarDate): string => {
   if (dueDate === null) return dossierContent.dashboard.noDueDate;
-  const remaining = daysUntilDue(dueDate, today);
-  if (remaining < 0) return dossierContent.dashboard.overdue;
-  if (remaining <= DUE_SOON_DAYS) return dossierContent.dashboard.dueSoon;
+  const category = dueDateCategory(dueDate, today);
+  if (category === "overdue") return dossierContent.dashboard.overdue;
+  if (category === "due_soon") return dossierContent.dashboard.dueSoon;
   return dossierContent.dashboard.dueLater(formatDate(dueDate));
 };
 

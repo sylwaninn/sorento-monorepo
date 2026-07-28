@@ -1,6 +1,6 @@
 # @sorento/web
 
-React SPA — the **assembly layer** of the monorepo. It composes `@sorento/domain`, `@sorento/core` and `@sorento/supabase-client` into screens. A React component here never contains a business rule: no eligibility condition, no deadline computation. Those live in `packages/core`, and the ESLint boundaries fail the build if this layer reaches where it should not.
+React SPA: the **assembly layer** of the monorepo. It composes `@sorento/domain`, `@sorento/core` and `@sorento/supabase-client` into screens. A React component here never contains a business rule: no eligibility condition, no deadline computation. Those live in `packages/core`, and the ESLint boundaries fail the build if this layer reaches where it should not.
 
 ## Stack
 
@@ -22,9 +22,9 @@ src/
 
 ## Rules that bite here
 
-- **HeroUI components only.** Composing them is encouraged; reimplementing one is forbidden. Check every prop against the HeroUI docs (MCP) — never guess.
-- **UI copy is French, code is English** — identifiers, files, comments, all of it.
-- **Tone**: cautious wording about entitlements, referral to regulated professionals on inheritance screens, never guilt-inducing UI (no aggressive red, no overdue counters, at most 2–3 highlighted "to do now" items).
+- **HeroUI components only.** Composing them is encouraged; reimplementing one is forbidden. Check every prop against the HeroUI docs (MCP), never guess.
+- **UI copy is French, code is English**: identifiers, files, comments, all of it.
+- **Tone**: cautious wording about entitlements, referral to regulated professionals on inheritance screens, never guilt-inducing UI (no aggressive red, no overdue counters, at most 2-3 highlighted "to do now" items).
 - **Catalog data** renders with `source_url`, `last_verified_date` and `caution_text` as non-optional props.
 - Only `VITE_`-prefixed environment variables reach the browser. The `service_role` key never appears here, under any name.
 

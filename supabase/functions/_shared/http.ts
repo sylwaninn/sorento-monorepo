@@ -8,7 +8,7 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([env.siteUrl]);
 
 /**
  * Echoes the caller's origin only when it is on the allow-list, and falls back to the app's own
- * origin otherwise — never to the request's. Exported with the list passed in so the case that
+ * origin otherwise, never to the request's. Exported with the list passed in so the case that
  * matters, a hostile origin asking to be reflected, can be asserted without a live request.
  */
 export const resolveAllowedOrigin = (
@@ -71,7 +71,7 @@ export const parseBody = async <T>(request: Request, schema: z.ZodType<T>): Prom
  * The query string comes from someone opening a link; the body comes from the client calling
  * `functions.invoke`, which is how the app actually reaches these endpoints and has no way to
  * append a query string. Reading only the query string made every resolve call answer
- * "invitation invalide ou expirée" — the request was well-formed and the token was real, it was
+ * "invitation invalide ou expirée": the request was well-formed and the token was real, it was
  * simply being looked for somewhere it never is.
  */
 export const parseTokenPayload = <T>(

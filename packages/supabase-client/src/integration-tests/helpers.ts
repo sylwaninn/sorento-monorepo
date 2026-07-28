@@ -19,7 +19,7 @@ export const anonClient = (): TypedSupabaseClient =>
 
 /**
  * Reads a row the test cannot continue without. A `?? ""` fallback in its place turns a query
- * that returned nothing into a delete on the empty id — the assertion that follows then passes
+ * that returned nothing into a delete on the empty id; the assertion that follows then passes
  * for the wrong reason, which is exactly the failure an RLS suite must never produce.
  */
 export const must = <T>(value: T | null | undefined, what: string): T => {
