@@ -46,7 +46,7 @@ const restrict = (files, paths) => ({
  * Two layers, because they catch different things. eslint-plugin-boundaries reasons about
  * resolved file paths, so it covers a relative reach across directories; the
  * no-restricted-imports layer reasons about specifiers, which is the only thing that catches
- * a bare workspace specifier like "@sorento/core" — the plugin resolves those into
+ * a bare workspace specifier like "@sorento/core": the plugin resolves those into
  * node_modules and classifies them as external, so it never sees them.
  */
 export const boundariesConfig = [

@@ -1,11 +1,11 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 /**
  * Edge Functions run under Deno and share the domain and core packages, but Deno cannot
  * resolve the extensionless `#domain/*` / `#core/*` subpath imports those packages use
- * internally. The import map therefore lists every module explicitly — and this script
+ * internally. The import map therefore lists every module explicitly, and this script
  * regenerates it, so adding a module to a package cannot silently break the functions.
  *
  * `--check` fails instead of writing, which is what CI runs.
@@ -17,7 +17,7 @@ const supabaseConfigPath = join(root, "supabase/config.toml");
 const functionsDir = join(root, "supabase/functions");
 
 // The local edge runtime only bind-mounts what it can reach from a function's import map, and
-// it looks for that map inside the function's own directory — which is not where ours lives.
+// it looks for that map inside the function's own directory, which is not where ours lives.
 // Without this explicit pointer the packages/* paths are absent from the container and every
 // function importing @sorento/domain dies with "Module not found" at boot.
 const IMPORT_MAP_LINE = 'import_map = "./functions/deno.json"';
@@ -77,6 +77,13 @@ const buildImports = () => {
   imports["@supabase/supabase-js"] = "npm:@supabase/supabase-js@^2.47.10";
   return imports;
 };
+
+// The functions tree arrives later in the branch stack; on the branches underneath it
+// there is nothing to sync yet.
+if (!existsSync(configPath)) {
+  console.log("sync-functions-import-map: no supabase/functions tree, nothing to sync");
+  process.exit(0);
+}
 
 const config = JSON.parse(readFileSync(configPath, "utf8"));
 const expected = buildImports();

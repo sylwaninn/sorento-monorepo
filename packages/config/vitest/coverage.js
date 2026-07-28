@@ -1,7 +1,7 @@
 /**
- * Shared coverage gate. Every package states its own thresholds — a single monorepo-wide
+ * Shared coverage gate. Every package states its own thresholds (a single monorepo-wide
  * number would be meaningless across layers whose risk profiles differ by an order of
- * magnitude — but they all measure the same way, so adding a package is one call, not a
+ * magnitude), but they all measure the same way, so adding a package is one call, not a
  * fresh set of decisions about reporters and exclusions.
  *
  * Thresholds are a ratchet: they may go up, never down. Lowering one to make CI pass is
