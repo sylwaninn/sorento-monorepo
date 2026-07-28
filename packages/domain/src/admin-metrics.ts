@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { dossierStatusSchema } from "#domain/enums";
 
-// Anonymized aggregate counts only — no dossier, user, or content identifiers. Matches
+// Anonymized aggregate counts only: no dossier, user, or content identifiers. Matches
 // get_admin_metrics() in the database, the one place the admin role reads across dossiers.
 export const adminMetricsSchema = z.object({
   totalUsers: z.number().int().nonnegative(),
