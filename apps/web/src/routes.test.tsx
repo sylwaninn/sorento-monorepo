@@ -18,7 +18,7 @@ import { signedInSession } from "@/test/supabase-stub";
  *
  * This is the cheapest test in the repo and it covers the failure that actually reached a
  * browser: `Rendered more hooks than during the previous render`, a crash no schema test and no
- * threshold can see, because it is not a wrong value — it is a screen that cannot mount. The
+ * threshold can see, because it is not a wrong value; it is a screen that cannot mount. The
  * same pass catches a broken import, a missing provider and a route pointing at a component
  * that no longer exists.
  *

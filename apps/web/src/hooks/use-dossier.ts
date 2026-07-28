@@ -14,7 +14,7 @@ export interface DossierContext {
   profilesById: Map<string, Profile>;
   role: DossierRole | null;
   isLoading: boolean;
-  /** Permission check delegated to the core matrix — no role comparison lives in the UI. */
+  /** Permission check delegated to the core matrix: no role comparison lives in the UI. */
   can: (action: DossierAction) => boolean;
   /** Accepts null so a deleted account renders as a neutral label, never as a blank. */
   firstNameOf: (userId: string | null) => string;
