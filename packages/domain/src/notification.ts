@@ -29,7 +29,7 @@ export const notificationPreferenceSchema = z.object({
 });
 export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>;
 
-// Mirrors resolve_notification_preference() in the migration — kept in sync by hand since
+// Mirrors resolve_notification_preference() in the migration, kept in sync by hand since
 // one is SQL and the other TS. Used by E13 to show the effective default before any
 // override exists, and by a viewer's stricter default (mention/dossier_activated only).
 export const DEFAULT_NOTIFICATION_PREFERENCES: Record<

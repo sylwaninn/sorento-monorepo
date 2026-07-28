@@ -13,7 +13,7 @@ import {
  * The expected values are written out here rather than derived from `schema.options`, and that
  * is the whole point: a test that loops over the schema's own options passes even when a value
  * is silently changed, because it validates the schema against itself. These lists are the
- * independent copy, and several of them mirror a SQL check constraint — a divergence here is a
+ * independent copy, and several of them mirror a SQL check constraint: a divergence here is a
  * row the database will reject at runtime.
  */
 

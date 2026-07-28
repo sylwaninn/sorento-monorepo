@@ -4,7 +4,7 @@ import { DIAGNOSTIC_QUESTIONS, applicableQuestions } from "#core/diagnostic";
 /**
  * The catalogue is written out again here rather than derived from DIAGNOSTIC_QUESTIONS: a test
  * that reads the list it is checking passes whatever the list says. This copy is what makes a
- * silently renamed id or a dropped option fail — and both matter, because the ids key the
+ * silently renamed id or a dropped option fail, and both matter, because the ids key the
  * answers the eligibility rules read, and the options key the French labels in apps/web.
  */
 const EXPECTED = [
