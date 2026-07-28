@@ -9,7 +9,7 @@
       third-party script origin, and no way to frame or hijack the document.
       style-src keeps 'unsafe-inline' because the styling layer injects style elements at
       runtime; script-src deliberately does not.
-      Prefer serving the same policy as a response header in production — a meta tag cannot
+      Prefer serving the same policy as a response header in production: a meta tag cannot
       express frame-ancestors to every browser, and a header is not editable by an injection.
     -->
     <meta

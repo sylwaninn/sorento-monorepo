@@ -73,7 +73,7 @@ export const BenefitsTab = () => {
                     {benefit.active ? "" : `(${adminContent.catalog.inactiveLabel})`}
                   </Typography>
                   <Typography type="body-sm" color="muted">
-                    {benefit.code} — {benefit.organization}
+                    {benefit.code} · {benefit.organization}
                   </Typography>
                 </div>
                 <div className="flex gap-2">

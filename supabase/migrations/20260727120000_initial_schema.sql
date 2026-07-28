@@ -172,7 +172,8 @@ as $$
   );
 $$;
 
-revoke execute on function is_dossier_owner(uuid) from anon;
+revoke execute on function is_dossier_owner(uuid) from public, anon;
+grant execute on function is_dossier_owner(uuid) to authenticated, service_role;
 
 -- Binning a dossier is the one write whose own result revokes the writer's access, which makes
 -- it fight every formulation of an UPDATE policy. Creation already goes through
@@ -196,7 +197,8 @@ begin
 end;
 $$;
 
-revoke execute on function soft_delete_dossier(uuid) from anon;
+revoke execute on function soft_delete_dossier(uuid) from public, anon;
+grant execute on function soft_delete_dossier(uuid) to authenticated, service_role;
 
 -- Restoring from the bin is the symmetric operation, still owner-only.
 create or replace function restore_dossier(p_dossier_id uuid)
@@ -214,7 +216,8 @@ begin
 end;
 $$;
 
-revoke execute on function restore_dossier(uuid) from anon;
+revoke execute on function restore_dossier(uuid) from public, anon;
+grant execute on function restore_dossier(uuid) to authenticated, service_role;
 
 -- Auto-ownership: the creator of a dossier becomes its owner.
 create or replace function create_owner_on_dossier_insert()

@@ -118,10 +118,10 @@ If any of these are detected, invoke `/technical-writer` to update the prose sec
 
 > Run `git diff main...HEAD` and audit it against the project's reference documents:
 >
-> - `CLAUDE.md` — project rules: commands added/renamed/removed, new packages or import boundaries, new process gates or quality checks
-> - `SECURITY.md` — security model: new or changed RLS policies or helper functions, Edge Function guards, roles, activation flow, admin surface, activity logging, deletion behavior
-> - `TESTING.md` — testing strategy: new suites, thresholds, gates, or a change in what a layer covers
-> - Per-workspace READMEs (`apps/web`, `packages/*`, `e2e`, `supabase`) — prose describing structure or behavior the diff changes
+> - `CLAUDE.md` (project rules): commands added/renamed/removed, new packages or import boundaries, new process gates or quality checks
+> - `SECURITY.md` (security model): new or changed RLS policies or helper functions, Edge Function guards, roles, activation flow, admin surface, activity logging, deletion behavior
+> - `TESTING.md` (testing strategy): new suites, thresholds, gates, or a change in what a layer covers
+> - Per-workspace READMEs (`apps/web`, `packages/*`, `e2e`, `supabase`): prose describing structure or behavior the diff changes
 >
 > Update ONLY statements the diff makes false, incomplete, or missing. Do not restyle, do not rewrite unchanged sections, do not add speculative content. All documentation in English (CLAUDE.md rule). Return the list of files modified with a one-line reason each, or "nothing stale" if no document needed a change.
 

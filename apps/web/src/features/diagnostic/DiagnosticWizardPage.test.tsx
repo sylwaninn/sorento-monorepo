@@ -14,7 +14,7 @@ import { must } from "@/test/must";
  * that keeps passing over a screen that no longer shows anything.
  *
  * Widened to a plain record on the way in: the dictionary's literal type would make an id the
- * copy no longer defines a compile error, which sounds stricter but is not — the point is to
+ * copy no longer defines a compile error, which sounds stricter but is not: the point is to
  * catch the removal at the assertion that depended on it, with the question named.
  */
 const QUESTIONS: Record<string, QuestionContent | undefined> = diagnosticContent.questions;

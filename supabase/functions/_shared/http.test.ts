@@ -20,7 +20,7 @@ const post = (body: unknown, headers: Record<string, string> = {}): Request =>
   });
 
 /**
- * These endpoints mutate state — invitations, activations — so a browser on any other origin
+ * These endpoints mutate state (invitations, activations), so a browser on any other origin
  * being able to call them with the user's cookies is exactly what CORS exists to stop.
  */
 

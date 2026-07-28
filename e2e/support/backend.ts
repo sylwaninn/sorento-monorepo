@@ -20,7 +20,7 @@ const serviceHeaders = {
   "Content-Type": "application/json",
 } as const;
 
-const rest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+const rest = async (path: string, init: RequestInit = {}): Promise<unknown> => {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...init,
     headers: { ...serviceHeaders, ...init.headers },
@@ -28,7 +28,23 @@ const rest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   if (!response.ok) {
     throw new Error(`${init.method ?? "GET"} ${path} answered ${response.status}`);
   }
-  return (await response.json()) as T;
+  return response.json();
+};
+
+// The journeys import none of the app's packages, so the narrowing is done by hand: a field
+// is read through Object.entries and type-checked, never asserted.
+const stringField = (row: unknown, name: string, what: string): string => {
+  if (typeof row !== "object" || row === null) throw new Error(`${what}: expected a row`);
+  const entry = Object.entries(row).find(([key]) => key === name);
+  if (!entry || typeof entry[1] !== "string") {
+    throw new Error(`${what}: expected a string field "${name}"`);
+  }
+  return entry[1];
+};
+
+const listOf = (value: unknown, what: string): unknown[] => {
+  if (!Array.isArray(value)) throw new Error(`${what}: expected an array`);
+  return value;
 };
 
 /**
@@ -56,7 +72,7 @@ export const createConfirmedAccount = async (
   let lastError: unknown;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
-      return (await rest<{ id: string }>("/auth/v1/admin/users", { method: "POST", body })).id;
+      return stringField(await rest("/auth/v1/admin/users", { method: "POST", body }), "id", email);
     } catch (error) {
       lastError = error;
       await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
@@ -83,16 +99,16 @@ export const requestActivation = async (dossierId: string, deathDate: string): P
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  const planted = await rest<unknown[]>(
-    `/rest/v1/trusted_contact_designations?dossier_id=eq.${dossierId}`,
-    {
+  const planted = listOf(
+    await rest(`/rest/v1/trusted_contact_designations?dossier_id=eq.${dossierId}`, {
       method: "PATCH",
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({
         activation_token_hash: tokenHash,
         activation_expires_at: expiresAt.toISOString(),
       }),
-    },
+    }),
+    `designations of ${dossierId}`,
   );
   if (planted.length === 0) {
     throw new Error(`dossier ${dossierId} has no designated trusted contact to report a death`);
@@ -175,20 +191,36 @@ export const runCronJob = async (name: string): Promise<void> => {
 };
 
 export const dossierStatus = async (dossierId: string): Promise<string> => {
-  const rows = await rest<{ status: string }[]>(
-    `/rest/v1/dossiers?select=status&id=eq.${dossierId}`,
+  const rows = listOf(
+    await rest(`/rest/v1/dossiers?select=status&id=eq.${dossierId}`),
+    `dossier ${dossierId}`,
   );
-  const row = rows[0];
-  if (!row) throw new Error(`dossier ${dossierId} not found`);
-  return row.status;
+  if (rows.length === 0) throw new Error(`dossier ${dossierId} not found`);
+  return stringField(rows[0], "status", `dossier ${dossierId}`);
 };
 
 export const membershipRole = async (
   dossierId: string,
   userId: string,
 ): Promise<string | undefined> => {
-  const rows = await rest<{ role: string }[]>(
-    `/rest/v1/memberships?select=role&dossier_id=eq.${dossierId}&user_id=eq.${userId}`,
+  const rows = listOf(
+    await rest(`/rest/v1/memberships?select=role&dossier_id=eq.${dossierId}&user_id=eq.${userId}`),
+    `membership of ${userId}`,
   );
-  return rows[0]?.role;
+  return rows.length === 0 ? undefined : stringField(rows[0], "role", `membership of ${userId}`);
+};
+
+/** Notification rows of one type for one member: what the bell and the mailer will read. */
+export const notificationCount = async (
+  dossierId: string,
+  userId: string,
+  type: string,
+): Promise<number> => {
+  const rows = listOf(
+    await rest(
+      `/rest/v1/notifications?select=id&dossier_id=eq.${dossierId}&user_id=eq.${userId}&type=eq.${type}`,
+    ),
+    `notifications of ${userId}`,
+  );
+  return rows.length;
 };

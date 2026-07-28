@@ -1,6 +1,7 @@
 import { Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Card, Typography } from "@heroui/react";
+import { dossierStatusSchema } from "@sorento/domain";
 import { AdminMetricsRepository } from "@sorento/supabase-client";
 import { supabase } from "@/lib/supabase-client";
 import { adminContent } from "@/features/admin/content";
@@ -79,7 +80,7 @@ export const MetricsPage = () => {
           <Card.Content className="flex flex-col gap-2 py-2">
             {Object.entries(metricsQuery.data.dossiersByStatus).map(([status, count]) => (
               <div key={status} className="flex items-center justify-between text-sm">
-                <span>{adminContent.metrics.statusLabels[status as "PREPARATION" | "ACTIVE"]}</span>
+                <span>{adminContent.metrics.statusLabels[dossierStatusSchema.parse(status)]}</span>
                 <Typography weight="medium">{count}</Typography>
               </div>
             ))}

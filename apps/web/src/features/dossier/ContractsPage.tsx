@@ -54,7 +54,7 @@ export const ContractsPage = () => {
               >
                 <div className="flex flex-col">
                   <Typography weight="medium">
-                    {contract.contractType} — {contract.company}
+                    {contract.contractType} · {contract.company}
                   </Typography>
                   {contract.contractNumber ? (
                     <Typography type="body-sm" color="muted">

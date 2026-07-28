@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { isRoleManageable } from "@sorento/core";
 import {
   Alert,
   AlertDialog,
@@ -19,6 +20,7 @@ import {
 } from "@heroui/react";
 import {
   createInvitationInputSchema,
+  invitableRoleSchema,
   type CreateInvitationInput,
   type DossierRole,
   type InvitableRole,
@@ -120,14 +122,12 @@ export const MembersPage = () => {
                     {profile?.firstName ?? member.userId} {isSelf ? "(vous)" : ""}
                   </Typography>
                   <Typography type="body-sm" color="muted">
-                    {dossierContent.members.roleLabels[member.role]} —{" "}
+                    {dossierContent.members.roleLabels[member.role]} ·{" "}
                     {dossierContent.members.list.joinedOn}{" "}
                     {new Date(member.createdAt).toLocaleDateString("fr-FR")}
                   </Typography>
                 </div>
-                {access.can("members:manage") &&
-                !isSelf &&
-                (member.role === "collaborator" || member.role === "viewer") ? (
+                {access.can("members:manage") && !isSelf && isRoleManageable(member.role) ? (
                   <div className="flex items-center gap-2">
                     <RoleSelect
                       role={member.role}
@@ -170,7 +170,7 @@ export const MembersPage = () => {
                 <div className="flex flex-col">
                   <span>{invitation.email}</span>
                   <Typography color="muted">
-                    {dossierContent.members.roleLabels[invitation.role]} —{" "}
+                    {dossierContent.members.roleLabels[invitation.role]} ·{" "}
                     {dossierContent.members.pending.expiresOn}{" "}
                     {new Date(invitation.expiresAt).toLocaleDateString("fr-FR")}
                   </Typography>
@@ -206,7 +206,7 @@ const RoleSelect = ({
   role: Exclude<DossierRole, "owner" | "trusted_contact">;
   onChange: (role: Exclude<DossierRole, "owner">) => void;
 }) => (
-  <Select value={role} onChange={(value) => onChange(value as Exclude<DossierRole, "owner">)}>
+  <Select value={role} onChange={(value) => onChange(invitableRoleSchema.parse(value))}>
     <Select.Trigger>
       <Select.Value />
       <Select.Indicator />
@@ -336,7 +336,7 @@ const InviteForm = ({ dossierId }: { dossierId: string }) => {
             {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
           </TextField>
 
-          <Select value={role} onChange={(value) => setRole(value as InvitableRole)}>
+          <Select value={role} onChange={(value) => setRole(invitableRoleSchema.parse(value))}>
             <Label>{dossierContent.members.invite.roleLabel}</Label>
             <Select.Trigger>
               <Select.Value />

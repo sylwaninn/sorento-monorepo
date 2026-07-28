@@ -5,7 +5,7 @@ import { serviceClient } from "@shared/supabase.ts";
 
 // Declared here rather than pulled from _shared/schemas.ts: that module imports
 // @sorento/domain, and the local edge runtime only mounts supabase/functions, so any function
-// reaching outside it fails to boot. Shape only — the password policy stays owned by GoTrue
+// reaching outside it fails to boot. Shape only: the password policy stays owned by GoTrue
 // (auth.minimum_password_length), so there is no business rule duplicated here to drift.
 const payloadSchema = z.object({
   email: z.string().email(),
@@ -15,7 +15,7 @@ const payloadSchema = z.object({
 /**
  * Local-development shortcut: creates an already-confirmed account so testing signup does not
  * require opening the confirmation email. It runs under service_role, so the environment gate
- * is the entire security of this endpoint — see _shared/env.ts for the two signals it demands.
+ * is the entire security of this endpoint; see _shared/env.ts for the two signals it demands.
  *
  * Outside a local stack it answers 404 rather than 403: a caller on a deployed environment
  * learns nothing about the endpoint existing at all.

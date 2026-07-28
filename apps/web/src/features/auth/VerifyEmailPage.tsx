@@ -23,7 +23,14 @@ const COOLDOWN_SECONDS = 60;
 export const VerifyEmailPage = () => {
   const { session } = useAuth();
   const location = useLocation();
-  const email = (location.state as { email?: string } | null)?.email;
+  const state: unknown = location.state;
+  const email =
+    state !== null &&
+    typeof state === "object" &&
+    "email" in state &&
+    typeof state.email === "string"
+      ? state.email
+      : undefined;
   const resend = useResendConfirmationMutation();
   const [secondsLeft, setSecondsLeft] = useState(COOLDOWN_SECONDS);
 

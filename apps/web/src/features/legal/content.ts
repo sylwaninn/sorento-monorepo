@@ -1,7 +1,7 @@
 /**
  * Structure and product-truthful wording. Everything in square brackets is an operator
  * detail (company name, registration numbers, host, DPO contact) that only the publisher can
- * fill in, and the whole set has to be reviewed by a lawyer before going live — which is why
+ * fill in, and the whole set has to be reviewed by a lawyer before going live, which is why
  * the placeholders are visible rather than invented.
  */
 const OPERATOR_PLACEHOLDER = "[Raison sociale de l'éditeur]";

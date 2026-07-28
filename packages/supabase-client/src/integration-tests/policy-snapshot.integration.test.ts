@@ -12,7 +12,7 @@ import { query } from "#client/integration-tests/database";
  *
  * This makes that change impossible to land silently. The snapshot only records what the
  * database ended up with, so a policy added, widened, narrowed or deleted shows as a diff that
- * has to be accepted deliberately — and accepting it is the moment to write the test that
+ * has to be accepted deliberately, and accepting it is the moment to write the test that
  * covers the new behaviour.
  *
  * Update with `pnpm test:integration -u` after reviewing the diff, never to make CI green.

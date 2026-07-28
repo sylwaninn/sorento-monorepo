@@ -5,6 +5,7 @@ import { AdminMetricsRepository } from "#client/repositories/admin-metrics-repos
 import { AnswerRepository } from "#client/repositories/answer-repository";
 import { CatalogHistoryRepository } from "#client/repositories/catalog-history-repository";
 import { CatalogRepository } from "#client/repositories/catalog-repository";
+import { CommentRepository } from "#client/repositories/comment-repository";
 import { ContractRepository } from "#client/repositories/contract-repository";
 import { DocumentRepository } from "#client/repositories/document-repository";
 import { DossierRepository } from "#client/repositories/dossier-repository";
@@ -1029,5 +1030,61 @@ describe("RLS: get_admin_metrics is admin-only and returns aggregates only", () 
     expect(metrics.totalUsers).toBeGreaterThan(0);
     expect(typeof metrics.totalDossiers).toBe("number");
     expect(typeof metrics.trackingCompletionRatePercent).toBe("number");
+  });
+});
+
+describe("RLS: the platform admin has no access to users' dossiers", () => {
+  let admin: TestUser;
+  let owner: TestUser;
+  let dossierId: string;
+
+  beforeAll(async () => {
+    admin = await createTestUser("AdminIsolation");
+    await promoteToAdmin(admin.id);
+    owner = await createTestUser("OwnerIsolation");
+
+    const dossier = await new DossierRepository(owner.client).create({
+      subjectFirstName: "Jeanne",
+      subjectLastName: "Martin",
+      status: "PREPARATION",
+    });
+    dossierId = dossier.id;
+
+    const procedureId = await fetchAProcedureId();
+    await new TrackingRepository(owner.client).createForProcedure(dossierId, procedureId);
+    const service = serviceRoleClient();
+    const { error: commentError } = await service.from("comments").insert({
+      dossier_id: dossierId,
+      author_id: owner.id,
+      content: "visible aux membres seulement",
+    });
+    if (commentError) throw commentError;
+    const { error: documentError } = await service.from("documents").insert({
+      dossier_id: dossierId,
+      category: "administratif",
+      storage_path: `${dossierId}/administratif/${crypto.randomUUID()}.pdf`,
+      original_name: "attestation.pdf",
+      mime_type: "application/pdf",
+      size_bytes: 1024,
+      added_by: owner.id,
+    });
+    if (documentError) throw documentError;
+  });
+
+  it("the owner sees the seeded content, so the admin assertions below are not vacuous", async () => {
+    expect(await new TrackingRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(
+      0,
+    );
+    expect(await new CommentRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(0);
+    expect(await new DocumentRepository(owner.client).listForDossier(dossierId)).not.toHaveLength(
+      0,
+    );
+  });
+
+  it("the admin reads neither the dossier nor its tracking, comments or documents", async () => {
+    await expect(new DossierRepository(admin.client).getById(dossierId)).resolves.toBeNull();
+    expect(await new TrackingRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
+    expect(await new CommentRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
+    expect(await new DocumentRepository(admin.client).listForDossier(dossierId)).toHaveLength(0);
   });
 });
