@@ -160,16 +160,18 @@ const MentionPicker = ({
             </SearchField.Group>
           </SearchField>
           <ListBox>
-            {access.members.map((member) => (
-              <ListBox.Item
-                key={member.userId}
-                id={member.userId}
-                textValue={access.firstNameOf(member.userId)}
-              >
-                {access.firstNameOf(member.userId)}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
+            {access.members
+              .filter((member) => member.role !== "trusted_contact")
+              .map((member) => (
+                <ListBox.Item
+                  key={member.userId}
+                  id={member.userId}
+                  textValue={access.firstNameOf(member.userId)}
+                >
+                  {access.firstNameOf(member.userId)}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
           </ListBox>
         </Autocomplete.Filter>
       </Autocomplete.Popover>

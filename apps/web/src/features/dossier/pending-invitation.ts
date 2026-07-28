@@ -4,8 +4,8 @@ export const savePendingInvitationToken = (token: string): void => {
   sessionStorage.setItem(SESSION_KEY, token);
 };
 
-export const takePendingInvitationToken = (): string | null => {
-  const token = sessionStorage.getItem(SESSION_KEY);
-  if (token) sessionStorage.removeItem(SESSION_KEY);
-  return token;
+export const getPendingInvitationToken = (): string | null => sessionStorage.getItem(SESSION_KEY);
+
+export const clearPendingInvitationToken = (): void => {
+  sessionStorage.removeItem(SESSION_KEY);
 };

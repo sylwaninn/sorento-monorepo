@@ -15,6 +15,7 @@ export const ConsentTrustedContactPage = () => {
   const { session } = useAuth();
   const [isConfirming, setIsConfirming] = useState(false);
   const [dossierId, setDossierId] = useState<string | null>(null);
+  const [activationUrl, setActivationUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const goToAuth = (path: "/inscription" | "/connexion") => {
@@ -28,6 +29,7 @@ export const ConsentTrustedContactPage = () => {
     try {
       const result = await new TrustedContactRepository(supabase).consent(token);
       setDossierId(result.dossierId);
+      setActivationUrl(result.activationUrl);
     } catch (confirmError) {
       setError(
         confirmError instanceof Error
@@ -64,6 +66,11 @@ export const ConsentTrustedContactPage = () => {
                   <Alert.Description>{activationContent.consent.confirmed}</Alert.Description>
                 </Alert.Content>
               </Alert>
+              {activationUrl ? (
+                <a className="link break-all text-sm" href={activationUrl}>
+                  Conserver mon lien d’activation
+                </a>
+              ) : null}
               <Button
                 variant="primary"
                 fullWidth

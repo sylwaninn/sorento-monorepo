@@ -14,6 +14,7 @@ import {
   saveAnswersToSession,
 } from "@/features/diagnostic/diagnostic-session";
 import { diagnosticContent } from "@/features/diagnostic/content";
+import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
 
 const QUESTION_CONTENT: Record<string, QuestionContent> = diagnosticContent.questions;
 const QUESTIONS_BY_ID: Record<string, QuestionDefinition> = Object.fromEntries(
@@ -50,7 +51,7 @@ export const DiagnosticWizardPage = () => {
   const answerValue = answers[question.id];
 
   const setAnswer = (value: AnswerValue) => {
-    setAnswers((previous) => ({ ...previous, [question.id]: value }));
+    setAnswers((previous) => pruneInapplicableAnswers({ ...previous, [question.id]: value }));
   };
 
   const goNext = () => {

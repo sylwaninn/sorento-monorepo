@@ -28,7 +28,7 @@ import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
 
 // The admin list and the list every dossier reads are two cache entries of the same data.
-const INVALIDATES = [queryKeys.catalog.conditions(), queryKeys.catalog.conditions()];
+const INVALIDATES = [queryKeys.catalog.conditions()];
 
 export const ConditionsTab = () => {
   const [editing, setEditing] = useState<Condition | null>(null);
@@ -39,11 +39,11 @@ export const ConditionsTab = () => {
     queryFn: () => repositories.catalog.listConditions(),
   });
   const proceduresQuery = useQuery({
-    queryKey: queryKeys.catalog.conditions(),
+    queryKey: queryKeys.catalog.allProcedures(),
     queryFn: () => repositories.catalog.listAllProcedures(),
   });
   const benefitsQuery = useQuery({
-    queryKey: queryKeys.catalog.conditions(),
+    queryKey: queryKeys.catalog.allBenefits(),
     queryFn: () => repositories.catalog.listAllBenefits(),
   });
 

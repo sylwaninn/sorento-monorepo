@@ -6,6 +6,7 @@ import { NotificationPreferenceRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
 import { notificationsContent } from "@/features/notifications/content";
+import { queryKeys } from "@/lib/query-keys";
 
 // "invitation" isn't a real per-user toggle in this implementation: invite-member emails
 // the invitee directly, it never creates a notifications row for an existing user.
@@ -18,8 +19,21 @@ export const NotificationPreferencesCard = () => {
   const queryClient = useQueryClient();
 
   const preferencesQuery = useQuery({
-    queryKey: ["notification-preferences", user?.id],
+    queryKey: queryKeys.account.notificationPreferences(),
     queryFn: () => new NotificationPreferenceRepository(supabase).listForCurrentUser(),
+    enabled: Boolean(user),
+  });
+  const rolesQuery = useQuery({
+    queryKey: queryKeys.account.membershipRoles(user?.id ?? ""),
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("memberships")
+        .select("role")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data ?? [];
+    },
     enabled: Boolean(user),
   });
 
@@ -31,8 +45,12 @@ export const NotificationPreferencesCard = () => {
   const setPreference = async (type: NotificationType, inApp: boolean, email: boolean) => {
     if (!user) return;
     await new NotificationPreferenceRepository(supabase).setPreference(user.id, type, inApp, email);
-    queryClient.invalidateQueries({ queryKey: ["notification-preferences", user.id] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.account.notificationPreferences() });
   };
+
+  const viewerOnly =
+    (rolesQuery.data?.length ?? 0) > 0 &&
+    rolesQuery.data?.every((membership) => membership.role === "viewer");
 
   return (
     <Card className="w-full max-w-md">
@@ -42,9 +60,13 @@ export const NotificationPreferencesCard = () => {
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
         {CONFIGURABLE_TYPES.map((type) => {
+          const roleDefault =
+            viewerOnly && type !== "mention" && type !== "dossier_activated"
+              ? { inApp: false, email: false }
+              : DEFAULT_NOTIFICATION_PREFERENCES[type];
           const effective = overridesByType.get(type) ?? {
-            inApp: DEFAULT_NOTIFICATION_PREFERENCES[type].inApp,
-            email: DEFAULT_NOTIFICATION_PREFERENCES[type].email,
+            inApp: roleDefault.inApp,
+            email: roleDefault.email,
           };
 
           return (

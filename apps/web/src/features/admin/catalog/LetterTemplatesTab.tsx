@@ -40,7 +40,7 @@ export const LetterTemplatesTab = () => {
     queryFn: () => repositories.catalog.listAllLetterTemplates(),
   });
   const proceduresQuery = useQuery({
-    queryKey: queryKeys.catalog.allLetterTemplates(),
+    queryKey: queryKeys.catalog.allProcedures(),
     queryFn: () => repositories.catalog.listAllProcedures(),
   });
 

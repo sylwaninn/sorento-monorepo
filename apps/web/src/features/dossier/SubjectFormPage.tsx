@@ -30,6 +30,7 @@ import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
 
 // mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic;
 // an existing dossier already has its own identity fields and death date flow.
@@ -91,7 +92,7 @@ export const SubjectFormPage = () => {
   );
 
   const onAnswerChange = (questionId: string, value: AnswerValue) => {
-    setAnswers((previous) => ({ ...previous, [questionId]: value }));
+    setAnswers((previous) => pruneInapplicableAnswers({ ...previous, [questionId]: value }));
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {

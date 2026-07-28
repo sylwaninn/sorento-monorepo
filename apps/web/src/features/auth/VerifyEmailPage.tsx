@@ -7,8 +7,14 @@ import { useResendConfirmationMutation } from "@/auth/use-auth-mutations";
 import { authErrorMessage } from "@/auth/auth-error-messages";
 import { supabase } from "@/lib/supabase-client";
 import { attachDiagnosticFromSession } from "@/features/diagnostic/attach-diagnostic";
-import { takePendingInvitationToken } from "@/features/dossier/pending-invitation";
-import { takePendingConsentToken } from "@/features/activation/pending-consent";
+import {
+  clearPendingInvitationToken,
+  getPendingInvitationToken,
+} from "@/features/dossier/pending-invitation";
+import {
+  clearPendingConsentToken,
+  getPendingConsentToken,
+} from "@/features/activation/pending-consent";
 import { authContent } from "@/features/auth/content";
 import { PageLoader } from "@/components/PageLoader";
 
@@ -94,29 +100,33 @@ const ConfirmedRedirect = () => {
 
   useEffect(() => {
     const run = async () => {
-      const pendingInvitationToken = takePendingInvitationToken();
+      const pendingInvitationToken = getPendingInvitationToken();
       if (pendingInvitationToken) {
         try {
           const { dossierId } = await new InvitationRepository(supabase).accept(
             pendingInvitationToken,
           );
+          clearPendingInvitationToken();
           navigate(`/dossiers/${dossierId}`, { replace: true });
           return;
         } catch {
-          // fall through to the diagnostic-attach / default path below
+          navigate(`/invitations/accepter?token=${pendingInvitationToken}`, { replace: true });
+          return;
         }
       }
 
-      const pendingConsentToken = takePendingConsentToken();
+      const pendingConsentToken = getPendingConsentToken();
       if (pendingConsentToken) {
         try {
           const { dossierId } = await new TrustedContactRepository(supabase).consent(
             pendingConsentToken,
           );
+          clearPendingConsentToken();
           navigate(`/dossiers/${dossierId}`, { replace: true });
           return;
         } catch {
-          // fall through to the diagnostic-attach / default path below
+          navigate(`/contact-confiance/confirmer?token=${pendingConsentToken}`, { replace: true });
+          return;
         }
       }
 

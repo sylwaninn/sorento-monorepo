@@ -34,6 +34,7 @@ export const queryKeys = {
   account: {
     notifications: () => ["account", "notifications"] as const,
     notificationPreferences: () => ["account", "notification-preferences"] as const,
+    membershipRoles: (userId: string) => ["account", "membership-roles", userId] as const,
     isAdmin: (userId: string) => ["account", "is-admin", userId] as const,
   },
   admin: {

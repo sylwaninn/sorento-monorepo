@@ -12,6 +12,7 @@ import { diagnosticContent } from "@/features/diagnostic/content";
 import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
 
 // mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic —
 // this sandbox has its own death-date field and doesn't create an account or a dossier.
@@ -49,7 +50,7 @@ export const ProfileTestingPage = () => {
   );
 
   const onAnswerChange = (questionId: string, value: AnswerValue) => {
-    setAnswers((previous) => ({ ...previous, [questionId]: value }));
+    setAnswers((previous) => pruneInapplicableAnswers({ ...previous, [questionId]: value }));
   };
 
   const result = useMemo(() => {

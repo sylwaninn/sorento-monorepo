@@ -1,11 +1,13 @@
-import type { DiagnosticAnswers } from "@sorento/domain";
+import { diagnosticAnswersSchema, type DiagnosticAnswers } from "@sorento/domain";
 
 const SESSION_KEY = "sorento:diagnostic";
 
 export const loadAnswersFromSession = (): DiagnosticAnswers => {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as DiagnosticAnswers) : {};
+    if (!raw) return {};
+    const parsed = diagnosticAnswersSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : {};
   } catch {
     return {};
   }

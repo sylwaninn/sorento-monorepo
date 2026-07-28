@@ -11,6 +11,7 @@ import { repositories } from "@/lib/repositories";
 import { loadAnswersFromSession } from "@/features/diagnostic/diagnostic-session";
 import { attachDiagnosticFromSession } from "@/features/diagnostic/attach-diagnostic";
 import { diagnosticContent } from "@/features/diagnostic/content";
+import { PageLoader } from "@/components/PageLoader";
 
 const TIME_WINDOWS: TimeWindow[] = ["24h", "7d", "30d", "6m"];
 
@@ -59,8 +60,13 @@ export const DiagnosticResultPage = () => {
     );
   }
 
-  if (!catalogQuery.data) {
-    return null;
+  if (catalogQuery.isPending) return <PageLoader />;
+  if (catalogQuery.isError || !catalogQuery.data) {
+    return (
+      <div className="mx-auto max-w-md p-4 py-8">
+        <ErrorAlert message="Le catalogue n’a pas pu être chargé. Réessayez dans un instant." />
+      </div>
+    );
   }
 
   const deathDate =
