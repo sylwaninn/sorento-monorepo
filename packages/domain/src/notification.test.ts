@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
+  defaultNotificationPreference,
   emailStatusSchema,
   notificationPreferenceSchema,
   notificationSchema,
+  VIEWER_DEFAULT_NOTIFICATION_TYPES,
 } from "#domain/notification";
 import { notificationTypeSchema } from "#domain/enums";
 import { DATE_TIME, ID, NOT_AN_ID, OTHER_ID } from "#domain/test-fixtures";
@@ -144,5 +146,24 @@ describe("DEFAULT_NOTIFICATION_PREFERENCES", () => {
   // The digest is opt-in on both channels: a bereavement app does not push a weekly recap.
   it("leaves the weekly digest off on both channels", () => {
     expect(DEFAULT_NOTIFICATION_PREFERENCES.weekly_digest).toEqual({ inApp: false, email: false });
+  });
+});
+
+describe("defaultNotificationPreference", () => {
+  it("returns the plain default for a non-viewer", () => {
+    expect(defaultNotificationPreference("procedure_assigned", false)).toEqual(
+      DEFAULT_NOTIFICATION_PREFERENCES["procedure_assigned"],
+    );
+  });
+
+  it("silences everything but mentions and activation for a viewer-only member", () => {
+    for (const eventType of notificationTypeSchema.options) {
+      const resolved = defaultNotificationPreference(eventType, true);
+      if (VIEWER_DEFAULT_NOTIFICATION_TYPES.includes(eventType)) {
+        expect(resolved).toEqual(DEFAULT_NOTIFICATION_PREFERENCES[eventType]);
+      } else {
+        expect(resolved).toEqual({ inApp: false, email: false });
+      }
+    }
   });
 });

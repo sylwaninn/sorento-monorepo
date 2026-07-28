@@ -50,7 +50,7 @@ export class MembershipRepository implements MembershipPort {
     assertNoError(error, "remove dossier member");
   };
 
-  // Atomic two-step role swap (see transfer_dossier_ownership in the migration) — the new
+  // Atomic two-step role swap (see transfer_dossier_ownership in the migration): the new
   // owner must already be a collaborator on the dossier.
   transferOwnership = async (dossierId: string, newOwnerUserId: string): Promise<void> => {
     const { error } = await this.client.rpc("transfer_dossier_ownership", {

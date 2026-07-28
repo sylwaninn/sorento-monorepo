@@ -25,7 +25,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
 import { QuestionField } from "@/features/diagnostic/QuestionField";
-import { diagnosticContent } from "@/features/diagnostic/content";
+import { questionContentFor } from "@/features/diagnostic/content";
 import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
@@ -172,11 +172,7 @@ export const SubjectFormPage = () => {
               <fieldset key={question.id} disabled={!access.can("answers:update")}>
                 <QuestionField
                   question={question}
-                  content={
-                    diagnosticContent.questions[
-                      question.id as keyof typeof diagnosticContent.questions
-                    ]
-                  }
+                  content={questionContentFor(question.id)}
                   value={answers[question.id]}
                   onChange={(value) => onAnswerChange(question.id, value)}
                 />

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { DossierRole } from "@sorento/domain";
-import { can, isAssignable, type DossierAction } from "#core/permissions";
+import {
+  can,
+  canOpposeActivation,
+  isAssignable,
+  isMentionable,
+  isRoleManageable,
+  type DossierAction,
+} from "#core/permissions";
 
 // Transcription of the specification matrix. Kept as data so a policy change has to be made
 // here as well as in the migration, and the divergence shows up as a failing test.
@@ -55,5 +62,24 @@ describe("can", () => {
 describe("isAssignable", () => {
   it("accepts owners and collaborators only", () => {
     expect(ALL_ROLES.filter(isAssignable)).toEqual(["owner", "collaborator"]);
+  });
+});
+
+describe("isMentionable", () => {
+  it("accepts every active member and never the trusted contact", () => {
+    expect(ALL_ROLES.filter(isMentionable)).toEqual(["owner", "collaborator", "viewer"]);
+  });
+});
+
+describe("isRoleManageable", () => {
+  it("accepts collaborators and viewers only", () => {
+    expect(ALL_ROLES.filter(isRoleManageable)).toEqual(["collaborator", "viewer"]);
+  });
+});
+
+describe("canOpposeActivation", () => {
+  it("accepts every active member, never the trusted contact nor a non-member", () => {
+    expect(ALL_ROLES.filter(canOpposeActivation)).toEqual(["owner", "collaborator", "viewer"]);
+    expect(canOpposeActivation(null)).toBe(false);
   });
 });

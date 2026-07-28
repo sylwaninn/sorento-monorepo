@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { notificationTypeSchema } from "#domain/enums";
+import { notificationTypeSchema, type NotificationType } from "#domain/enums";
 import { dateTimeSchema, idSchema } from "#domain/primitives";
 
 // Mirrors notifications_email_status_check. "failed" was added by the delivery-bookkeeping
@@ -29,9 +29,17 @@ export const notificationPreferenceSchema = z.object({
 });
 export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>;
 
-// Mirrors resolve_notification_preference() in the migration — kept in sync by hand since
+// Mirrors resolve_notification_preference() in the migration, kept in sync by hand since
 // one is SQL and the other TS. Used by E13 to show the effective default before any
 // override exists, and by a viewer's stricter default (mention/dossier_activated only).
+// The viewer branch of resolve_notification_preference(): someone who is only ever a viewer
+// defaults to silence except for these two types. Components read through the helper below
+// instead of restating the branch.
+export const VIEWER_DEFAULT_NOTIFICATION_TYPES: readonly NotificationType[] = [
+  "mention",
+  "dossier_activated",
+];
+
 export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
   z.infer<typeof notificationTypeSchema>,
   { inApp: boolean; email: boolean }
@@ -48,3 +56,11 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
   dossier_activated: { inApp: true, email: true },
   weekly_digest: { inApp: false, email: false },
 };
+
+export const defaultNotificationPreference = (
+  eventType: NotificationType,
+  isViewerOnly: boolean,
+): { inApp: boolean; email: boolean } =>
+  isViewerOnly && !VIEWER_DEFAULT_NOTIFICATION_TYPES.includes(eventType)
+    ? { inApp: false, email: false }
+    : DEFAULT_NOTIFICATION_PREFERENCES[eventType];

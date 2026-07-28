@@ -1,18 +1,22 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, Switch, Typography } from "@heroui/react";
-import { DEFAULT_NOTIFICATION_PREFERENCES, type NotificationType } from "@sorento/domain";
-import { NotificationPreferenceRepository } from "@sorento/supabase-client";
+import {
+  defaultNotificationPreference,
+  notificationTypeSchema,
+  type NotificationType,
+} from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
+import { repositories } from "@/lib/repositories";
 import { notificationsContent } from "@/features/notifications/content";
 import { queryKeys } from "@/lib/query-keys";
 
 // "invitation" isn't a real per-user toggle in this implementation: invite-member emails
 // the invitee directly, it never creates a notifications row for an existing user.
-const CONFIGURABLE_TYPES = (
-  Object.keys(DEFAULT_NOTIFICATION_PREFERENCES) as NotificationType[]
-).filter((type) => type !== "invitation");
+const CONFIGURABLE_TYPES: NotificationType[] = notificationTypeSchema.options.filter(
+  (type) => type !== "invitation",
+);
 
 export const NotificationPreferencesCard = () => {
   const { user } = useAuth();
@@ -20,7 +24,7 @@ export const NotificationPreferencesCard = () => {
 
   const preferencesQuery = useQuery({
     queryKey: queryKeys.account.notificationPreferences(),
-    queryFn: () => new NotificationPreferenceRepository(supabase).listForCurrentUser(),
+    queryFn: () => repositories.notificationPreferences.listForCurrentUser(),
     enabled: Boolean(user),
   });
   const rolesQuery = useQuery({
@@ -44,7 +48,7 @@ export const NotificationPreferencesCard = () => {
 
   const setPreference = async (type: NotificationType, inApp: boolean, email: boolean) => {
     if (!user) return;
-    await new NotificationPreferenceRepository(supabase).setPreference(user.id, type, inApp, email);
+    await repositories.notificationPreferences.setPreference(user.id, type, inApp, email);
     queryClient.invalidateQueries({ queryKey: queryKeys.account.notificationPreferences() });
   };
 
@@ -60,10 +64,7 @@ export const NotificationPreferencesCard = () => {
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
         {CONFIGURABLE_TYPES.map((type) => {
-          const roleDefault =
-            viewerOnly && type !== "mention" && type !== "dossier_activated"
-              ? { inApp: false, email: false }
-              : DEFAULT_NOTIFICATION_PREFERENCES[type];
+          const roleDefault = defaultNotificationPreference(type, viewerOnly === true);
           const effective = overridesByType.get(type) ?? {
             inApp: roleDefault.inApp,
             email: roleDefault.email,

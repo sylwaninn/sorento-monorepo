@@ -4,7 +4,7 @@ import { CRON_SECRET, SERVICE_ROLE_KEY, SUPABASE_URL } from "#e2e/support/env";
  * The parts of a journey a browser cannot reach.
  *
  * Three of them, precisely: a confirmation email, a token that only exists inside one, and the
- * passage of time. Everything else goes through the UI — a helper that created a dossier with
+ * passage of time. Everything else goes through the UI; a helper that created a dossier with
  * service_role would be testing the fixture, not the app.
  *
  * Spoken to over plain HTTP rather than through @sorento/supabase-client. These journeys are a
@@ -18,7 +18,7 @@ const serviceHeaders = {
   "Content-Type": "application/json",
 } as const;
 
-const rest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+const rest = async (path: string, init: RequestInit = {}): Promise<unknown> => {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...init,
     headers: { ...serviceHeaders, ...init.headers },
@@ -26,7 +26,23 @@ const rest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   if (!response.ok) {
     throw new Error(`${init.method ?? "GET"} ${path} answered ${response.status}`);
   }
-  return (await response.json()) as T;
+  return response.json();
+};
+
+// The journeys import none of the app's packages, so the narrowing is done by hand: a field
+// is read through Object.entries and type-checked, never asserted.
+const stringField = (row: unknown, name: string, what: string): string => {
+  if (typeof row !== "object" || row === null) throw new Error(`${what}: expected a row`);
+  const entry = Object.entries(row).find(([key]) => key === name);
+  if (!entry || typeof entry[1] !== "string") {
+    throw new Error(`${what}: expected a string field "${name}"`);
+  }
+  return entry[1];
+};
+
+const listOf = (value: unknown, what: string): unknown[] => {
+  if (!Array.isArray(value)) throw new Error(`${what}: expected an array`);
+  return value;
 };
 
 /**
@@ -54,7 +70,7 @@ export const createConfirmedAccount = async (
   let lastError: unknown;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
-      return (await rest<{ id: string }>("/auth/v1/admin/users", { method: "POST", body })).id;
+      return stringField(await rest("/auth/v1/admin/users", { method: "POST", body }), "id", email);
     } catch (error) {
       lastError = error;
       await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
@@ -66,7 +82,7 @@ export const createConfirmedAccount = async (
 /**
  * Puts the dossier in the state a trusted contact's report leaves it in.
  *
- * The real path is a link sent by email, and local development sends none — the mailer skips
+ * The real path is a link sent by email, and local development sends none: the mailer skips
  * silently without a provider key, so the token that link carries never exists anywhere a test
  * could read it. This writes the same columns request-dossier-activation writes, and nothing
  * else: the freeze the job later reads, and the death date it will apply.
@@ -151,20 +167,36 @@ export const runCronJob = async (name: string): Promise<void> => {
 };
 
 export const dossierStatus = async (dossierId: string): Promise<string> => {
-  const rows = await rest<{ status: string }[]>(
-    `/rest/v1/dossiers?select=status&id=eq.${dossierId}`,
+  const rows = listOf(
+    await rest(`/rest/v1/dossiers?select=status&id=eq.${dossierId}`),
+    `dossier ${dossierId}`,
   );
-  const row = rows[0];
-  if (!row) throw new Error(`dossier ${dossierId} not found`);
-  return row.status;
+  if (rows.length === 0) throw new Error(`dossier ${dossierId} not found`);
+  return stringField(rows[0], "status", `dossier ${dossierId}`);
 };
 
 export const membershipRole = async (
   dossierId: string,
   userId: string,
 ): Promise<string | undefined> => {
-  const rows = await rest<{ role: string }[]>(
-    `/rest/v1/memberships?select=role&dossier_id=eq.${dossierId}&user_id=eq.${userId}`,
+  const rows = listOf(
+    await rest(`/rest/v1/memberships?select=role&dossier_id=eq.${dossierId}&user_id=eq.${userId}`),
+    `membership of ${userId}`,
   );
-  return rows[0]?.role;
+  return rows.length === 0 ? undefined : stringField(rows[0], "role", `membership of ${userId}`);
+};
+
+/** Notification rows of one type for one member: what the bell and the mailer will read. */
+export const notificationCount = async (
+  dossierId: string,
+  userId: string,
+  type: string,
+): Promise<number> => {
+  const rows = listOf(
+    await rest(
+      `/rest/v1/notifications?select=id&dossier_id=eq.${dossierId}&user_id=eq.${userId}&type=eq.${type}`,
+    ),
+    `notifications of ${userId}`,
+  );
+  return rows.length;
 };

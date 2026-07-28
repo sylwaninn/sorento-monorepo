@@ -5,7 +5,7 @@ export interface CatalogNoticeProps {
   /** Required, not optional: no catalog data may be displayed without its provenance. */
   sourceUrl: string;
   lastVerifiedDate: string;
-  /** Regulated profession to redirect to, straight from the catalog row — never hardcoded. */
+  /** Regulated profession to redirect to, straight from the catalog row, never hardcoded. */
   referenceProfession: string | null;
 }
 

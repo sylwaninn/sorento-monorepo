@@ -1,4 +1,4 @@
-// Default local `supabase start` keys — identical on every unconfigured local instance,
+// Default local `supabase start` keys: identical on every unconfigured local instance,
 // not a secret. Overridable via env vars for CI.
 export const LOCAL_SUPABASE_URL = process.env["SUPABASE_URL"] ?? "http://127.0.0.1:57321";
 
@@ -8,7 +8,7 @@ export const LOCAL_ANON_KEY =
 
 /**
  * Direct Postgres connection, used only by the suites that read the catalog (pg_constraint,
- * pg_policies) or call a plpgsql function straight — none of that is reachable through
+ * pg_policies) or call a plpgsql function straight; none of that is reachable through
  * PostgREST, and adding a database function just so a test could call it would mean shipping
  * surface area for the tests' benefit.
  */

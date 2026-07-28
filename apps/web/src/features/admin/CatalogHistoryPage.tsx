@@ -42,10 +42,10 @@ export const CatalogHistoryPage = () => {
                 >
                   <div className="flex flex-col gap-1">
                     <span>
-                      {adminContent.history.tableLabels[entry.catalogTable]} — {entry.rowId}
+                      {adminContent.history.tableLabels[entry.catalogTable]} · {entry.rowId}
                     </span>
                     <Typography color="muted">
-                      {entry.modifiedBy ?? adminContent.history.systemActor} —{" "}
+                      {entry.modifiedBy ?? adminContent.history.systemActor} ·{" "}
                       {new Date(entry.createdAt).toLocaleString("fr-FR")}
                     </Typography>
                   </div>

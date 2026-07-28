@@ -7,7 +7,7 @@ import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { TrackedItemCard } from "@/features/dossier/TrackedItemCard";
 import { useDossier } from "@/hooks/use-dossier";
-import { useParcours } from "@/hooks/use-parcours";
+import { useJourney } from "@/hooks/use-journey";
 
 const SECTION_LINKS = [
   { to: "aides", label: dossierContent.dashboard.benefitsLink },
@@ -22,13 +22,13 @@ export const DossierDashboardPage = () => {
   const { user } = useAuth();
   const access = useDossier(dossierId);
   const [filterMine, setFilterMine] = useState(false);
-  const parcours = useParcours(
+  const journey = useJourney(
     dossierId,
     access.dossier,
     filterMine ? (user?.id ?? null) : undefined,
   );
 
-  if (access.isLoading || parcours.isLoading) return <PageLoader />;
+  if (access.isLoading || journey.isLoading) return <PageLoader />;
 
   const assigneeOf = (assignedTo: string | null): string | null =>
     assignedTo === null ? null : access.firstNameOf(assignedTo);
@@ -37,7 +37,7 @@ export const DossierDashboardPage = () => {
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
         <Typography.Heading level={1}>
-          {dossierContent.dashboard.title} — {access.dossier?.subjectFirstName}{" "}
+          {dossierContent.dashboard.title} · {access.dossier?.subjectFirstName}{" "}
           {access.dossier?.subjectLastName}
         </Typography.Heading>
         <RouterLink className="link text-sm" to="/mes-dossiers">
@@ -48,34 +48,34 @@ export const DossierDashboardPage = () => {
       <Card>
         <Card.Content className="flex flex-col gap-2 py-4">
           <ProgressBar
-            value={parcours.completionPercentage}
+            value={journey.completionPercentage}
             minValue={0}
             maxValue={100}
             aria-label={dossierContent.dashboard.progressLabel}
           />
           <Typography type="body-sm" color="muted">
-            {dossierContent.dashboard.progressValue(parcours.completionPercentage)}
+            {dossierContent.dashboard.progressValue(journey.completionPercentage)}
           </Typography>
         </Card.Content>
       </Card>
 
       <section className="flex flex-col gap-2">
         <Typography.Heading level={2}>{dossierContent.dashboard.focusTitle}</Typography.Heading>
-        {parcours.focus.length === 0 ? (
+        {journey.focus.length === 0 ? (
           <Card>
             <Card.Content className="text-muted py-6 text-center text-sm">
               {dossierContent.dashboard.focusEmpty}
             </Card.Content>
           </Card>
         ) : (
-          parcours.focus.map((entry) => (
+          journey.focus.map((entry) => (
             <TrackedItemCard
               key={entry.tracking.id}
               entry={entry}
-              today={parcours.today}
+              today={journey.today}
               dossierId={dossierId}
               assigneeFirstName={assigneeOf(entry.tracking.assignedTo)}
-              commentCount={parcours.commentCountByProcedureId.get(entry.item.id) ?? 0}
+              commentCount={journey.commentCountByProcedureId.get(entry.item.id) ?? 0}
             />
           ))
         )}
@@ -106,7 +106,7 @@ export const DossierDashboardPage = () => {
         </Button>
       </div>
 
-      {parcours.groups.length === 0 ? (
+      {journey.groups.length === 0 ? (
         <Card>
           <Card.Content className="text-muted py-6 text-center text-sm">
             {dossierContent.dashboard.empty}
@@ -116,11 +116,11 @@ export const DossierDashboardPage = () => {
         <Accordion
           allowsMultipleExpanded
           // Settled windows start folded, with a reassuring line instead of a list.
-          defaultExpandedKeys={parcours.groups
+          defaultExpandedKeys={journey.groups
             .filter((group) => !group.settled)
             .map((group) => group.timeWindow)}
         >
-          {parcours.groups.map((group) => (
+          {journey.groups.map((group) => (
             <Accordion.Item key={group.timeWindow} id={group.timeWindow}>
               <Accordion.Heading>
                 <Accordion.Trigger>
@@ -139,10 +139,10 @@ export const DossierDashboardPage = () => {
                     <TrackedItemCard
                       key={entry.tracking.id}
                       entry={entry}
-                      today={parcours.today}
+                      today={journey.today}
                       dossierId={dossierId}
                       assigneeFirstName={assigneeOf(entry.tracking.assignedTo)}
-                      commentCount={parcours.commentCountByProcedureId.get(entry.item.id) ?? 0}
+                      commentCount={journey.commentCountByProcedureId.get(entry.item.id) ?? 0}
                     />
                   ))}
                 </Accordion.Body>

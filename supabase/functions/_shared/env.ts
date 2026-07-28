@@ -28,7 +28,7 @@ export const isLocalSupabaseUrl = (url: string): boolean => {
 
 /**
  * The gate for development-only endpoints, as a pure decision rather than a value frozen at
- * module load — the combinations that matter (a deployed URL with APP_ENV set, a local URL
+ * module load: the combinations that matter (a deployed URL with APP_ENV set, a local URL
  * without it) cannot be reached otherwise, and an unasserted gate is an assumed gate.
  *
  * Two independent signals must agree: an explicit opt-in (APP_ENV lives only in the gitignored

@@ -1,4 +1,4 @@
-import type { AccountExport, AccountPort, DossierRole } from "@sorento/domain";
+import { dossierRoleSchema, type AccountExport, type AccountPort } from "@sorento/domain";
 import type { TypedSupabaseClient } from "#client/client";
 import { assertNoError, requireRow, SupabaseRepositoryError } from "#client/errors";
 import {
@@ -63,7 +63,7 @@ export class AccountRepository implements AccountPort {
       dossiers: (dossiers.data ?? []).map(mapDossierRow),
       memberships: (memberships.data ?? []).map((row) => ({
         dossierId: row.dossier_id,
-        role: row.role as DossierRole,
+        role: dossierRoleSchema.parse(row.role),
       })),
       answers: (answers.data ?? []).map(mapAnswerRow),
       tracking: (tracking.data ?? []).map(mapTrackingRow),

@@ -3,7 +3,7 @@ import { LOCAL_DATABASE_URL } from "#client/integration-tests/env";
 
 /**
  * Opens a connection, runs one query, closes it. The catalog suites make a handful of queries
- * in total, so a pool would be machinery for nothing — and a leaked pooled connection is a hung
+ * in total, so a pool would be machinery for nothing, and a leaked pooled connection is a hung
  * CI job, which costs far more than reconnecting.
  */
 export const query = async <T extends Record<string, unknown>>(

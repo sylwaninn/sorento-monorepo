@@ -56,15 +56,18 @@ security definer
 set search_path = public
 stable
 as $$
+  -- Soft-deleted dossiers count too: while a dossier sits in the 30-day bin its owner can
+  -- still restore it, so erasing the account would orphan it and trip
+  -- trg_memberships_require_owner with an internal error instead of this guard's message.
   select count(*)::integer
   from memberships m
   join dossiers d on d.id = m.dossier_id
   where m.user_id = auth.uid()
-    and m.role = 'owner'
-    and d.deleted_at is null;
+    and m.role = 'owner';
 $$;
 
-revoke execute on function owned_dossier_count() from anon;
+revoke execute on function owned_dossier_count() from public, anon;
+grant execute on function owned_dossier_count() to authenticated, service_role;
 
 create or replace function delete_own_account()
 returns void
@@ -90,7 +93,7 @@ begin
   where author_id = v_user_id;
 
   -- Deleting auth.users cascades to profiles, which cascades to memberships, whose removal
-  -- trigger journals a "member_removed" event attributed to the person leaving — whose profile
+  -- trigger journals a "member_removed" event attributed to the person leaving, whose profile
   -- no longer exists at that point in the transaction. Memberships go first, while the actor is
   -- still a real profile, so the dossiers keep an honest trace of the departure.
   delete from memberships where user_id = v_user_id;
@@ -101,4 +104,5 @@ begin
 end;
 $$;
 
-revoke execute on function delete_own_account() from anon;
+revoke execute on function delete_own_account() from public, anon;
+grant execute on function delete_own_account() to authenticated, service_role;

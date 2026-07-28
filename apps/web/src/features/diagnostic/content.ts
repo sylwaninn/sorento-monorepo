@@ -1,3 +1,5 @@
+import type { QuestionContent } from "@/features/diagnostic/QuestionField";
+
 export const diagnosticContent = {
   page: {
     title: "Diagnostic",
@@ -82,3 +84,15 @@ export const diagnosticContent = {
   notice:
     "Ce service fournit de l'information générale personnalisée. Il ne remplace ni un notaire, ni un avocat, ni un conseiller.",
 } as const;
+
+const questionContentById = new Map<string, QuestionContent>(
+  Object.entries(diagnosticContent.questions),
+);
+
+export const questionContentFor = (questionId: string): QuestionContent => {
+  const content = questionContentById.get(questionId);
+  if (content === undefined) {
+    throw new Error(`Missing diagnostic copy for question "${questionId}"`);
+  }
+  return content;
+};
