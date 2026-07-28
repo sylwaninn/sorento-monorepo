@@ -2,7 +2,7 @@
 -- Objecting to an activation used to be a dead end: the pending fields stayed set
 -- forever, so request-dossier-activation answered "activation_already_pending" for
 -- good and nobody could move the dossier on. Opposition now cancels the pending
--- activation and freezes further attempts until support lifts the freeze — which is
+-- activation and freezes further attempts until support lifts the freeze, which is
 -- what "freeze the activation and notify support" actually requires.
 -- ============================================================================
 
@@ -34,4 +34,5 @@ begin
 end;
 $$;
 
-revoke execute on function release_activation_freeze(uuid) from anon;
+revoke execute on function release_activation_freeze(uuid) from public, anon;
+grant execute on function release_activation_freeze(uuid) to authenticated, service_role;

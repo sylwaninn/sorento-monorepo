@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 /**
  * The French copy the journeys drive the app through. It mirrors the per-feature content
- * dictionaries in apps/web — the app cannot export them, so this is the one place they are
+ * dictionaries in apps/web; the app cannot export them, so this is the one place they are
  * repeated, and a wording change breaks here rather than in ten test files.
  */
 export const copy = {
@@ -17,7 +17,7 @@ export const copy = {
   email: "Email",
   password: "Mot de passe",
   acceptTerms: /J'accepte les conditions générales/,
-  devSkipConfirmation: /DEV — créer le compte sans email/,
+  devSkipConfirmation: /DEV : créer le compte sans email/,
   submitSignup: "Créer mon compte",
   submitLogin: "Se connecter",
 } as const;
@@ -34,7 +34,7 @@ export const TEST_PASSWORD = "E2ePassword1234!";
 
 /**
  * Creates a confirmed account through the app itself, using the development shortcut the signup
- * screen offers locally — the same path a developer uses, so the screen is exercised rather than
+ * screen offers locally, the same path a developer uses, so the screen is exercised rather than
  * bypassed with an admin API call.
  */
 export const signUp = async (page: Page, email: string): Promise<void> => {
@@ -60,7 +60,7 @@ export const logIn = async (page: Page, email: string): Promise<void> => {
  * Written against the field kinds rather than a fixed list of questions on purpose: the engine
  * decides which questions apply from the answers so far, so a journey enumerating them would
  * encode a branch of the rules and break every time the catalog changes. What it asserts is the
- * property that matters to a user — the wizard always reaches a result.
+ * property that matters to a user: the wizard always reaches a result.
  */
 export type DiagnosticMode = "death" | "preparation";
 
@@ -73,8 +73,8 @@ export const completeDiagnostic = async (
   for (let visited = 0; visited < 20; visited += 1) {
     if (page.url().includes("/diagnostic/resultat")) return;
 
-    // The first question decides the whole branch — a dossier in PREPARATION or one already
-    // active — so it is the one answer a journey chooses rather than takes as it comes.
+    // The first question decides the whole branch (a dossier in PREPARATION or one already
+    // active), so it is the one answer a journey chooses rather than takes as it comes.
     await (visited === 0 ? answerMode(page, mode) : answerCurrentQuestion(page));
     const before = await step.innerText();
 
@@ -137,7 +137,7 @@ const answerCurrentQuestion = async (page: Page): Promise<void> => {
   }
 
   // A number field also exposes its input as a textbox, so the stepper buttons are what tells
-  // the two apart — a name typed into an age field leaves the step invalid and Next disabled,
+  // the two apart: a name typed into an age field leaves the step invalid and Next disabled,
   // which is a very slow way to discover the wrong branch was taken.
   const isNumberField = (await page.getByRole("button", { name: /Augmenter/ }).count()) > 0;
 

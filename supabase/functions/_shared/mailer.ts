@@ -23,7 +23,7 @@ export const unsubscribeFooter = (siteUrl: string, unsubscribeType: string | und
 
 /**
  * Sober by design: no deceased name in the subject, minimal body, one-click unsubscribe for
- * the exact notification type. Skips silently (not an error) when RESEND_API_KEY is unset —
+ * the exact notification type. Skips silently (not an error) when RESEND_API_KEY is unset:
  * local dev has no Resend account, and a missing key is not a delivery failure worth
  * retrying forever.
  */

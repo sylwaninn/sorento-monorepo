@@ -15,7 +15,7 @@ vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
 /**
  * Browser APIs jsdom does not implement but HeroUI measures with. Without them a component
  * throws on mount into React's error boundary, which reads as a rendered page: the test passes
- * while the screen is broken. Stubs, not fakes — nothing here asserts on layout.
+ * while the screen is broken. Stubs, not fakes: nothing here asserts on layout.
  */
 class ObserverStub {
   observe = (): void => {};
@@ -46,7 +46,7 @@ if (!globalThis.HTMLElement.prototype.scrollTo) {
 /**
  * React Router builds a `Request` for every navigation and hands it the current AbortSignal.
  * Under vitest that signal comes from jsdom while `Request` comes from Node's undici, which
- * rejects it as a foreign type — every `navigate()` in a test then produces an unhandled
+ * rejects it as a foreign type: every `navigate()` in a test then produces an unhandled
  * rejection that has nothing to do with the app. Dropping the signal is harmless here: no test
  * aborts a navigation, and the data layer that would honour it is stubbed.
  */

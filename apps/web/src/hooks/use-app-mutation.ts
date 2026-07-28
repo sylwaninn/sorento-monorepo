@@ -19,8 +19,8 @@ export type AppMutation<TInput, TResult> = UseMutationResult<TResult, unknown, T
 };
 
 /**
- * The single write path for the app. Every mutation goes through it so that a rejected write —
- * an RLS refusal above all — surfaces as a readable message instead of a screen that quietly
+ * The single write path for the app. Every mutation goes through it so that a rejected write
+ * (an RLS refusal above all) surfaces as a readable message instead of a screen that quietly
  * does not change, which is what fire-and-forget `await repo.update(...)` produced.
  */
 export const useAppMutation = <TInput, TResult>({

@@ -1,4 +1,4 @@
-<!-- PR title format: type(scope): description — e.g. feat(web): add dashboard page -->
+<!-- PR title format: type(scope): description, e.g. feat(web): add dashboard page -->
 
 ## Summary
 

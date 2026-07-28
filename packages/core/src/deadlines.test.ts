@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateDueDate, daysUntilDue, DEFAULT_DELAY_DAYS } from "#core/deadlines";
+import {
+  calculateDueDate,
+  daysUntilDue,
+  DEFAULT_DELAY_DAYS,
+  dueDateCategory,
+} from "#core/deadlines";
 import { addDays, daysBetween, toCalendarDate } from "#core/calendar-date";
 import { createProcedure } from "#core/test-fixtures";
 
@@ -54,5 +59,15 @@ describe("calendar arithmetic", () => {
 
   it("reads an instant as its UTC calendar day", () => {
     expect(toCalendarDate(new Date("2026-01-15T23:30:00Z"))).toBe("2026-01-15");
+  });
+});
+
+describe("dueDateCategory", () => {
+  it("categorises around the due-soon threshold without any clock of its own", () => {
+    expect(dueDateCategory(null, "2026-01-10")).toBe("none");
+    expect(dueDateCategory("2026-01-09", "2026-01-10")).toBe("overdue");
+    expect(dueDateCategory("2026-01-10", "2026-01-10")).toBe("due_soon");
+    expect(dueDateCategory("2026-01-17", "2026-01-10")).toBe("due_soon");
+    expect(dueDateCategory("2026-01-18", "2026-01-10")).toBe("due_later");
   });
 });

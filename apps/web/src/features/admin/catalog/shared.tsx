@@ -1,6 +1,6 @@
 import { parseDate, type DateValue } from "@internationalized/date";
 import { AlertDialog, Button, DateField, Label, ListBox, Select } from "@heroui/react";
-import type { TimeWindow } from "@sorento/domain";
+import { timeWindowSchema, type TimeWindow } from "@sorento/domain";
 import { adminContent } from "@/features/admin/content";
 
 export const TIME_WINDOWS: TimeWindow[] = ["24h", "7d", "30d", "6m"];
@@ -12,7 +12,7 @@ export const TimeWindowSelect = ({
   value: TimeWindow;
   onChange: (value: TimeWindow) => void;
 }) => (
-  <Select value={value} onChange={(v) => onChange(v as TimeWindow)}>
+  <Select value={value} onChange={(v) => onChange(timeWindowSchema.parse(v))}>
     <Label>{adminContent.catalog.procedures.timeWindowLabel}</Label>
     <Select.Trigger>
       <Select.Value />

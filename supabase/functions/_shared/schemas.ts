@@ -27,7 +27,7 @@ export const consentTrustedContactPayloadSchema = tokenPayloadSchema;
 
 // The document path is produced by the client upload and then read back through Storage, so
 // it is constrained to the {dossier_id}/{category}/{uuid}.{ext} layout the bucket policies
-// assume — a free-form string here would be a path-traversal surface.
+// assume: a free-form string here would be a path-traversal surface.
 const documentPathSchema = z
   .string()
   .regex(

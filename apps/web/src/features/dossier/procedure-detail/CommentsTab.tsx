@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { isMentionable } from "@sorento/core";
 import {
   Autocomplete,
   Button,
@@ -131,7 +132,7 @@ export const CommentsTab = ({ dossierId, procedureId, access }: CommentsTabProps
 };
 
 // HeroUI's Autocomplete is a discrete picker (its own trigger + popover), not an inline "@"
-// trigger inside a textarea — that pattern isn't offered by the component. Composed here as a
+// trigger inside a textarea: that pattern isn't offered by the component. Composed here as a
 // standalone "mention someone" picker next to the comment box.
 const MentionPicker = ({
   access,
@@ -161,7 +162,7 @@ const MentionPicker = ({
           </SearchField>
           <ListBox>
             {access.members
-              .filter((member) => member.role !== "trusted_contact")
+              .filter((member) => isMentionable(member.role))
               .map((member) => (
                 <ListBox.Item
                   key={member.userId}

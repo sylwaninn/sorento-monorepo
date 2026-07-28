@@ -1,12 +1,15 @@
+import { z } from "zod";
 import { isAuthorizedCronRequest } from "@shared/cron-auth.ts";
 import { internalError, json, preflight } from "@shared/http.ts";
 import { serviceClient, type EdgeSupabaseClient } from "@shared/supabase.ts";
 import { completionPercentage } from "@sorento/core";
 
-interface TrackingDigestRow {
-  status: string;
-  updated_at: string;
-}
+// The client is untyped, so the rows are validated instead of asserted.
+const trackingDigestRowSchema = z.object({
+  status: z.string(),
+  updated_at: z.string(),
+});
+type TrackingDigestRow = z.infer<typeof trackingDigestRowSchema>;
 
 const isSettled = (entry: TrackingDigestRow): boolean =>
   entry.status === "done" || entry.status === "not_applicable";
@@ -20,7 +23,7 @@ const digestFor = async (
   dossierId: string,
 ): Promise<{ percentage: number; completedThisWeek: number; remaining: number } | null> => {
   const { data } = await client.from("tracking").select().eq("dossier_id", dossierId);
-  const entries = (data ?? []) as TrackingDigestRow[];
+  const entries = z.array(trackingDigestRowSchema).parse(data ?? []);
   if (entries.length === 0) return null;
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();

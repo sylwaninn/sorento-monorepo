@@ -6,7 +6,7 @@ import { createConfirmedAccount } from "#e2e/support/backend";
  * The funnel the whole product rests on: someone answers the diagnostic, and the journey their
  * answers produced becomes a dossier they can work through.
  *
- * Every layer already has its own tests — the engine's rules, the schemas, the policies, the
+ * Every layer already has its own tests: the engine's rules, the schemas, the policies, the
  * screens in isolation. None of them can fail when the pieces disagree: answers persisted under
  * one key and read under another, a session that arrives after the redirect, a dossier created
  * without the diagnostic attached. That is the whole reason this test exists.

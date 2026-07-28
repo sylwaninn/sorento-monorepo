@@ -5,8 +5,8 @@ import type { Session, User } from "@sorento/supabase-client";
  *
  * Every repository method and every auth call returns a promise that never settles, so react-query
  * stays pending and each screen renders its loading branch. That is deliberate: the smoke suite
- * exists to prove a screen can mount at all — its imports resolve, its hooks run in a stable
- * order, the providers it expects are there — and a fixture per screen would only add a second
+ * exists to prove a screen can mount at all (its imports resolve, its hooks run in a stable
+ * order, the providers it expects are there), and a fixture per screen would only add a second
  * thing that can be wrong. Loaded-state behaviour belongs in the screen's own test, and the
  * real round trip belongs in E2E.
  */
@@ -43,8 +43,8 @@ const stubSupabaseClient = (): unknown => ({
 });
 
 /**
- * Replaces every `*Repository` export and the client factory, and leaves everything else — the
- * error type screens match on, the type-only exports — untouched.
+ * Replaces every `*Repository` export and the client factory, and leaves everything else
+ * (the error type screens match on, the type-only exports) untouched.
  */
 export const stubDataLayer = (actual: Record<string, unknown>): Record<string, unknown> => ({
   ...Object.fromEntries(

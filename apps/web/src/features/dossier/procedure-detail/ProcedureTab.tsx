@@ -1,5 +1,10 @@
 import { Card, Label, ListBox, Select, Typography } from "@heroui/react";
-import type { Procedure, Tracking, TrackingStatus } from "@sorento/domain";
+import {
+  trackingStatusSchema,
+  type Procedure,
+  type Tracking,
+  type TrackingStatus,
+} from "@sorento/domain";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { dossierContent } from "@/features/dossier/content";
 import type { AppMutation } from "@/hooks/use-app-mutation";
@@ -37,7 +42,7 @@ export const ProcedureTab = ({
         <p>{procedure.description}</p>
         <Typography.Paragraph color="muted" size="sm">
           {dossierContent.procedureDetail.organizationLabel}: {procedure.organization}
-          {procedure.recipientAddress === null ? "" : ` — ${procedure.recipientAddress}`}
+          {procedure.recipientAddress === null ? "" : ` · ${procedure.recipientAddress}`}
         </Typography.Paragraph>
 
         <ErrorAlert message={statusMutation.errorMessage ?? assigneeMutation.errorMessage} />
@@ -45,7 +50,7 @@ export const ProcedureTab = ({
         <Select
           isDisabled={!canEdit}
           value={tracking.status}
-          onChange={(value) => statusMutation.mutate(value as TrackingStatus)}
+          onChange={(value) => statusMutation.mutate(trackingStatusSchema.parse(value))}
           placeholder={dossierContent.procedureDetail.statusLabel}
         >
           <Label>{dossierContent.procedureDetail.statusLabel}</Label>
@@ -86,7 +91,7 @@ export const ProcedureTab = ({
                 {dossierContent.dashboard.unassigned}
                 <ListBox.ItemIndicator />
               </ListBox.Item>
-              {/* Viewers are never assignable — the same rule the database trigger enforces. */}
+              {/* Viewers are never assignable: the same rule the database trigger enforces. */}
               {access.assignableMembers.map((member) => (
                 <ListBox.Item
                   key={member.userId}

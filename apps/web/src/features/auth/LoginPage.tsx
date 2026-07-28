@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
+import { z } from "zod";
 import {
   Alert,
   Button,
@@ -18,6 +19,8 @@ import { authErrorMessage } from "@/auth/auth-error-messages";
 import { useMagicLinkLoginMutation, usePasswordLoginMutation } from "@/auth/use-auth-mutations";
 import { authContent } from "@/features/auth/content";
 
+const loginModeSchema = z.enum(["password", "magic-link"]);
+
 export const LoginPage = () => {
   const [mode, setMode] = useState<"password" | "magic-link">("password");
 
@@ -30,7 +33,7 @@ export const LoginPage = () => {
         <Card.Content>
           <Tabs
             selectedKey={mode}
-            onSelectionChange={(key) => setMode(key as "password" | "magic-link")}
+            onSelectionChange={(key) => setMode(loginModeSchema.parse(String(key)))}
           >
             <Tabs.ListContainer>
               <Tabs.List aria-label="Méthode de connexion">
@@ -72,12 +75,14 @@ const PasswordLoginForm = () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const emailNotConfirmed =
-    login.isError &&
-    typeof login.error === "object" &&
+  const loginErrorCode =
     login.error !== null &&
+    typeof login.error === "object" &&
     "code" in login.error &&
-    (login.error as { code?: string }).code === "email_not_confirmed";
+    typeof login.error.code === "string"
+      ? login.error.code
+      : undefined;
+  const emailNotConfirmed = login.isError && loginErrorCode === "email_not_confirmed";
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
