@@ -150,9 +150,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Pinned: `latest` turned a Supabase release into a red build nobody had committed for.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.110.0
 
       # Replays every migration from nothing and seeds. A migration that only applies on top of
       # an existing database fails here rather than on the next developer's machine.
