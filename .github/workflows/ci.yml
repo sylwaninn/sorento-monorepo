@@ -1,0 +1,259 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to a PR makes the previous run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Everything that reads the code without running it. Split from `test` so a failing
+  # assertion and a formatting slip are never reported as the same red cross.
+  quality:
+    name: Quality (format, lint, types, suite hygiene)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Runs before lint: an unformatted file is the cheapest failure to diagnose.
+      - name: Check formatting
+        run: pnpm format:check
+
+      # Structural audit of the suites: an orphan test, a module with none, a `.only`. Runs no
+      # test, so it reports in seconds and before anything slower has a chance to fail first.
+      - name: Audit the test suites
+        run: pnpm check:tests
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Deno, plus the import-map guard that keeps every Edge Function bootable.
+      - name: Lint and typecheck Edge Functions
+        run: pnpm check:functions
+
+      # The README's generated blocks (badges, packages, commands, functions, env vars)
+      # must match the tree. `pnpm sync:docs` regenerates them.
+      - name: Check documentation freshness
+        run: pnpm check:docs
+
+  test:
+    name: Unit tests and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # check-diff-coverage compares against the base branch, which needs its history.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Fails on its own if any package falls under its threshold. The gate lives in the
+      # vitest configs, not here, so `pnpm verify` locally enforces exactly the same bar.
+      - name: Unit tests with coverage thresholds
+        run: pnpm test:coverage
+
+      # A global percentage barely moves when a hundred untested lines land in a large
+      # repository. This asks the question that does not average away: are the lines this
+      # branch changed covered?
+      - name: Coverage of the changed lines
+        if: github.event_name == 'pull_request'
+        run: pnpm coverage:diff
+
+      # Coverage that has run ahead of its threshold is slack a later regression hides in.
+      - name: Coverage thresholds still pressed to what is achieved
+        run: pnpm coverage:ratchet:check
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            packages/*/coverage
+            apps/*/coverage
+          retention-days: 7
+          if-no-files-found: ignore
+
+  functions:
+    name: Edge Function unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # The shared code every function runs before anything else: token hashing, the cron
+      # secret comparison, CORS, payload parsing, and the gate on the development endpoints.
+      - name: Test the shared Edge Function code
+        run: pnpm test:functions
+
+  # Everything that needs a database and a running stack, in one job: starting Supabase twice
+  # costs more than the clarity of splitting it, and the step names say which half failed.
+  stack:
+    name: Integration and journeys
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Replays every migration from nothing and seeds. A migration that only applies on top of
+      # an existing database fails here rather than on the next developer's machine.
+      - name: Start Supabase
+        run: supabase start
+
+      # RLS policies, the policy snapshot, the SQL-to-TypeScript mirrors, and the thirteen Edge
+      # Functions over real HTTP.
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: Install Playwright browser
+        run: pnpm --filter @sorento/e2e exec playwright install --with-deps chromium
+
+      # The journeys no other suite can see fail: the diagnostic funnel, an invitation crossing
+      # from one account to another, and the 48-hour activation grace period.
+      - name: End-to-end journeys
+        run: pnpm test:e2e
+
+      - name: Upload journey report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stack state on failure
+        if: failure()
+        run: supabase status || true
+
+  # Coverage says a line ran; the mutation score says an assertion would have caught it
+  # changing. Only the two pure packages are mutated: they have no DOM and no I/O, so the whole
+  # run is seconds, and they are where the rules live.
+  mutation:
+    name: Mutation score (core, domain)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Each package breaks the build under its own threshold, set in its stryker.config.json.
+      - name: Mutation testing
+        run: pnpm test:mutation
+
+      - name: Upload mutation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-reports
+          path: packages/*/reports/mutation
+          retention-days: 7
+          if-no-files-found: ignore
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs the history to scan the commits a PR adds, not just the tree.
+          fetch-depth: 0
+
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
