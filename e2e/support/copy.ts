@@ -1,26 +1,11 @@
-/**
- * The French copy the journeys drive the app through.
- *
- * These journeys are a black box: they import none of the app's packages, so the per-feature
- * content dictionaries cannot be imported either and every string a journey clicks on has to be
- * repeated here. A repetition nothing compares is a repetition that drifts, and the way it
- * surfaces is the worst kind of failure a suite can have: a selector that finds nothing, twelve
- * minutes into CI, pointing at the test rather than at the wording that moved.
- *
- * So each entry names the dictionary it was copied from, and `pnpm check:tests` refuses one whose
- * dictionary no longer contains that text. The rename then fails in milliseconds, before the
- * commit, naming both sides.
- *
- * Strings are the whole label rather than a fragment of it. Playwright matches an accessible name
- * exactly, and a fragment would also keep passing after the half it does not name is rewritten.
- */
+import { mirrors } from "#e2e/support/mirrors";
 
 /**
- * Records which dictionary a string was copied from. Both arguments are read by the checker in
- * scripts/check-tests.mjs, which is why they have to stay string literals rather than constants.
+ * The copy the shared helpers drive the app through: the landing page, the diagnostic, signing
+ * in, and the two flows that were the suite's first journeys. Copy belonging to one area lives
+ * beside that area's journey, in its own `copy-<area>.ts`, so two journeys never queue behind the
+ * same file. See mirrors.ts for why any of this is repeated at all.
  */
-const mirrors = (_dictionary: string, text: string): string => text;
-
 export const copy = {
   landingCta: mirrors("features/landing/content.ts", "Commencer mon diagnostic gratuit"),
 
