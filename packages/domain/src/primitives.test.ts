@@ -69,6 +69,22 @@ describe("dateSchema", () => {
     expect(dateSchema.safeParse("2026/01/15").success).toBe(false);
   });
 
+  it.each(["2026-02-29", "2026-04-31", "2026-13-01", "2026-00-10", "2026-01-00"])(
+    "rejects the impossible calendar date %s",
+    (value) => {
+      expect(dateSchema.safeParse(value).success).toBe(false);
+    },
+  );
+
+  it("accepts 29 February in a leap year", () => {
+    expect(dateSchema.safeParse("2028-02-29").success).toBe(true);
+  });
+
+  it("does not treat a century as a leap year unless it is divisible by 400", () => {
+    expect(dateSchema.safeParse("1900-02-29").success).toBe(false);
+    expect(dateSchema.safeParse("2000-02-29").success).toBe(true);
+  });
+
   it("states the expected format in French, the language the user reads", () => {
     const result = dateSchema.safeParse("nope");
     expect(result.success).toBe(false);
