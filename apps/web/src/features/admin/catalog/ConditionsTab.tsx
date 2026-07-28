@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import {
   Button,
   Card,
@@ -29,6 +30,8 @@ import { fieldErrors } from "@/lib/zod-form-errors";
 
 // The admin list and the list every dossier reads are two cache entries of the same data.
 const INVALIDATES = [queryKeys.catalog.conditions()];
+
+const targetTypeSchema = z.enum(["procedure", "benefit"]);
 
 export const ConditionsTab = () => {
   const [editing, setEditing] = useState<Condition | null>(null);
@@ -80,7 +83,7 @@ export const ConditionsTab = () => {
                       {condition.procedureId
                         ? adminContent.catalog.conditions.targetProcedure
                         : adminContent.catalog.conditions.targetBenefit}{" "}
-                      — {targetLabel}
+                      : {targetLabel}
                     </Typography>
                     <span className="text-muted max-w-md truncate text-sm">
                       {JSON.stringify(condition.expression)}
@@ -212,7 +215,7 @@ const ConditionForm = ({
           <Select
             value={targetType}
             onChange={(value) => {
-              setTargetType(value as "procedure" | "benefit");
+              setTargetType(targetTypeSchema.parse(value));
               setTargetId("");
             }}
           >
@@ -235,7 +238,7 @@ const ConditionForm = ({
             </Select.Popover>
           </Select>
 
-          <Select value={targetId} onChange={(value) => setTargetId(value as string)}>
+          <Select value={targetId} onChange={(value) => setTargetId(String(value))}>
             <Label>{targetType === "procedure" ? c.targetProcedure : c.targetBenefit}</Label>
             <Select.Trigger>
               <Select.Value />

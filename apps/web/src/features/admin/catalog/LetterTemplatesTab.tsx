@@ -185,7 +185,7 @@ const LetterTemplateForm = ({
         <Card.Content className="flex flex-col gap-4">
           <ErrorAlert message={save.errorMessage} />
 
-          <Select value={procedureId} onChange={(value) => setProcedureId(value as string)}>
+          <Select value={procedureId} onChange={(value) => setProcedureId(String(value))}>
             <Label>{c.procedureLabel}</Label>
             <Select.Trigger>
               <Select.Value />

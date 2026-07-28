@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card, ListBox, Select, Typography } from "@heroui/react";
-import type { ActivityLogType } from "@sorento/domain";
+import { activityLogTypeSchema } from "@sorento/domain";
 import { ActivityLogRepository } from "@sorento/supabase-client";
 import { supabase } from "@/lib/supabase-client";
 import { useDossier } from "@/hooks/use-dossier";
@@ -36,7 +36,7 @@ export const ActivityPage = () => {
     return <PageLoader />;
   }
 
-  const actionTypes = Object.keys(dossierContent.activity.actionLabels) as ActivityLogType[];
+  const actionTypes = activityLogTypeSchema.options;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
@@ -105,7 +105,10 @@ export const ActivityPage = () => {
             filtered.map((entry) => (
               <div key={entry.id} className="flex justify-between border-b pb-2 text-sm">
                 <span>
-                  {entry.actorId ? (access.profilesById.get(entry.actorId)?.firstName ?? "—") : "—"}{" "}
+                  {entry.actorId
+                    ? (access.profilesById.get(entry.actorId)?.firstName ??
+                      sharedContent.unknownMember)
+                    : sharedContent.unknownMember}{" "}
                   {dossierContent.activity.actionLabels[entry.actionType]}
                 </span>
                 <Typography color="muted">
