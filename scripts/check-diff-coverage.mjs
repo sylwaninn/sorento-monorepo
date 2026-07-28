@@ -4,7 +4,7 @@
  *
  * A global threshold is a ratio, and a ratio is dominated by code written months ago. On a
  * repository with a large untested surface, a hundred new untested lines move it by a fraction
- * of a point — so the gate that is supposed to mean "changes arrive with tests" stays green
+ * of a point, so the gate that is supposed to mean "changes arrive with tests" stays green
  * through exactly the change it exists to catch. This asks the narrower question the global
  * number cannot: of the lines you touched, how many does a test actually execute?
  *
@@ -29,8 +29,8 @@ const LCOV_FILES = [
 
 /**
  * Files whose changed lines are not measured by any lcov, on purpose. Each is covered by a
- * suite that reports no coverage — the integration suites run against a real database, the Deno
- * suites run outside vitest — or holds no behaviour to cover.
+ * suite that reports no coverage (the integration suites run against a real database, the Deno
+ * suites run outside vitest), or holds no behaviour to cover.
  */
 const NOT_MEASURED = [
   /^supabase\//,
@@ -178,7 +178,7 @@ for (const [file, lines] of changed) {
 
   const missing = [];
   for (const lineNumber of lines) {
-    // A line absent from the report is not executable — a blank line, a type, a closing brace.
+    // A line absent from the report is not executable: a blank line, a type, a closing brace.
     const hits = executions.get(lineNumber);
     if (hits === undefined) continue;
     measured += 1;

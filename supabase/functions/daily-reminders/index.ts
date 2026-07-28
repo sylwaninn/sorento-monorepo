@@ -5,9 +5,11 @@ import {
   addDays,
   calculateDueDate,
   daysBetween,
+  isCalendarDate,
   toCalendarDate,
   type CalendarDate,
 } from "@sorento/core";
+import { timeWindowSchema } from "@sorento/domain";
 
 const APPROACHING_WINDOW_DAYS = 3;
 const PROLONGED_WAITING_DAYS = 5;
@@ -63,7 +65,7 @@ const collectByRecipient = (
     const dueDate = calculateDueDate(
       {
         delayDays: catalog.delay_days,
-        timeWindow: catalog.time_window as "24h" | "7d" | "30d" | "6m",
+        timeWindow: timeWindowSchema.parse(catalog.time_window),
       },
       deathDate,
     );
@@ -120,7 +122,8 @@ Deno.serve(async (request) => {
     let emailsQueued = 0;
 
     for (const dossier of dossiers ?? []) {
-      const deathDate = dossier.death_date as CalendarDate;
+      const deathDate: string = String(dossier.death_date);
+      if (!isCalendarDate(deathDate)) continue;
 
       const [{ data: tracking }, { data: owner }] = await Promise.all([
         client

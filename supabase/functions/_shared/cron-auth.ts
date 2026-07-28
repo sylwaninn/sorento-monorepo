@@ -26,7 +26,7 @@ export const matchesCronSecret = (provided: string | null, expected: string | nu
   return secretsMatch(provided, expected);
 };
 
-// These jobs run with service_role privileges and must not be publicly callable — guarded by
+// These jobs run with service_role privileges and must not be publicly callable: guarded by
 // a shared secret rather than a user JWT, since there is no user to verify_jwt as.
 export const isAuthorizedCronRequest = (request: Request): boolean =>
   matchesCronSecret(request.headers.get("x-cron-secret"), env.cronSecret);

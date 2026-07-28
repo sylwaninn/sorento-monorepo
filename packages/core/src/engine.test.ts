@@ -79,7 +79,7 @@ const run = (answers: DiagnosticAnswers, deathDate: CalendarDate | null) =>
     deathDate,
   });
 
-describe("evaluateJourney — profile types", () => {
+describe("evaluateJourney: profile types", () => {
   it("widowed, retired, no minor children: neither survivor pension, employer, nor family counsel", () => {
     const result = run(
       { maritalStatus: "widowed", employmentStatus: "retired", hasMinorChildren: false },

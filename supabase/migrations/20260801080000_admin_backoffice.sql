@@ -6,7 +6,7 @@
 -- ----------------------------------------------------------------------------
 
 -- Nullable: seed.sql populates the catalog outside any authenticated session (no
--- auth.uid()), which is bootstrap data, not an admin edit — null means "system".
+-- auth.uid()), which is bootstrap data, not an admin edit: null means "system".
 alter table catalog_history alter column modified_by drop not null;
 
 create or replace function log_catalog_change()
@@ -48,7 +48,7 @@ create trigger trg_letter_templates_catalog_history
 -- ----------------------------------------------------------------------------
 -- get_admin_metrics: anonymized aggregate counts only. Runs as security definer
 -- to count across all dossiers, but never returns a row, a name, or any single
--- dossier's content — only totals. CLAUDE.md forbids the admin any access to
+-- dossier's content: only totals. CLAUDE.md forbids the admin any access to
 -- dossier/tracking/comment/document content; this function is the one exception,
 -- deliberately scoped to counts.
 -- ----------------------------------------------------------------------------

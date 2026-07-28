@@ -9,7 +9,7 @@
  *   node scripts/ratchet-coverage.mjs           raise every threshold to what is achieved
  *   node scripts/ratchet-coverage.mjs --check   fail when too much slack has opened up
  *
- * Run `pnpm test:coverage` first — this reads the reports, it does not produce them.
+ * Run `pnpm test:coverage` first: this reads the reports, it does not produce them.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -27,8 +27,8 @@ const PACKAGES = [
 
 /**
  * How far actual coverage may run ahead of the threshold before the ratchet has to be pulled.
- * Some slack is necessary — a threshold pinned to the exact number breaks on a one-line change
- * that happens to be uncovered — but slack is also where a regression hides, so it is bounded.
+ * Some slack is necessary (a threshold pinned to the exact number breaks on a one-line change
+ * that happens to be uncovered), but slack is also where a regression hides, so it is bounded.
  */
 const MAX_SLACK = 5;
 
@@ -78,7 +78,7 @@ for (const packagePath of PACKAGES) {
     if (isCheck) {
       problems.push(
         `${packagePath} ${metric}: threshold ${current}%, achieved ${achieved[metric]}%` +
-          ` — ${slack} points of slack. Run \`pnpm coverage:ratchet\`.`,
+          `: ${slack} points of slack. Run \`pnpm coverage:ratchet\`.`,
       );
       continue;
     }
