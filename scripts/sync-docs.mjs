@@ -6,13 +6,13 @@
  *
  * Descriptions live in the maps below on purpose: adding a script, package, function or env
  * var without describing it fails `--check`, which turns "the docs need updating" into a hard
- * signal — in CI, in `pnpm verify` and in the Claude Code Stop hook — instead of a hope.
+ * signal (in CI, in `pnpm verify` and in the Claude Code Stop hook) instead of a hope.
  *
  * `--check` fails instead of writing, which is what CI runs.
  */
 
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,6 +20,13 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const readmePath = join(root, "README.md");
 const isCheck = process.argv.includes("--check");
 const problems = [];
+
+// The README lands with the CI branch at the top of the stack; on the branches
+// underneath it there is nothing to sync yet.
+if (!existsSync(readmePath)) {
+  console.log("sync-docs: no README.md in this tree, nothing to sync");
+  process.exit(0);
+}
 
 const readJson = (path) => JSON.parse(readFileSync(join(root, path), "utf8"));
 
@@ -31,17 +38,17 @@ const clientPkg = readJson("packages/supabase-client/package.json");
 const e2ePkg = readJson("e2e/package.json");
 
 // ---------------------------------------------------------------------------
-// Description maps — the one part of the generated blocks that is authored here.
+// Description maps: the one part of the generated blocks that is authored here.
 // A key with no entry fails the run; a stale entry fails it too.
 // ---------------------------------------------------------------------------
 
 const PACKAGE_DESCRIPTIONS = {
   "@sorento/web":
-    "React SPA — the assembly layer. Composes the packages into screens; contains no business rule.",
+    "React SPA, the assembly layer. Composes the packages into screens; contains no business rule.",
   "@sorento/core":
     "Pure business rules (journey engine, permissions, deadlines). No React, no I/O, injected clock.",
   "@sorento/domain":
-    "Zod schemas and the types inferred from them — the single source of truth for domain shapes.",
+    "Zod schemas and the types inferred from them: the single source of truth for domain shapes.",
   "@sorento/supabase-client":
     "Repositories and row-to-domain mappers. The only package allowed to import `@supabase/supabase-js`.",
   "@sorento/config":
@@ -73,7 +80,7 @@ const SCRIPT_DESCRIPTIONS = {
   "sync:docs": "Regenerate this README's generated blocks.",
   format: "Prettier, write mode.",
   "format:check": "Prettier, check mode.",
-  verify: "The full local quality gate — the same bar CI enforces.",
+  verify: "The full local quality gate: the same bar CI enforces.",
   prepare: "Husky bootstrap; runs automatically on install.",
 };
 
@@ -81,7 +88,7 @@ const FUNCTION_DESCRIPTIONS = {
   "accept-invitation": "Accepts a dossier invitation and creates the membership.",
   "consent-trusted-contact":
     "Records the trusted contact's consent and issues their long-lived activation link.",
-  "daily-reminders": "Cron — computes and queues the daily reminder notifications.",
+  "daily-reminders": "Cron: computes and queues the daily reminder notifications.",
   "designate-trusted-contact": "Designates a trusted contact and sends the consent link.",
   "dev-signup":
     "Development only (`env.isDevelopment`): account creation without a confirmation email. Answers 404 anywhere else.",
@@ -89,16 +96,16 @@ const FUNCTION_DESCRIPTIONS = {
   "oppose-dossier-activation":
     "Registers a member's objection during the 48 h activation grace period.",
   "process-dossier-activations":
-    "Cron — activates dossiers whose 48 h grace period expired without objection.",
+    "Cron: activates dossiers whose 48 h grace period expired without objection.",
   "request-dossier-activation":
     "Lets the trusted contact request activation: starts the 48 h grace period and notifies every member.",
   "resolve-invitation":
-    "Public — resolves an invitation token to who invites to which dossier, and nothing more.",
+    "Public: resolves an invitation token to who invites to which dossier, and nothing more.",
   "resolve-trusted-contact-activation":
-    "Public — resolves an activation token so the trusted contact sees what is about to happen.",
-  "send-pending-emails": "Cron — delivers the queued notification emails.",
+    "Public: resolves an activation token so the trusted contact sees what is about to happen.",
+  "send-pending-emails": "Cron: delivers the queued notification emails.",
   "weekly-digest":
-    "Cron — queues the opt-in weekly progress summary (what advanced, never what is late).",
+    "Cron: queues the opt-in weekly progress summary (what advanced, never what is late).",
 };
 
 const ENV_DESCRIPTIONS = {
@@ -109,7 +116,7 @@ const ENV_DESCRIPTIONS = {
   },
   SUPABASE_SERVICE_ROLE_KEY: {
     scope: "Server",
-    text: "Bypasses RLS. Edge Functions and server-side scripts only — never client-side, never committed.",
+    text: "Bypasses RLS. Edge Functions and server-side scripts only: never client-side, never committed.",
   },
   SUPABASE_DB_URL: {
     scope: "Server",
@@ -145,7 +152,7 @@ const dep = (pkg, name) => {
   const range = pkg.dependencies?.[name] ?? pkg.devDependencies?.[name];
   if (!range) {
     problems.push(
-      `"${name}" not found in ${pkg.name}'s manifest — update the badge list in scripts/sync-docs.mjs`,
+      `"${name}" not found in ${pkg.name}'s manifest. Update the badge list in scripts/sync-docs.mjs`,
     );
     return "?";
   }
@@ -194,10 +201,10 @@ const envVarNames = () =>
 
 const requireDescriptions = (kind, keys, map) => {
   for (const key of keys.filter((k) => !(k in map))) {
-    problems.push(`missing ${kind} description for "${key}" — add it to scripts/sync-docs.mjs`);
+    problems.push(`missing ${kind} description for "${key}": add it to scripts/sync-docs.mjs`);
   }
   for (const key of Object.keys(map).filter((k) => !keys.includes(k))) {
-    problems.push(`stale ${kind} description for "${key}" — remove it from scripts/sync-docs.mjs`);
+    problems.push(`stale ${kind} description for "${key}": remove it from scripts/sync-docs.mjs`);
   }
 };
 
@@ -333,7 +340,7 @@ if (problems.length > 0) {
 try {
   next = prettify(next);
 } catch {
-  console.error("could not run `pnpm exec prettier` — is the workspace installed?");
+  console.error("could not run `pnpm exec prettier`. Is the workspace installed?");
   process.exit(1);
 }
 

@@ -18,6 +18,6 @@ src/
 Two distinct suites:
 
 - **Unit** (`pnpm --filter @sorento/supabase-client test`): mappers and repository logic, no network.
-- **Integration** (`pnpm test:integration`, from the root): runs against the real local Postgres — RLS policy behaviour per role, hardening checks, the policy snapshot (a new policy changes the snapshot, and that diff must be accepted deliberately), the SQL↔TypeScript mirror suite, and HTTP tests for every Edge Function. Requires `supabase start`.
+- **Integration** (`pnpm test:integration`, from the root): runs against the real local Postgres: RLS policy behaviour per role, hardening checks, the policy snapshot (a new policy changes the snapshot, and that diff must be accepted deliberately), the SQL↔TypeScript mirror suite, and HTTP tests for every Edge Function. Requires `supabase start`.
 
-Every new RLS policy arrives with its integration test — the suite here is where that rule is enforced.
+Every new RLS policy arrives with its integration test; the suite here is where that rule is enforced.

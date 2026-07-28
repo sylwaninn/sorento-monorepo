@@ -29,7 +29,7 @@ const addCollaborator = async (dossierId: string, user: TestUser): Promise<strin
   return data.id;
 };
 
-describe("RLS — the activity log cannot be written by a client", () => {
+describe("RLS: the activity log cannot be written by a client", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
@@ -75,7 +75,7 @@ describe("RLS — the activity log cannot be written by a client", () => {
   });
 });
 
-describe("RLS — a soft-deleted dossier revokes access to its content", () => {
+describe("RLS: a soft-deleted dossier revokes access to its content", () => {
   let owner: TestUser;
   let dossierId: string;
 
@@ -109,7 +109,7 @@ describe("RLS — a soft-deleted dossier revokes access to its content", () => {
   });
 });
 
-describe("RLS — creating a dossier does not grant permanent access", () => {
+describe("RLS: creating a dossier does not grant permanent access", () => {
   it("the previous owner loses the dossier once ownership moves on", async () => {
     const creator = await createTestUser("Camille");
     const successor = await createTestUser("Sacha");
@@ -139,7 +139,7 @@ describe("RLS — creating a dossier does not grant permanent access", () => {
   });
 });
 
-describe("RLS — notifications are strictly personal", () => {
+describe("RLS: notifications are strictly personal", () => {
   it("a member never reads another member's notifications", async () => {
     const owner = await createTestUser("Noa");
     const other = await createTestUser("Nina");
@@ -170,7 +170,7 @@ describe("RLS — notifications are strictly personal", () => {
   });
 });
 
-describe("RLS — comment deletion follows the matrix", () => {
+describe("RLS: comment deletion follows the matrix", () => {
   let owner: TestUser;
   let viewer: TestUser;
   let dossierId: string;

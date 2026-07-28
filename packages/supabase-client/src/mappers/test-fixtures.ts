@@ -2,7 +2,7 @@
  * Sentinel builders for the mapper suites.
  *
  * Every mapper is a column-to-field translation, so the only bug it can carry is reading the
- * wrong column — `created_at` landing in `updatedAt`, `procedure_id` in `benefitId`. A fixture
+ * wrong column: `created_at` landing in `updatedAt`, `procedure_id` in `benefitId`. A fixture
  * that reuses the same UUID or the same timestamp for several columns cannot express that
  * failure: the assertion passes either way. These builders hand out a distinct value per
  * ordinal so a swap always changes the result.

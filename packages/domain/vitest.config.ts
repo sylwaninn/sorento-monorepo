@@ -7,7 +7,7 @@ import { coverageConfig } from "@sorento/config/vitest-coverage";
  * this package is its mutation score (stryker.config.json, break at 95): every schema here is
  * a contract, and a contract nobody asserts is a contract that can be loosened by accident.
  *
- * Line coverage on a declarative package is cheap to fake — importing a module executes its
+ * Line coverage on a declarative package is cheap to fake: importing a module executes its
  * `z.object(...)` calls without asserting anything. The mutation score is what makes that
  * impossible, which is why it, not this file, is the real gate.
  */

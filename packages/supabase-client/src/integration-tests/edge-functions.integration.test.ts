@@ -6,7 +6,7 @@ import { LOCAL_ANON_KEY, LOCAL_SUPABASE_URL } from "#client/integration-tests/en
  *
  * They run as service_role: whatever they are willing to do for an unauthenticated caller, they
  * do with every RLS policy bypassed. `deno check` proves they compile and the _shared suites
- * prove the guards decide correctly in isolation — neither proves a guard is actually wired into
+ * prove the guards decide correctly in isolation; neither proves a guard is actually wired into
  * a given endpoint, which is the mistake that matters. This suite asks each function the only
  * question an attacker asks: what do you do for someone who is nobody?
  *
@@ -83,8 +83,8 @@ describe.each(FUNCTIONS)("$name", ({ name }) => {
  * _shared/http.ts pins Access-Control-Allow-Origin to the app's own origin, and the unit suite
  * proves it never reflects a foreign one. Reached through the Supabase gateway, that header is
  * replaced by `*` before it leaves the stack, so the pinning is inert in practice and CORS is
- * not a boundary anything here may rely on. The guards asserted below — JWT, cron secret,
- * token, environment — are the real ones.
+ * not a boundary anything here may rely on. The guards asserted below (JWT, cron secret,
+ * token, environment) are the real ones.
  *
  * This test exists so the day the platform stops overriding the header is a visible failure and
  * a decision, rather than something nobody notices.
@@ -156,12 +156,12 @@ describe.each(byGuard("token"))("$name refuses an invalid token", ({ name }) => 
 /**
  * The development gate, checked against the stack the tests actually run on. APP_ENV lives only
  * in the gitignored supabase/functions/.env, so unless a developer opted in locally this
- * endpoint is shut — which is the state every deployed environment is in permanently.
+ * endpoint is shut, which is the state every deployed environment is in permanently.
  */
 describe.each(byGuard("development"))("$name is gated on the environment", ({ name }) => {
   /**
    * The gate is open on a developer machine that opted in through the gitignored
-   * supabase/functions/.env, and shut everywhere else — including CI, which never writes that
+   * supabase/functions/.env, and shut everywhere else, including CI, which never writes that
    * file. Both states are legitimate, so the suite reads which one it is running against and
    * then holds it to the matching contract, rather than skipping when the door is open.
    */
@@ -214,7 +214,7 @@ describe("Edge Function inventory", () => {
     );
 
     // A 404 here means the function is listed in this suite but no longer deployed by the
-    // stack — the test would otherwise keep passing against an endpoint that does not exist.
+    // stack: the test would otherwise keep passing against an endpoint that does not exist.
     expect(responses.filter((entry) => entry.status === 404)).toEqual([]);
   });
 });

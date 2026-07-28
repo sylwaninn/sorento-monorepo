@@ -82,7 +82,7 @@ export const buildTrackedItems = (
   trackingEntries.flatMap((tracking) => {
     const itemId = tracking.procedureId ?? tracking.benefitId;
     // Stryker disable next-line ConditionalExpression: equivalent mutant. The null branch only
-    // satisfies the Map's string key type — get(null) would return undefined all the same, so
+    // satisfies the Map's string key type; get(null) would return undefined all the same, so
     // no test can distinguish the two.
     const item = itemId === null ? undefined : itemsById.get(itemId);
     if (!item) return [];
