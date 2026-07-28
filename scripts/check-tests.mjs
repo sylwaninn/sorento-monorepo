@@ -63,6 +63,19 @@ const SUITE_TESTS = new Set([
 /** Where the suites live. Anything matching TEST_FILE outside these roots is unowned. */
 const TEST_ROOTS = ["packages", "apps", "supabase/functions", "e2e"];
 
+/**
+ * The Edge Function suite's own table, and the only place naming a function counts. Matching
+ * anywhere in the file would let a mention in a comment stand in for a case.
+ */
+const EDGE_FUNCTION_TABLE =
+  "packages/supabase-client/src/integration-tests/edge-functions.integration.test.ts";
+
+/** Where the journeys record which dictionary each French string was copied from. */
+const E2E_COPY = "e2e/support/copy.ts";
+
+/** Content dictionaries live under this root; the paths in E2E_COPY are relative to it. */
+const CONTENT_ROOT = "apps/web/src";
+
 const TEST_FILE = /\.(test|spec)\.(ts|tsx)$/;
 const E2E_FILE = /\.e2e\.ts$/;
 
@@ -146,17 +159,33 @@ const functionNames = readdirSync(join(ROOT, "supabase/functions"), { withFileTy
   .filter((entry) => entry.isDirectory() && entry.name !== "_shared")
   .map((entry) => entry.name);
 
-const functionTestCorpus = testFiles
-  .filter((file) => file.includes("edge-functions") || file.startsWith("supabase/functions/"))
-  .map(read)
-  .join("\n");
+/**
+ * Read from the suite's table rather than from the whole file: a function named only in a
+ * comment, or in the prose explaining why some other function behaves as it does, would
+ * otherwise count as covered and the rule would pass for a function no case ever calls.
+ */
+const tabledFunctions = new Set(
+  exists(EDGE_FUNCTION_TABLE)
+    ? Array.from(read(EDGE_FUNCTION_TABLE).matchAll(/\bname:\s*"([^"]+)"/g), (match) => match[1])
+    : [],
+);
 
 for (const name of functionNames) {
-  if (!functionTestCorpus.includes(name)) {
+  if (!tabledFunctions.has(name)) {
     fail(
       "untested-edge-function",
       `supabase/functions/${name}/index.ts`,
-      "runs with service_role and no test names it. Add a case to the Edge Function suite.",
+      `runs with service_role and the table in ${EDGE_FUNCTION_TABLE} does not name it. Add a case with the guard it uses.`,
+    );
+  }
+}
+
+for (const name of tabledFunctions) {
+  if (!exists(`supabase/functions/${name}`)) {
+    fail(
+      "phantom-edge-function",
+      `${EDGE_FUNCTION_TABLE}`,
+      `the table names "${name}", which no longer exists under supabase/functions. A case against a deleted endpoint asserts nothing.`,
     );
   }
 }
@@ -178,8 +207,14 @@ const MASKING_PATTERNS = [
 ];
 
 const FOCUS_PATTERNS = [
-  { pattern: /\b(?:describe|it|test)\.only\s*\(/g, hint: ".only silently skips the rest of the file" },
-  { pattern: /\b(?:describe|it|test)\.skip\s*\(/g, hint: "a skipped test is a test that does not exist" },
+  {
+    pattern: /\b(?:describe|it|test)\.only\s*\(/g,
+    hint: ".only silently skips the rest of the file",
+  },
+  {
+    pattern: /\b(?:describe|it|test)\.skip\s*\(/g,
+    hint: "a skipped test is a test that does not exist",
+  },
   { pattern: /\bx(?:describe|it)\s*\(/g, hint: "a skipped test is a test that does not exist" },
 ];
 
@@ -199,6 +234,51 @@ for (const testFile of testFiles) {
       }
     }
   });
+}
+
+// ---------------------------------------------------------------------------
+// R5 — the journeys' French copy still exists in the app
+// ---------------------------------------------------------------------------
+
+/**
+ * The E2E suite is a black box: it imports none of the app's packages, so every string it
+ * clicks on is a copy of a content dictionary rather than a reference to one. Left uncompared,
+ * that copy drifts, and it surfaces as the worst failure a suite can produce: a selector finding
+ * nothing, minutes into CI, pointing at the test rather than at the wording that moved.
+ *
+ * Each entry in e2e/support/copy.ts names the dictionary it came from. This checks the text is
+ * still in there, which turns a rename into a failure that names both sides, before the commit.
+ */
+const MIRRORS = /\bmirrors\(\s*("(?:[^"\\]|\\.)*")\s*,\s*("(?:[^"\\]|\\.)*")\s*,?\s*\)/g;
+
+if (exists(E2E_COPY)) {
+  const entries = Array.from(read(E2E_COPY).matchAll(MIRRORS));
+
+  if (entries.length === 0) {
+    fail(
+      "unmirrored-e2e-copy",
+      E2E_COPY,
+      "no mirrors(...) entry found. Either the file stopped declaring where its strings come from, or this rule stopped reading it.",
+    );
+  }
+
+  for (const [, rawDictionary, rawText] of entries) {
+    const dictionary = JSON.parse(rawDictionary);
+    const text = JSON.parse(rawText);
+    const source = join(CONTENT_ROOT, dictionary);
+
+    if (!exists(source)) {
+      fail("unmirrored-e2e-copy", E2E_COPY, `names ${source}, which does not exist.`);
+      continue;
+    }
+    if (!read(source).includes(text)) {
+      fail(
+        "unmirrored-e2e-copy",
+        E2E_COPY,
+        `${source} no longer contains "${text}". The wording changed: update the journey's copy to match, do not delete the entry.`,
+      );
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

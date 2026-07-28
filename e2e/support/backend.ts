@@ -1,11 +1,13 @@
-import { CRON_SECRET, SERVICE_ROLE_KEY, SUPABASE_URL } from "#e2e/support/env";
+import { createHash, randomBytes } from "node:crypto";
+import { ANON_KEY, CRON_SECRET, SERVICE_ROLE_KEY, SUPABASE_URL } from "#e2e/support/env";
 
 /**
  * The parts of a journey a browser cannot reach.
  *
  * Three of them, precisely: a confirmation email, a token that only exists inside one, and the
- * passage of time. Everything else goes through the UI — a helper that created a dossier with
- * service_role would be testing the fixture, not the app.
+ * passage of time. Everything else goes through the UI, and everything a server decides goes
+ * through the endpoint that decides it. A helper that created a dossier with service_role would
+ * be testing the fixture, not the app.
  *
  * Spoken to over plain HTTP rather than through @sorento/supabase-client. These journeys are a
  * black box around the built application: linking them against the app's own packages would let
@@ -64,30 +66,52 @@ export const createConfirmedAccount = async (
 };
 
 /**
- * Puts the dossier in the state a trusted contact's report leaves it in.
+ * Reports a death the way a consented trusted contact does, by spending their activation link.
  *
- * The real path is a link sent by email, and local development sends none — the mailer skips
- * silently without a provider key, so the token that link carries never exists anywhere a test
- * could read it. This writes the same columns request-dossier-activation writes, and nothing
- * else: the freeze the job later reads, and the death date it will apply.
+ * The link is sent by email and local development sends none: the mailer skips silently without
+ * a provider key, so the token it carries exists nowhere a test could read it. Only that one step
+ * is faked. The token is planted on the designation, hashed exactly as _shared/token.ts hashes
+ * it, and then spent against the real endpoint.
+ *
+ * Writing the resulting columns here instead would have been shorter and wrong: the grace period,
+ * the freeze the job later reads and the notification every member gets would then be stated
+ * twice, and the copy in this file would keep passing after the function changed its mind. It
+ * also means this is the only place the activation endpoint is exercised on its happy path.
  */
 export const requestActivation = async (dossierId: string, deathDate: string): Promise<void> => {
-  const GRACE_HOURS = 48;
-  const requestedAt = new Date();
-  const effectiveAt = new Date(requestedAt.getTime() + GRACE_HOURS * 60 * 60 * 1000);
+  const token = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/dossiers?id=eq.${dossierId}`, {
-    method: "PATCH",
-    headers: { ...serviceHeaders, Prefer: "return=minimal" },
-    body: JSON.stringify({
-      pending_activation_death_date: deathDate,
-      pending_activation_requested_at: requestedAt.toISOString(),
-      pending_activation_effective_at: effectiveAt.toISOString(),
-      pending_activation_opposed_at: null,
-      pending_activation_opposed_by: null,
-    }),
+  const planted = await rest<unknown[]>(
+    `/rest/v1/trusted_contact_designations?dossier_id=eq.${dossierId}`,
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({
+        activation_token_hash: tokenHash,
+        activation_expires_at: expiresAt.toISOString(),
+      }),
+    },
+  );
+  if (planted.length === 0) {
+    throw new Error(`dossier ${dossierId} has no designated trusted contact to report a death`);
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/request-dossier-activation`, {
+    method: "POST",
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token, deathDate }),
   });
-  if (!response.ok) throw new Error(`could not open an activation: ${response.status}`);
+  if (!response.ok) {
+    throw new Error(
+      `request-dossier-activation answered ${response.status}: ${await response.text()}`,
+    );
+  }
   await response.body?.cancel();
 };
 
