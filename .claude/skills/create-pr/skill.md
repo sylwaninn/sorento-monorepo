@@ -72,18 +72,12 @@ test(e2e): cover the allowance journey with its copy mirror
 
 1. Stage only the relevant files: `git add <specific-files>` (never `git add .` or `git add -A`)
 2. Create commit following **MANDATORY** rules:
-   - Format: `type(scope): description`
-   - **ONE LINE ONLY**, multiline commits are forbidden
-   - Types: feat, fix, docs, style, refactor, test, chore
-   - Scope: one workspace or area of this repo (web, core, domain,
-     supabase-client, config, supabase, e2e, ci, deps); omit only for
-     genuinely cross-cutting changes
-   - Description: lowercase, no period at end, start with a verb
-   - Examples:
+   - Follow `.claude/rules/commits.md`, the single source for format,
+     types, scope vocabulary and examples: `type(scope): description`,
+     one line only, imperative, lowercase, scope from that file's list
+   - Two examples, the rest live in commits.md:
      - `feat(web): add dossier activation screen`
      - `fix(supabase): escape user-supplied text in outbound emails`
-     - `refactor(domain): extract procedure status schema`
-     - `test(e2e): cover the trusted contact activation journey`
 
 3. **NEVER use `--no-verify`**, all commits must pass pre-commit hooks
 4. If hooks fail, fix the issues and retry
@@ -174,54 +168,25 @@ git push -u origin <branch-name>
 
 ### 7. Create Pull Request
 
-**CRITICAL: The PR body MUST follow the repository template, `.github/pull_request_template.md`. Read that file first; if it changed, the file wins over the copy below.**
+**CRITICAL: The PR body follows `.github/pull_request_template.md`. Read that file and fill it; the skill embeds no copy, so the template file is the only source of structure.**
 
-Use this exact command structure:
+1. Read `.github/pull_request_template.md`.
+2. Fill every section, keeping the template's headings: Summary (what and
+   why, link related issues), Scope (check the applicable boxes), Changes,
+   How to test. Use "None" or "N/A" when a section does not apply.
+3. Checklist: check a box only after verifying that item on this branch.
+   When one does not hold, leave it unchecked and explain below the list.
+   Every box starts unchecked; checking it is a deliberate act.
+4. Create the PR passing the filled body inline:
 
 ```bash
 gh pr create --title "<type(scope): description>" --body "$(cat <<'EOF'
-## Summary
-
-<What and why, in 1-2 sentences. Link related issues: Closes #123>
-
-## Scope
-
-- [ ] `web`
-- [ ] `supabase`
-- [ ] `shared`
-- [ ] `ci/cd`
-- [ ] Other (specify):
-
-## Changes
-
-- <Change 1>
-- <Change 2>
-
-## How to test
-
-1. <Step 1>
-2. <Step 2>
-
-## Checklist
-
-- [x] `pnpm verify` passes (format, lint, typecheck, Edge Functions, tests + coverage)
-- [x] New business rules in `packages/core` ship with their unit tests
-- [x] Coverage thresholds were not lowered to make the build pass
-- [x] Tested on affected apps
-- [x] No breaking changes (or noted below)
-- [x] DB migration is backwards-compatible (if applicable)
+<the filled template>
 EOF
 )"
 ```
 
-**MANDATORY RULES:**
-
-- The PR description MUST be written in **English**
-- Check the applicable Scope boxes with `[x]`
-- Fill ALL sections (use "None" or "N/A" if not applicable)
-- Check only the checklist items actually verified; when one does not
-  hold, leave it unchecked and explain below the list
-- Never invent another structure
+The PR description MUST be written in **English**.
 
 ### 8. Update PR Details
 
@@ -231,18 +196,6 @@ After creation:
 - Fill all template sections appropriately
 - Add relevant labels if applicable
 - Request reviewers if needed
-
-## Commit Message Examples
-
-```
-feat(core): add surviving spouse pension eligibility rule
-feat(web): add dossier activation screen
-fix(supabase): escape user-supplied text in outbound emails
-refactor(domain): extract procedure status schema
-chore(deps): update heroui packages
-docs: reflect activation grace period in security model
-test(e2e): cover the trusted contact activation journey
-```
 
 ## PR Title Guidelines
 
