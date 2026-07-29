@@ -51,6 +51,11 @@ keep the packages reusable.
   with a notification to every member.
 - The platform admin has no access to users' dossiers, tracking, comments
   or documents.
+- .env files are never read, grepped, edited or piped through a shell
+  command by an agent tool call; the PreToolUse hook
+  .claude/hooks/protect-env.sh blocks every such call. Only the committed
+  .env.example templates are readable. Values come from the user, never
+  from the file.
 
 ### TypeScript
 
@@ -140,6 +145,11 @@ keep the packages reusable.
 - Before marking a task done: pnpm verify must pass. When the change touches
   the database, an Edge Function or a user journey, also pnpm test:integration
   and pnpm test:e2e (both need supabase start).
+- Before every commit or PR: the four anti-regression guard agents in
+  .claude/agents (security-regression-guard, code-practices-guard,
+  design-system-guard, test-regression-guard) review the change set,
+  launched in parallel, and their findings are fixed before proceeding.
+  The /guards skill runs the full pass in one command.
 - The full strategy, and what each layer deliberately does not cover, is in
   TESTING.md.
 - Documentation follows the change that makes it stale, in the same PR.

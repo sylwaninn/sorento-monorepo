@@ -254,6 +254,12 @@ The same bar is enforced three times, closest gate first:
 | Build       | Full workspace build                                         |
 | Secret scan | gitleaks over the commits the PR adds                        |
 
+Ahead of those deterministic gates, four review agents in `.claude/agents/`
+(security, code practices, design system, test integrity) review every
+change set for regressions before commit or PR; the `/guards` skill in
+`.claude/skills/` runs all four in parallel and merges their findings.
+They report, the developer fixes: enforcement stays with the gates above.
+
 ## Documentation
 
 This README does not rot by accident:
