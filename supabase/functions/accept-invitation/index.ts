@@ -8,11 +8,11 @@ Deno.serve(async (request) => {
   if (preflightResponse) return preflightResponse;
 
   try {
-    const parsed = await parseBody(request, acceptInvitationPayloadSchema);
-    if (!parsed.ok) return parsed.response;
-
     const user = await currentUser(request);
     if (!user) return json(request, { error: "unauthorized" }, 401);
+
+    const parsed = await parseBody(request, acceptInvitationPayloadSchema);
+    if (!parsed.ok) return parsed.response;
 
     const service = serviceClient();
     const tokenHash = await hashToken(parsed.value.token);
