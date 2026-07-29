@@ -51,11 +51,12 @@ keep the packages reusable.
   with a notification to every member.
 - The platform admin has no access to users' dossiers, tracking, comments
   or documents.
-- .env files are never read, grepped, edited or piped through a shell
-  command by an agent tool call; the PreToolUse hook
-  .claude/hooks/protect-env.sh blocks every such call. Only the committed
-  .env.example templates are readable. Values come from the user, never
-  from the file.
+- An agent tool call whose target names a .env path is blocked by the
+  PreToolUse hook .claude/hooks/protect-env.sh: a guardrail against
+  accidental access, not a sandbox against a command that resolves the
+  name at run time. The committed .env.example templates and the dummy
+  fixture supabase/functions/.env.test stay accessible. Real values come
+  from the user, never from the file.
 
 ### TypeScript
 
