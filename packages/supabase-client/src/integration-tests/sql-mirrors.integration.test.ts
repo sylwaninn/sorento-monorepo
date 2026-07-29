@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ALLOWED_MIME_TYPES,
   DEFAULT_NOTIFICATION_PREFERENCES,
+  defaultNotificationPreference,
   catalogHistoryActionSchema,
   catalogTableSchema,
   dossierRoleSchema,
@@ -113,8 +114,9 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
   });
 
   /**
-   * A viewer receives nothing but a direct mention and the dossier's activation. That rule lives
-   * only in SQL, so it is asserted against the database rather than mirrored into TypeScript.
+   * A viewer receives nothing but a direct mention and the dossier's activation. The settings
+   * screen shows that default through defaultNotificationPreference(), so the helper is the
+   * TypeScript copy this mirror compares against the plpgsql authority.
    */
   it("silences everything but mentions and activation for a viewer", async () => {
     const owner = await createTestUser("Owner");
@@ -132,12 +134,7 @@ describe("notification defaults mirror resolve_notification_preference()", () =>
 
     for (const eventType of notificationTypeSchema.options) {
       const resolved = await resolveInDatabase(viewer.id, dossier.id, eventType);
-      const expected =
-        eventType === "mention" || eventType === "dossier_activated"
-          ? DEFAULT_NOTIFICATION_PREFERENCES[eventType]
-          : { inApp: false, email: false };
-
-      expect(resolved, eventType).toEqual(expected);
+      expect(resolved, eventType).toEqual(defaultNotificationPreference(eventType, true));
     }
   });
 

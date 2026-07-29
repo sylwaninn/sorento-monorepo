@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Sessions are kept in localStorage (see SECURITY.md), so an XSS would be enough to
+      exfiltrate an access token. This policy is the main compensation: no eval, no
+      third-party script origin, and no way to frame or hijack the document.
+      style-src keeps 'unsafe-inline' because the styling layer injects style elements at
+      runtime; script-src deliberately does not.
+      Prefer serving the same policy as a response header in production: a meta tag cannot
+      express frame-ancestors to every browser, and a header is not editable by an injection.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: blob:;
+               font-src 'self' data:;
+               connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:57321 ws://127.0.0.1:57321;
+               frame-ancestors 'none';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self'"
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Sorento</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

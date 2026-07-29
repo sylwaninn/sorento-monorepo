@@ -100,3 +100,19 @@ export const can = (role: DossierRole | null, action: DossierAction): boolean =>
 // validate_assignment trigger enforces on the database side too.
 export const isAssignable = (role: DossierRole): boolean =>
   role === "owner" || role === "collaborator";
+
+// Mention targets: every active member, never the dormant trusted contact.
+export const isMentionable = (role: DossierRole): boolean => role !== "trusted_contact";
+
+// Role management targets: the owner transfers ownership instead of being demoted, and the
+// trusted contact is managed through its designation, not the member list. A type guard,
+// so a manageable member's role narrows to what the role selector accepts.
+export const isRoleManageable = (
+  role: DossierRole,
+): role is Extract<DossierRole, "collaborator" | "viewer"> =>
+  role === "collaborator" || role === "viewer";
+
+// Any active member may object during the 48 h grace period; the dormant trusted contact,
+// who requested the activation, may not oppose their own request.
+export const canOpposeActivation = (role: DossierRole | null): boolean =>
+  role !== null && role !== "trusted_contact";

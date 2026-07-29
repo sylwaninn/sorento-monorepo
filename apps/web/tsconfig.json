@@ -1,0 +1,14 @@
+{
+  "extends": "@sorento/config/tsconfig-react.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/domain" },
+    { "path": "../../packages/core" },
+    { "path": "../../packages/supabase-client" }
+  ]
+}
