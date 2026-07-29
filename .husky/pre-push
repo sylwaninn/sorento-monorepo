@@ -1,0 +1,10 @@
+# The full gate, once, before anything leaves the machine.
+#
+# Deliberately not on pre-commit: it runs every suite plus the coverage thresholds, which is far
+# too slow to pay on each commit and would train everyone to reach for --no-verify. Here it is
+# paid once per push and catches what pre-commit cannot: a rule whose test was never written, a
+# threshold that stopped being met, a coverage ratchet that has fallen behind.
+#
+# The suites needing a running stack (integration, E2E) are not here: they need `supabase start`
+# and a built app, so they belong to CI and to a deliberate local run.
+pnpm verify
