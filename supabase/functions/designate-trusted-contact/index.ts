@@ -1,4 +1,5 @@
 import { env } from "@shared/env.ts";
+import { escapeHtml } from "@shared/html.ts";
 import { internalError, json, parseBody, preflight } from "@shared/http.ts";
 import { sendEmail } from "@shared/mailer.ts";
 import { designateTrustedContactPayloadSchema } from "@shared/schemas.ts";
@@ -75,9 +76,9 @@ Deno.serve(async (request) => {
 
     await sendEmail(normalizedEmail, {
       subject: "Vous avez été désigné contact de confiance",
-      bodyHtml: `<p>Vous avez été désigné comme contact de confiance pour le dossier de ${
-        dossier.subject_first_name
-      } ${dossier.subject_last_name} sur Sorento.</p>
+      bodyHtml: `<p>Vous avez été désigné comme contact de confiance pour le dossier de ${escapeHtml(
+        dossier.subject_first_name,
+      )} ${escapeHtml(dossier.subject_last_name)} sur Sorento.</p>
        <p>Ce rôle reste inactif tant qu'il n'est pas nécessaire. Merci de confirmer que vous l'acceptez :</p>
        <p><a href="${consentUrl}">Confirmer</a></p>
        <p style="font-size:12px;color:#666">Ce lien expire dans 48 heures.</p>`,
