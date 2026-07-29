@@ -46,39 +46,38 @@ If not already on a feature branch:
 **How to split commits:**
 
 1. Analyze all changed files and group them by concern:
-   - Feature logic (new components, services, hooks)
-   - UI/styling changes (CSS, layout, design tokens)
-   - i18n/translations (locale JSON files)
+   - Domain schemas (packages/domain) and business rules with their tests
+     (packages/core)
+   - Database migrations, RLS policies and Edge Functions (supabase)
+   - UI assembly (apps/web: screens, components, routing)
+   - E2E journeys and their copy mirrors (e2e)
    - Refactoring (renaming, extracting, restructuring existing code)
    - Configuration (build, linting, CI)
    - Bug fixes
 2. Each group becomes its own commit
-3. Order commits logically: foundational changes first, dependent changes after
+3. Order commits logically: foundational changes first, dependent changes
+   after (domain, then core, then supabase, then web, then e2e)
 
-**Example split for a profile modal rework:**
+**Example split for a new benefit journey:**
 
 ```
-refactor(web): remove size prop from Button component
-style(web): add frosted-header utility and float animation
-feat(web): add account deletion flow
-feat(web): rework profile modal as single scrollable page
-chore(web): update profile i18n keys for all locales
+feat(domain): add allowance schema and inferred types
+feat(core): add allowance eligibility rule with unit tests
+feat(supabase): add allowance catalog migration with RLS and tests
+feat(web): add allowance screen composing HeroUI components
+test(e2e): cover the allowance journey with its copy mirror
 ```
 
 **For each commit:**
 
 1. Stage only the relevant files: `git add <specific-files>` (never `git add .` or `git add -A`)
 2. Create commit following **MANDATORY** rules:
-   - Format: `type(scope): description`
-   - **ONE LINE ONLY**, multiline commits are forbidden
-   - Types: feat, fix, docs, style, refactor, test, chore
-   - Scope: required for app-specific changes (web, mobile, shared, supabase)
-   - Description: lowercase, no period at end, start with a verb
-   - Examples:
-     - `feat(web): add PIN verification flow`
-     - `fix(mobile): resolve button alignment issue`
-     - `refactor(shared): extract user profile types`
-     - `chore(web): update profile i18n keys for all locales`
+   - Follow `.claude/rules/commits.md`, the single source for format,
+     types, scope vocabulary and examples: `type(scope): description`,
+     one line only, imperative, lowercase, scope from that file's list
+   - Two examples, the rest live in commits.md:
+     - `feat(web): add dossier activation screen`
+     - `fix(supabase): escape user-supplied text in outbound emails`
 
 3. **NEVER use `--no-verify`**, all commits must pass pre-commit hooks
 4. If hooks fail, fix the issues and retry
@@ -92,6 +91,18 @@ pnpm verify
 ```
 
 This must pass with zero warnings/errors. Fix any issues before proceeding.
+
+### 4b. Anti-regression Guards (MANDATORY)
+
+Run the four guard agents on the branch diff, in parallel (a single
+message with four Agent calls): `security-regression-guard`,
+`code-practices-guard`, `design-system-guard`, `test-regression-guard`.
+The `/guards` skill does exactly this in one step.
+
+- Fix every critical and high finding, then rerun the affected guard
+  until it is clean.
+- Medium and low findings: fix them, or record why not in the PR
+  description.
 
 ### 5. Update Documentation (MANDATORY check, conditional update)
 
@@ -133,92 +144,19 @@ Steps 5.1 and 5.3 always run. Step 5.2 may be skipped only when `pnpm check:docs
 
 ### 5b. Check Legal Pages (if needed)
 
-If the PR introduces changes that affect legal obligations, check whether the legal pages (`apps/web/src/locales/*/pages.json`) need updating. Look for:
+If the PR introduces changes that affect legal obligations, check whether the legal pages (`apps/web/src/features/legal/content.ts`, rendered by `LegalPage.tsx`) need updating. Look for:
 
 - New **third-party services** or SDKs added (e.g., analytics, crash reporting, payment providers)
 - Changes to **data collection** (new personal data fields, new tracking events)
 - Changes to **authentication** flow or required user information
 - New **cookie** or local storage usage
-- Changes to **data retention** or deletion behavior
+- Changes to **data retention** or deletion behavior (soft delete, 30-day bin, account erasure)
 - Changes to the **hosting infrastructure** (new providers)
 - Addition of **paid features** or subscription model
 
-If any of these are detected, update the relevant sections in `apps/web/src/locales/*/pages.json` (all 5 locales: fr, en-GB, es-ES, de, pt-BR) and bump the `lastUpdated` date. The legal pages commit should use `chore(web): update legal pages` format.
+If any of these are detected, update the relevant sections of the legal content (user-facing copy stays in French) and its last-updated date. The commit uses `chore(web): update legal pages`.
 
 If none of the above apply, skip this step.
-
-### 5c. Detect Native Mobile Changes (MANDATORY for mobile scope)
-
-If any commit on the branch touches `apps/mobile/`, you MUST check whether the changes require a native rebuild. The `[native]` flag in the PR title controls whether the CI triggers an OTA update or a full native version bump.
-
-**Run this detection by diffing the branch against main:**
-
-```bash
-git diff main...HEAD --name-only
-```
-
-**The PR title MUST include `[native]` if ANY of these conditions are true:**
-
-1. **Native directories changed:**
-   - `apps/mobile/ios/**`
-   - `apps/mobile/android/**`
-   - `apps/mobile/plugins/**`
-
-2. **Expo plugins changed in `app.config.ts`:**
-   - Lines added/removed/modified inside the `plugins: [...]` array
-   - Check with: `git diff main...HEAD -- apps/mobile/app.config.ts` and look for changes in plugin entries
-
-3. **Native-impacting fields changed in `app.config.ts`:**
-   - `bundleIdentifier`, `package` (Android package name)
-   - `icon`, `splash`, `adaptiveIcon` (requires rebuild for native assets)
-   - `orientation`, `newArchEnabled`
-   - `infoPlist`, `entitlements`
-   - Any field inside `ios: { ... }` or `android: { ... }` blocks (except `buildNumber` and `versionCode` which are handled by the version workflow)
-
-4. **New native dependencies added in `package.json`:**
-   - Check `git diff main...HEAD -- apps/mobile/package.json` for new dependencies
-   - Packages matching these patterns are native: `react-native-*`, `@react-native-*`, `@react-native-community/*`, `expo-*` (NEW additions only, not version bumps)
-   - Use this heuristic: if a line was added in `"dependencies"` or `"devDependencies"` with a package name matching the above patterns, it is native
-
-5. **EAS build config changed:**
-   - `apps/mobile/eas.json`
-
-**How to apply:**
-
-- If native changes detected, append ` [native]` to the PR title
-- Example: `feat(mobile): add camera support [native]`
-- If mixed mobile+web PR with native mobile changes, still append `[native]`
-- If only JS/TS changes in `apps/mobile/src/`, NO `[native]` needed
-
-**Detection script (run in bash):**
-
-```bash
-NATIVE_CHANGES=false
-
-# Check native directories
-if git diff main...HEAD --name-only | grep -qE '^apps/mobile/(ios|android|plugins)/'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check app.config.ts for plugin/native config changes
-if git diff main...HEAD -- apps/mobile/app.config.ts | grep -qE '^\+.*plugins|^\+.*bundleIdentifier|^\+.*package:|^\+.*infoPlist|^\+.*entitlements|^\+.*newArchEnabled|^\+.*orientation'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check for new native dependencies
-if git diff main...HEAD -- apps/mobile/package.json | grep -qE '^\+\s*"(react-native-|@react-native|expo-)'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check EAS config
-if git diff main...HEAD --name-only | grep -q '^apps/mobile/eas.json'; then
-  NATIVE_CHANGES=true
-fi
-
-echo "Native changes detected: $NATIVE_CHANGES"
-```
-
-If `NATIVE_CHANGES=true`, the PR title MUST end with ` [native]`.
 
 ### 6. Push Branch
 
@@ -230,78 +168,25 @@ git push -u origin <branch-name>
 
 ### 7. Create Pull Request
 
-**CRITICAL: You MUST use the EXACT template structure below. No exceptions.**
+**CRITICAL: The PR body follows `.github/pull_request_template.md`. Read that file and fill it; the skill embeds no copy, so the template file is the only source of structure.**
 
-Use this exact command structure:
+1. Read `.github/pull_request_template.md`.
+2. Fill every section, keeping the template's headings: Summary (what and
+   why, link related issues), Scope (check the applicable boxes), Changes,
+   How to test. Use "None" or "N/A" when a section does not apply.
+3. Checklist: check a box only after verifying that item on this branch.
+   When one does not hold, leave it unchecked and explain below the list.
+   Every box starts unchecked; checking it is a deliberate act.
+4. Create the PR passing the filled body inline:
 
 ```bash
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Type of Change
-
-- [ ] ✨ New feature
-- [ ] 🐛 Bug fix
-- [ ] 📝 Documentation
-- [ ] 🔧 Configuration
-- [ ] 🤖 CI/CD
-- [ ] ♻️ Refactor
-- [ ] 🎨 Style
-
-## Summary
-
-<Brief description of changes - 1-2 sentences>
-
-## Motivation
-
-<Why are these changes needed? What problem do they solve?>
-
-## Changes
-
-### Main Changes
-
-- <Change 1>
-- <Change 2>
-
-### Additional Changes
-
-- <Change 1 or "None">
-
-## Testing
-
-### Prerequisites
-
-<List any prerequisites or "None">
-
-### Test Steps
-
-1. <Step 1>
-2. <Step 2>
-3. <Expected result>
-
-## Documentation
-
-- [x] No documentation changes needed
-
-## Breaking Changes
-
-- [x] No breaking changes
-
-## Checklist
-
-- [x] All tests pass (`pnpm verify`)
-- [x] TypeScript compiles without errors
-- [x] No console warnings or errors introduced
-- [x] Code follows project conventions
+gh pr create --title "<type(scope): description>" --body "$(cat <<'EOF'
+<the filled template>
 EOF
 )"
 ```
 
-**MANDATORY RULES:**
-
-- The PR description MUST be written in **English**
-- Check ONE or more types of change with `[x]`
-- Fill ALL sections (use "None" or "N/A" if not applicable)
-- Check all applicable items in Checklist
-- Never skip or simplify this template
+The PR description MUST be written in **English**.
 
 ### 8. Update PR Details
 
@@ -312,18 +197,6 @@ After creation:
 - Add relevant labels if applicable
 - Request reviewers if needed
 
-## Commit Message Examples
-
-```
-feat(auth): add biometric authentication support
-fix(home): resolve application list refresh issue
-refactor(ui): extract Button component from screens
-chore(i18n): add missing French translations
-docs(api): update authentication endpoints
-style(components): apply consistent spacing
-test(services): add user profile service tests
-```
-
 ## PR Title Guidelines
 
 - Keep under 70 characters
@@ -331,8 +204,8 @@ test(services): add user profile service tests
 - Be specific about what changes
 - Include scope if helpful
 
-Good: `feat(auth): add PIN code verification`
-Bad: `Updated some auth stuff`
+Good: `feat(web): add dossier activation screen`
+Bad: `Updated some dossier stuff`
 
 ## Checklist Before PR
 
@@ -340,6 +213,7 @@ Bad: `Updated some auth stuff`
 - [ ] All commits follow conventional format
 - [ ] No `--no-verify` was used
 - [ ] `pnpm verify` passes
+- [ ] The four anti-regression guards ran clean on the final diff (step 4b)
 - [ ] `pnpm check:docs` passes (generated README blocks in sync)
 - [ ] README prose updated if env vars, scripts, deps, or structure changed (via `/technical-writer`)
 - [ ] CLAUDE.md / SECURITY.md / TESTING.md audited against the diff by the subagent (step 5.3)
