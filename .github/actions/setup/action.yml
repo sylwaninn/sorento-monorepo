@@ -1,0 +1,30 @@
+name: Setup
+description: pnpm, Node and the workspace dependencies, which every job needs before anything else.
+
+# Six jobs repeated the same four steps, so a version bump meant six edits and the chance to
+# miss one. Checkout stays in the job: a local composite action only exists once the repository
+# is on disk.
+
+inputs:
+  deno:
+    description: Also install Deno, for the jobs that run or check the Edge Functions.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+
+    - if: inputs.deno == 'true'
+      uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+
+    - shell: bash
+      run: pnpm install --frozen-lockfile

@@ -6,7 +6,7 @@ import type {
   ResolveInvitationResult,
 } from "@sorento/domain";
 import type { TypedSupabaseClient } from "#client/client";
-import { assertNoError } from "#client/errors";
+import { assertNoError, assertNoFunctionError } from "#client/errors";
 import { mapInvitationRow } from "#client/mappers";
 
 // Creation and acceptance are intentionally NOT here: they go through the invite-member /
@@ -43,7 +43,7 @@ export class InvitationRepository implements InvitationPort {
         body: input,
       },
     );
-    assertNoError(error, "create invitation");
+    await assertNoFunctionError(error, "create invitation");
     if (!data) throw new Error("create invitation: no data returned");
     return data;
   };
@@ -55,7 +55,7 @@ export class InvitationRepository implements InvitationPort {
         body: { token },
       },
     );
-    assertNoError(error, "resolve invitation");
+    await assertNoFunctionError(error, "resolve invitation");
     if (!data) throw new Error("resolve invitation: no data returned");
     return data;
   };
@@ -67,7 +67,7 @@ export class InvitationRepository implements InvitationPort {
         body: { token },
       },
     );
-    assertNoError(error, "accept invitation");
+    await assertNoFunctionError(error, "accept invitation");
     if (!data) throw new Error("accept invitation: no data returned");
     return data;
   };

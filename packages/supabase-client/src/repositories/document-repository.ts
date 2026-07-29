@@ -64,10 +64,19 @@ export class DocumentRepository implements DocumentPort {
     return mapDocumentRow(requireRow(data, error, "create document row"));
   };
 
-  getSignedUrl = async (storagePath: string, expiresInSeconds = 60): Promise<string> => {
+  /**
+   * `download` is signed into the URL rather than left to the anchor's own attribute: storage
+   * answers from a different origin than the app, and a cross-origin `download` attribute is
+   * ignored. Without it someone filing a death certificate finds a bare uuid in their downloads.
+   */
+  getSignedUrl = async (
+    storagePath: string,
+    expiresInSeconds = 60,
+    downloadAs?: string,
+  ): Promise<string> => {
     const { data, error } = await this.client.storage
       .from("documents")
-      .createSignedUrl(storagePath, expiresInSeconds);
+      .createSignedUrl(storagePath, expiresInSeconds, downloadAs ? { download: downloadAs } : {});
     assertNoError(error, "create signed document URL");
     if (!data) {
       throw new SupabaseRepositoryError("create signed document URL: no data returned", null);

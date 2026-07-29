@@ -4,10 +4,14 @@ import { ANON_KEY, CRON_SECRET, SERVICE_ROLE_KEY, SUPABASE_URL } from "#e2e/supp
 /**
  * The parts of a journey a browser cannot reach.
  *
- * Three of them, precisely: a confirmation email, a token that only exists inside one, and the
- * passage of time. Everything else goes through the UI, and everything a server decides goes
- * through the endpoint that decides it. A helper that created a dossier with service_role would
- * be testing the fixture, not the app.
+ * Two of them now, precisely: the passage of time, and one token that no email carries locally.
+ * Everything else goes through the UI, and everything a server decides goes through the endpoint
+ * that decides it. A helper that created a dossier with service_role would be testing the
+ * fixture, not the app.
+ *
+ * Confirmation emails used to be on that list. They are not: the local stack posts them to
+ * Mailpit, so a journey can open the mailbox, follow the link a person would click, and prove the
+ * whole round trip rather than assuming the middle of it.
  *
  * Spoken to over plain HTTP rather than through @sorento/supabase-client. These journeys are a
  * black box around the built application: linking them against the app's own packages would let
@@ -20,7 +24,17 @@ const serviceHeaders = {
   "Content-Type": "application/json",
 } as const;
 
-const rest = async (path: string, init: RequestInit = {}): Promise<unknown> => {
+/**
+ * A service_role call against PostgREST, for seeding a precondition and for reading back what a
+ * journey cannot see on screen. Exported so an area's own journey can add the reads it needs
+ * without every one of them queueing behind this file.
+ *
+ * The generic is asserted, not validated: the journeys import none of the app's packages, so
+ * there is no schema to parse with, and PostgREST's shapes are pinned by the select strings a
+ * line above each call. The suite's casts live at its two HTTP boundaries, here and in
+ * mailbox.ts, on purpose, where they are visible.
+ */
+export const rest = async <T = unknown>(path: string, init: RequestInit = {}): Promise<T> => {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...init,
     headers: { ...serviceHeaders, ...init.headers },
@@ -28,7 +42,7 @@ const rest = async (path: string, init: RequestInit = {}): Promise<unknown> => {
   if (!response.ok) {
     throw new Error(`${init.method ?? "GET"} ${path} answered ${response.status}`);
   }
-  return response.json();
+  return (await response.json()) as T;
 };
 
 // The journeys import none of the app's packages, so the narrowing is done by hand: a field

@@ -100,7 +100,7 @@ export const QuestionField = ({
         <RadioGroup
           isRequired
           name={question.id}
-          value={typeof value === "boolean" ? String(value) : ""}
+          value={typeof value === "boolean" ? String(value) : null}
           onChange={(v) => onChange(v === "true")}
           isInvalid={Boolean(error)}
         >
@@ -127,7 +127,7 @@ export const QuestionField = ({
         <RadioGroup
           isRequired
           name={question.id}
-          value={typeof value === "string" ? value : ""}
+          value={typeof value === "string" ? value : null}
           onChange={onChange}
           isInvalid={Boolean(error)}
         >

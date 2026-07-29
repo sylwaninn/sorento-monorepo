@@ -69,7 +69,13 @@ export const SignupPage = () => {
           <Card.Title>{authContent.signup.title}</Card.Title>
           <Card.Description>{authContent.signup.description}</Card.Description>
         </Card.Header>
-        <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        {/*
+          Zod owns this form's validation, so native validation must not also run: it blocks the
+          submit before onSubmit fires, and the required checkbox's real input is hidden behind
+          HeroUI's control, leaving the browser's message nothing to point at. Pressing the button
+          with the terms unticked did nothing at all, with no explanation on screen.
+        */}
+        <Form className="flex flex-col gap-4" validationBehavior="aria" onSubmit={onSubmit}>
           <Card.Content className="flex flex-col gap-4">
             {submitError ? (
               <Alert status="danger">

@@ -53,7 +53,9 @@ export const DocumentsPage = () => {
       storagePath: string;
       originalName: string;
     }) => {
-      const url = await repositories.documents.getSignedUrl(storagePath);
+      // The name has to be signed into the URL: storage answers from another origin, where the
+      // anchor's own download attribute is ignored and the file lands as a bare uuid.
+      const url = await repositories.documents.getSignedUrl(storagePath, 60, originalName);
       const link = document.createElement("a");
       link.href = url;
       link.download = originalName;

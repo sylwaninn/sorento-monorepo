@@ -35,7 +35,7 @@ export const TrustedContactPage = () => {
   const access = useDossier(dossierId);
 
   const designationsQuery = useQuery({
-    queryKey: ["dossier-trusted-contacts", dossierId],
+    queryKey: queryKeys.dossiers.trustedContacts(dossierId),
     queryFn: () => repositories.trustedContacts.listForDossier(dossierId),
   });
 

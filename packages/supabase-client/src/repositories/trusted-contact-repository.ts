@@ -5,7 +5,7 @@ import type {
   TrustedContactPort,
 } from "@sorento/domain";
 import type { TypedSupabaseClient } from "#client/client";
-import { assertNoError } from "#client/errors";
+import { assertNoError, assertNoFunctionError } from "#client/errors";
 import { mapTrustedContactDesignationRow } from "#client/mappers";
 
 export class TrustedContactRepository implements TrustedContactPort {
@@ -40,7 +40,7 @@ export class TrustedContactRepository implements TrustedContactPort {
     }>("designate-trusted-contact", {
       body: input,
     });
-    assertNoError(error, "designate trusted contact");
+    await assertNoFunctionError(error, "designate trusted contact");
     if (!data) throw new Error("designate trusted contact: no data returned");
     return data;
   };
@@ -52,7 +52,7 @@ export class TrustedContactRepository implements TrustedContactPort {
     }>("consent-trusted-contact", {
       body: { token },
     });
-    assertNoError(error, "consent to trusted contact designation");
+    await assertNoFunctionError(error, "consent to trusted contact designation");
     if (!data) throw new Error("consent to trusted contact designation: no data returned");
     return data;
   };
@@ -63,7 +63,7 @@ export class TrustedContactRepository implements TrustedContactPort {
         "resolve-trusted-contact-activation",
         { body: { token } },
       );
-    assertNoError(error, "resolve trusted contact activation");
+    await assertNoFunctionError(error, "resolve trusted contact activation");
     if (!data) throw new Error("resolve trusted contact activation: no data returned");
     return data;
   };
@@ -77,7 +77,7 @@ export class TrustedContactRepository implements TrustedContactPort {
       dossierId: string;
       effectiveAt: string;
     }>("request-dossier-activation", { body: { token, deathDate, documentPath } });
-    assertNoError(error, "request dossier activation");
+    await assertNoFunctionError(error, "request dossier activation");
     if (!data) throw new Error("request dossier activation: no data returned");
     return data;
   };
@@ -86,6 +86,6 @@ export class TrustedContactRepository implements TrustedContactPort {
     const { error } = await this.client.functions.invoke("oppose-dossier-activation", {
       body: { dossierId, reason },
     });
-    assertNoError(error, "oppose dossier activation");
+    await assertNoFunctionError(error, "oppose dossier activation");
   };
 }
