@@ -1,6 +1,6 @@
 ---
 name: design-system-guard
-description: Reviews pending UI changes for design system regressions, such as non-HeroUI components, hard-coded styles, arbitrary Tailwind values, theme token bypasses. Use proactively after any change under apps/web touching components, styles or copy, and before every commit or PR. Read-only, reports findings, never edits files.
+description: Reviews pending UI changes for design system regressions, such as non-HeroUI components, hard-coded styles, arbitrary Tailwind values, theme token bypasses. Use proactively after any change under apps/web touching components, styles or copy, and before every commit or PR. Reports findings and never applies fixes itself.
 tools: Read, Grep, Glob, Bash, mcp__heroui-react__list_components, mcp__heroui-react__get_component_docs, mcp__heroui-react__get_theme_variables
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: security-regression-guard
-description: Reviews pending changes for security regressions. Use proactively after any change touching migrations, RLS policies, Edge Functions, auth, emails, or data deletion, and before every commit or PR. Read-only, reports findings, never edits files.
+description: Reviews pending changes for security regressions. Use proactively after any change touching migrations, RLS policies, Edge Functions, auth, emails, or data deletion, and before every commit or PR. Reports findings and never applies fixes itself.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -49,6 +49,9 @@ changes only, and you never modify any file.
 - Secrets, tokens or keys of any kind appearing in the diff.
 - A weakened or removed policy, guard, or check that existed before the
   change, even if nothing replaces it "for now".
+- The agent env-file protection weakened: .claude/hooks/protect-env.sh
+  loosened or deleted, or its PreToolUse registration removed from
+  .claude/settings.json.
 - Any statement in SECURITY.md the diff makes false. The document is the
   model; code drifting from it is a regression even when no rule above
   names it.

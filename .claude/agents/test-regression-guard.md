@@ -1,6 +1,6 @@
 ---
 name: test-regression-guard
-description: Reviews pending changes for test regressions, such as missing tests for new behaviour, weakened or deleted tests, tests written to fit the implementation instead of the feature, coverage ratchet lowered. Use proactively after any change and before every commit or PR. Read-only, reports findings, never edits files.
+description: Reviews pending changes for test regressions, such as missing tests for new behaviour, weakened or deleted tests, tests written to fit the implementation instead of the feature, coverage ratchet lowered. Use proactively after any change and before every commit or PR. Reports findings and never applies fixes itself.
 tools: Read, Grep, Glob, Bash
 ---
 

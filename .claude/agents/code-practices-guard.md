@@ -1,6 +1,6 @@
 ---
 name: code-practices-guard
-description: Reviews pending changes for code convention regressions, such as architecture boundaries, typing, SOLID, DRY, declaration versus behaviour separation. Use proactively after any TypeScript or SQL change and before every commit or PR. Read-only, reports findings, never edits files.
+description: Reviews pending changes for code convention regressions, such as architecture boundaries, typing, SOLID, DRY, declaration versus behaviour separation. Use proactively after any TypeScript or SQL change and before every commit or PR. Reports findings and never applies fixes itself.
 tools: Read, Grep, Glob, Bash
 ---
 
