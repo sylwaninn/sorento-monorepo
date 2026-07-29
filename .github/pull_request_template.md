@@ -7,9 +7,10 @@
 ## Scope
 
 - [ ] `web`
+- [ ] `packages` (core, domain, supabase-client, config)
 - [ ] `supabase`
-- [ ] `shared`
-- [ ] `ci/cd`
+- [ ] `e2e`
+- [ ] `ci`
 - [ ] Other (specify):
 
 ## Changes
