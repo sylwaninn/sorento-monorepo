@@ -1,0 +1,47 @@
+{
+  "name": "@sorento/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "preview": "vite preview",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@gravity-ui/icons": "^2.13.0",
+    "@heroui/react": "^3.0.5",
+    "@heroui/styles": "^3.0.5",
+    "@internationalized/date": "^3.7.0",
+    "@sorento/core": "workspace:*",
+    "@sorento/domain": "workspace:*",
+    "@sorento/supabase-client": "workspace:*",
+    "@tanstack/react-query": "^5.62.11",
+    "jspdf": "^2.5.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^7.1.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@sorento/config": "workspace:*",
+    "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.17.0",
+    "jsdom": "^25.0.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}
