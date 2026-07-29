@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { createDossier, logIn, TEST_PASSWORD, uniqueEmail } from "#e2e/support/app";
+import {
+  createDossier,
+  DIAGNOSTIC_SUBJECT_NAME,
+  inviteRelative,
+  logIn,
+  pathOf,
+  TEST_PASSWORD,
+  uniqueEmail,
+} from "#e2e/support/app";
+import { copy } from "#e2e/support/copy";
 import { createConfirmedAccount, membershipRole } from "#e2e/support/backend";
 
 /**
@@ -21,18 +30,7 @@ test.describe("inviting a relative into a dossier", () => {
 
     await logIn(page, ownerEmail);
     const dossierId = await createDossier(page, "death");
-
-    await page.goto(`/dossiers/${dossierId}/membres`);
-    await page.getByRole("textbox", { name: "Email" }).fill(guestEmail);
-    await page.getByRole("button", { name: "Envoyer l'invitation" }).click();
-
-    // Local development has no email provider, so the screen surfaces the link instead of
-    // pretending a message went out. That is also the only way this journey can follow it.
-    const acceptUrl = await page
-      .locator("code", { hasText: "/invitations/accepter" })
-      .first()
-      .innerText();
-    expect(acceptUrl).toContain("/invitations/accepter");
+    const acceptUrl = await inviteRelative(page, dossierId, guestEmail);
 
     // Before accepting, the guest is a stranger to this dossier as far as the policies go.
     expect(await membershipRole(dossierId, guestId)).toBeUndefined();
@@ -41,15 +39,15 @@ test.describe("inviting a relative into a dossier", () => {
     const guestPage = await guestContext.newPage();
     try {
       await logIn(guestPage, guestEmail);
-      await guestPage.goto(new URL(acceptUrl).pathname + new URL(acceptUrl).search);
+      await guestPage.goto(pathOf(acceptUrl));
 
       // Joining is a deliberate act, not a side effect of opening a link: the screen names the
       // dossier and the role before anything is granted.
-      await expect(guestPage.getByText(/vous invite à rejoindre le dossier de/)).toBeVisible();
-      await guestPage.getByRole("button", { name: "Accepter l'invitation" }).click();
+      await expect(guestPage.getByText(copy.invitedToJoin)).toBeVisible();
+      await guestPage.getByRole("button", { name: copy.acceptInvitation }).click();
 
       await expect(guestPage).toHaveURL(/\/dossiers\/[0-9a-f-]{36}/, { timeout: 30_000 });
-      await expect(guestPage.getByText(/Jean Dupont/)).toBeVisible();
+      await expect(guestPage.getByText(DIAGNOSTIC_SUBJECT_NAME)).toBeVisible();
 
       expect(await membershipRole(dossierId, guestId)).toBe("collaborator");
     } finally {
@@ -67,14 +65,7 @@ test.describe("inviting a relative into a dossier", () => {
 
     await logIn(page, ownerEmail);
     const dossierId = await createDossier(page, "death");
-
-    await page.goto(`/dossiers/${dossierId}/membres`);
-    await page.getByRole("textbox", { name: "Email" }).fill(invitedEmail);
-    await page.getByRole("button", { name: "Envoyer l'invitation" }).click();
-    const acceptUrl = await page
-      .locator("code", { hasText: "/invitations/accepter" })
-      .first()
-      .innerText();
+    const acceptUrl = await inviteRelative(page, dossierId, invitedEmail);
 
     // An invitation is addressed to a person, not to whoever ends up holding the link: a
     // forwarded email must not be a way into someone's dossier.
@@ -82,7 +73,7 @@ test.describe("inviting a relative into a dossier", () => {
     const outsiderPage = await outsiderContext.newPage();
     try {
       await logIn(outsiderPage, outsiderEmail);
-      await outsiderPage.goto(new URL(acceptUrl).pathname + new URL(acceptUrl).search);
+      await outsiderPage.goto(pathOf(acceptUrl));
 
       await expect(outsiderPage).not.toHaveURL(new RegExp(`/dossiers/${dossierId}$`));
       expect(await membershipRole(dossierId, outsiderId)).toBeUndefined();

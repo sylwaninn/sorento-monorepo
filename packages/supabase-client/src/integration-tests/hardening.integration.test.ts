@@ -1,15 +1,20 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AccountRepository } from "#client/repositories/account-repository";
 import { AnswerRepository } from "#client/repositories/answer-repository";
 import { CommentRepository } from "#client/repositories/comment-repository";
 import { DossierRepository } from "#client/repositories/dossier-repository";
 import { MembershipRepository } from "#client/repositories/membership-repository";
+import { NotificationPreferenceRepository } from "#client/repositories/notification-preference-repository";
+import { NotificationRepository } from "#client/repositories/notification-repository";
 import { TrackingRepository } from "#client/repositories/tracking-repository";
 import { query } from "#client/integration-tests/database";
 import {
   createActiveTestDossier,
+  createMember,
+  createOwnedDossier,
   createTestUser,
   fetchAProcedureId,
+  grantMembership,
   must,
   serviceRoleClient,
   type TestUser,
@@ -19,27 +24,16 @@ import {
 // a forgeable audit trail, a bin that revoked nothing, notifications readable by anyone,
 // and a creator who kept access forever.
 
-const addCollaborator = async (dossierId: string, user: TestUser): Promise<string> => {
-  const { data, error } = await serviceRoleClient()
-    .from("memberships")
-    .insert({ dossier_id: dossierId, user_id: user.id, role: "collaborator" })
-    .select("id")
-    .single();
-  if (error || !data) throw new Error(`failed to add collaborator: ${error?.message}`);
-  return data.id;
-};
-
 describe("RLS: the activity log cannot be written by a client", () => {
   let owner: TestUser;
   let collaborator: TestUser;
   let dossierId: string;
 
   beforeAll(async () => {
-    owner = await createTestUser("Olivia");
-    collaborator = await createTestUser("Colin");
-    const dossier = await createActiveTestDossier(owner, "Jean", "Durand");
-    dossierId = dossier.id;
-    await addCollaborator(dossierId, collaborator);
+    const fixture = await createOwnedDossier({ ownerName: "Olivia", status: "ACTIVE" });
+    owner = fixture.owner;
+    dossierId = fixture.dossierId;
+    collaborator = await createMember(dossierId, "collaborator", "Colin");
   });
 
   it("a collaborator cannot insert an entry, forged or otherwise", async () => {
@@ -79,10 +73,12 @@ describe("RLS: a soft-deleted dossier revokes access to its content", () => {
   let owner: TestUser;
   let dossierId: string;
 
-  beforeAll(async () => {
-    owner = await createTestUser("Oscar");
-    const dossier = await createActiveTestDossier(owner, "Marie", "Petit");
-    dossierId = dossier.id;
+  // Each test bins a dossier of its own. The write test used to inherit the deletion the read
+  // test performed, so it only held as long as vitest ran the file in declaration order.
+  beforeEach(async () => {
+    const fixture = await createOwnedDossier({ ownerName: "Oscar", status: "ACTIVE" });
+    owner = fixture.owner;
+    dossierId = fixture.dossierId;
     await new TrackingRepository(owner.client).createForProcedure(
       dossierId,
       await fetchAProcedureId(),
@@ -100,7 +96,9 @@ describe("RLS: a soft-deleted dossier revokes access to its content", () => {
     expect(await new DossierRepository(owner.client).getById(dossierId)).toBeNull();
   });
 
-  it("and so does the ability to write to them", async () => {
+  it("a binned dossier can no longer be written to either", async () => {
+    await new DossierRepository(owner.client).softDelete(dossierId);
+
     const { error } = await owner.client
       .from("comments")
       .insert({ dossier_id: dossierId, author_id: owner.id, content: "après suppression" });
@@ -119,7 +117,7 @@ describe("RLS: creating a dossier does not grant permanent access", () => {
       subjectLastName: "Girard",
       status: "PREPARATION",
     });
-    await addCollaborator(dossier.id, successor);
+    await grantMembership(dossier.id, successor, "collaborator");
     await new MembershipRepository(creator.client).transferOwnership(dossier.id, successor.id);
 
     // created_by still points at them, which used to be enough to keep reading the dossier.
@@ -140,33 +138,167 @@ describe("RLS: creating a dossier does not grant permanent access", () => {
 });
 
 describe("RLS: notifications are strictly personal", () => {
+  let recipient: TestUser;
+  let other: TestUser;
+  let dossierId: string;
+
+  // create_notification is a server-only function, so a notification a test needs to already
+  // exist is inserted the way the triggers insert theirs.
+  const seedNotification = async (): Promise<string> => {
+    const { data, error } = await serviceRoleClient()
+      .from("notifications")
+      .insert({
+        user_id: recipient.id,
+        dossier_id: dossierId,
+        type: "mention",
+        target_id: null,
+        payload: {},
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return must(data, "seeded notification").id;
+  };
+
+  const isRead = async (notificationId: string): Promise<boolean> => {
+    const { data } = await serviceRoleClient()
+      .from("notifications")
+      .select("read")
+      .eq("id", notificationId)
+      .single();
+    return must(data, "notification").read;
+  };
+
+  beforeAll(async () => {
+    const fixture = await createOwnedDossier({ ownerName: "Noa", status: "ACTIVE" });
+    recipient = fixture.owner;
+    dossierId = fixture.dossierId;
+    other = await createMember(dossierId, "collaborator", "Nina");
+  });
+
   it("a member never reads another member's notifications", async () => {
-    const owner = await createTestUser("Noa");
-    const other = await createTestUser("Nina");
-    const dossier = await createActiveTestDossier(owner, "Luc", "Bernard");
-    await addCollaborator(dossier.id, other);
+    const notificationId = await seedNotification();
 
-    await serviceRoleClient().from("notifications").insert({
-      user_id: owner.id,
-      dossier_id: dossier.id,
-      type: "mention",
-      target_id: null,
-      payload: {},
-    });
+    const seenByRecipient = await new NotificationRepository(recipient.client).listForCurrentUser();
+    const seenByOther = await new NotificationRepository(other.client).listForCurrentUser();
 
-    const { data: seenByOther } = await other.client
-      .from("notifications")
-      .select("id")
-      .eq("dossier_id", dossier.id)
-      .eq("type", "mention");
-    const { data: seenByOwner } = await owner.client
-      .from("notifications")
-      .select("id")
-      .eq("dossier_id", dossier.id)
-      .eq("type", "mention");
+    expect(seenByRecipient.map((notification) => notification.id)).toContain(notificationId);
+    expect(seenByOther.map((notification) => notification.id)).not.toContain(notificationId);
+  });
 
-    expect(seenByOther).toEqual([]);
-    expect(seenByOwner?.length).toBe(1);
+  it("the recipient marks their own notification as read", async () => {
+    const notificationId = await seedNotification();
+
+    await new NotificationRepository(recipient.client).markRead(notificationId);
+
+    expect(await isRead(notificationId)).toBe(true);
+  });
+
+  // The update policy denies by matching no row, which returns no error. Only reading the row
+  // back distinguishes a refusal from a write that silently went through.
+  it("another member cannot mark it as read on their behalf", async () => {
+    const notificationId = await seedNotification();
+
+    await new NotificationRepository(other.client).markRead(notificationId);
+
+    expect(await isRead(notificationId)).toBe(false);
+  });
+
+  it("marking everything read stops at your own list", async () => {
+    const notificationId = await seedNotification();
+
+    await new NotificationRepository(other.client).markAllRead(recipient.id);
+
+    expect(await isRead(notificationId)).toBe(false);
+  });
+});
+
+describe("RLS: notification preferences are personal", () => {
+  let user: TestUser;
+  let other: TestUser;
+
+  const storedPreferenceCount = async (userId: string, eventType: string): Promise<number> => {
+    const { data } = await serviceRoleClient()
+      .from("notification_preferences")
+      .select("event_type")
+      .eq("user_id", userId)
+      .eq("event_type", eventType);
+    return must(data, `stored ${eventType} preference`).length;
+  };
+
+  beforeAll(async () => {
+    user = await createTestUser("Prudence");
+    other = await createTestUser("Perrine");
+  });
+
+  it("a user records an override and reads it back", async () => {
+    await new NotificationPreferenceRepository(user.client).setPreference(
+      user.id,
+      "mention",
+      true,
+      false,
+    );
+
+    const preferences = await new NotificationPreferenceRepository(
+      user.client,
+    ).listForCurrentUser();
+    const mention = must(
+      preferences.find((preference) => preference.eventType === "mention"),
+      "mention preference",
+    );
+    expect(mention.email).toBe(false);
+  });
+
+  it("someone else's overrides are invisible", async () => {
+    await new NotificationPreferenceRepository(other.client).setPreference(
+      other.id,
+      "weekly_digest",
+      false,
+      false,
+    );
+
+    const preferences = await new NotificationPreferenceRepository(
+      user.client,
+    ).listForCurrentUser();
+    expect(
+      preferences.find((preference) => preference.eventType === "weekly_digest"),
+    ).toBeUndefined();
+  });
+
+  // Silencing someone else's notifications would be a way to keep them from noticing anything.
+  it("a user cannot record an override for someone else", async () => {
+    await expect(
+      new NotificationPreferenceRepository(user.client).setPreference(
+        other.id,
+        "procedure_assigned",
+        false,
+        false,
+      ),
+    ).rejects.toThrow();
+
+    expect(await storedPreferenceCount(other.id, "procedure_assigned")).toBe(0);
+  });
+
+  // Deleting an override is how the app returns a type to its default, and the repository has
+  // no method for it: the screen deletes the row directly.
+  it("a user deletes their own override but not someone else's", async () => {
+    const preferences = new NotificationPreferenceRepository(user.client);
+    await preferences.setPreference(user.id, "member_joined", false, false);
+    await new NotificationPreferenceRepository(other.client).setPreference(
+      other.id,
+      "member_joined",
+      false,
+      false,
+    );
+
+    await user.client
+      .from("notification_preferences")
+      .delete()
+      .eq("event_type", "member_joined")
+      .in("user_id", [user.id, other.id]);
+
+    expect(await storedPreferenceCount(user.id, "member_joined")).toBe(0);
+    expect(await storedPreferenceCount(other.id, "member_joined")).toBe(1);
   });
 });
 
@@ -176,13 +308,10 @@ describe("RLS: comment deletion follows the matrix", () => {
   let dossierId: string;
 
   beforeAll(async () => {
-    owner = await createTestUser("Ophélie");
-    viewer = await createTestUser("Victor");
-    const dossier = await createActiveTestDossier(owner, "Anne", "Leroy");
-    dossierId = dossier.id;
-    await serviceRoleClient()
-      .from("memberships")
-      .insert({ dossier_id: dossierId, user_id: viewer.id, role: "viewer" });
+    const fixture = await createOwnedDossier({ ownerName: "Ophélie", status: "ACTIVE" });
+    owner = fixture.owner;
+    dossierId = fixture.dossierId;
+    viewer = await createMember(dossierId, "viewer", "Victor");
   });
 
   it("a viewer can comment, and delete their own comment", async () => {
@@ -254,9 +383,8 @@ describe("account deletion", () => {
 
   it("goes through once no dossier is owned, and keeps the thread readable", async () => {
     const owner = await createTestUser("Théo");
-    const leaver = await createTestUser("Léa");
     const dossier = await createActiveTestDossier(owner, "Sophie", "Roux");
-    await addCollaborator(dossier.id, leaver);
+    const leaver = await createMember(dossier.id, "collaborator", "Léa");
 
     const comment = await new CommentRepository(leaver.client).create(
       { dossierId: dossier.id, procedureId: null, content: "À bientôt.", mentions: [] },
@@ -400,12 +528,7 @@ describe("database authorization invariants", () => {
     });
     const service = serviceRoleClient();
 
-    await service.from("memberships").insert({
-      dossier_id: dossier.id,
-      user_id: trusted.id,
-      role: "trusted_contact",
-      invited_by: owner.id,
-    });
+    await grantMembership(dossier.id, trusted, "trusted_contact");
     await service.from("trusted_contact_designations").insert({
       dossier_id: dossier.id,
       email: trusted.email,

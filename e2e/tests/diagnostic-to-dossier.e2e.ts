@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { completeDiagnostic, copy, logIn, TEST_PASSWORD, uniqueEmail } from "#e2e/support/app";
+import {
+  completeDiagnostic,
+  DIAGNOSTIC_SUBJECT_NAME,
+  logIn,
+  TEST_PASSWORD,
+  uniqueEmail,
+  wizardStep,
+} from "#e2e/support/app";
+import { copy } from "#e2e/support/copy";
 import { createConfirmedAccount } from "#e2e/support/backend";
 
 /**
@@ -7,9 +15,9 @@ import { createConfirmedAccount } from "#e2e/support/backend";
  * answers produced becomes a dossier they can work through.
  *
  * Every layer already has its own tests: the engine's rules, the schemas, the policies, the
- * screens in isolation. None of them can fail when the pieces disagree: answers persisted under
- * one key and read under another, a session that arrives after the redirect, a dossier created
- * without the diagnostic attached. That is the whole reason this test exists.
+ * screens in isolation. None of them can fail when the pieces disagree, with answers persisted
+ * under one key and read under another, a session that arrives after the redirect, a dossier
+ * created without the diagnostic attached. That is the whole reason this test exists.
  */
 
 test.describe("from the diagnostic to a dossier", () => {
@@ -23,10 +31,10 @@ test.describe("from the diagnostic to a dossier", () => {
 
     // The synthesis is the argument for creating an account, so it has to say something before
     // the account exists: putting it behind the signup wall would invert the funnel.
-    await expect(page.getByText(/démarches identifiées/)).toBeVisible();
+    await expect(page.getByText(copy.proceduresIdentified)).toBeVisible();
 
     // Cautious wording about entitlements is a compliance rule, not a style preference.
-    await expect(page.getByText(/ne constituent pas un conseil individuel/)).toBeVisible();
+    await expect(page.getByText(copy.resultNotice)).toBeVisible();
 
     await expect(page.getByRole("link", { name: copy.signupFromResult })).toHaveAttribute(
       "href",
@@ -49,14 +57,14 @@ test.describe("from the diagnostic to a dossier", () => {
     // the name typed into the diagnostic is what proves they crossed over and were attached,
     // rather than an empty dossier being created next to answers that were dropped.
     await expect(page).toHaveURL(/\/dossiers\/[0-9a-f-]{36}/, { timeout: 30_000 });
-    await expect(page.getByText(/Jean Dupont/)).toBeVisible();
+    await expect(page.getByText(DIAGNOSTIC_SUBJECT_NAME)).toBeVisible();
   });
 
   test("an unfinished diagnostic does not pretend to have a result", async ({ page }) => {
     await page.goto("/diagnostic/resultat");
 
-    await expect(page.getByText(/Aucun diagnostic en cours/)).toBeVisible();
-    await expect(page.getByRole("link", { name: /Recommencer le diagnostic/ })).toBeVisible();
+    await expect(page.getByText(copy.noDiagnostic)).toBeVisible();
+    await expect(page.getByRole("link", { name: copy.restartDiagnostic })).toBeVisible();
   });
 
   test("answers survive a reload mid-diagnostic", async ({ page }) => {
@@ -64,7 +72,7 @@ test.describe("from the diagnostic to a dossier", () => {
     await page.getByRole("radio").first().check({ force: true });
     await page.getByRole("button", { name: copy.next }).click();
 
-    const step = page.locator("[data-slot=card-content]").first();
+    const step = wizardStep(page);
     const secondQuestion = await step.innerText();
 
     await page.reload();

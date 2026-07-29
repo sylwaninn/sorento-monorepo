@@ -24,8 +24,9 @@ import { signedInSession } from "@/test/supabase-stub";
  *
  * It walks the exported table rather than a list written here, so a new screen is covered the
  * moment its route is added and a deleted screen removes its own case. Guard elements have no
- * `path`, so they are skipped: they are tested where they belong, in their own suites, and
- * going through them here would only mean asserting on a redirect.
+ * `path`, so they are skipped: they decide who gets through rather than showing anything, and
+ * that decision is asserted in src/auth/RequireAuth.test.tsx, RequireAdmin.test.tsx and
+ * RequireGuest.test.tsx, where the destination of each redirect can actually be named.
  */
 
 interface Screen {

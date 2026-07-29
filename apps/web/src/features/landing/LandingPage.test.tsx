@@ -4,6 +4,7 @@ import { LandingPage } from "@/features/landing/LandingPage";
 import { landingContent } from "@/features/landing/content";
 import { sharedContent } from "@/components/content";
 import { renderWithProviders } from "@/test/render";
+import { must } from "@/test/must";
 
 describe("LandingPage", () => {
   it("carries the mandatory general-information notice", () => {
@@ -39,6 +40,15 @@ describe("LandingPage", () => {
   it("states that no commission is taken on recovered sums", () => {
     renderWithProviders(<LandingPage />);
 
-    expect(screen.getByText(/aucune commission/i)).toBeInTheDocument();
+    // Found by what it says rather than by its position, and read through must so that
+    // dropping the promise from the dictionary fails here by name instead of quietly
+    // removing the only place the commitment is made.
+    const noCommission = must(
+      landingContent.reassurance.points.find((point) => /commission/i.test(point.title)),
+      "the landing reassurance point about commission",
+    );
+
+    expect(screen.getByText(noCommission.title)).toBeInTheDocument();
+    expect(screen.getByText(noCommission.description)).toBeInTheDocument();
   });
 });

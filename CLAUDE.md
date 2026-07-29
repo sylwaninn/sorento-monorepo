@@ -110,10 +110,21 @@ keep the packages reusable.
   sibling test.
 - Every new RLS policy arrives WITH its integration test. Enforced: the
   policy snapshot changes, and the diff has to be accepted deliberately.
-- Every new Edge Function is named by the HTTP integration suite. It runs
-  as service_role; an unasserted guard is an assumed guard.
+- Every new Edge Function is named by the HTTP integration suite, with the
+  guard it uses, and declared in supabase/config.toml. It runs as
+  service_role; an unasserted guard is an assumed guard. Enforced: check:tests
+  refuses a function the suite's table does not name, a table entry pointing
+  at a deleted function, and a verify_jwt that disagrees with the tested guard.
 - A rule stated in both SQL and TypeScript is compared by the mirror suite.
   Never write the same list twice and hope.
+- User-facing copy an E2E journey clicks on is repeated in e2e/support/copy.ts,
+  because the journeys import none of the app's packages. Every entry names the
+  dictionary it came from and check:tests refuses one that has drifted. Change
+  the wording in both, in the same commit.
+- Email bodies interpolating anything a user typed go through escapeHtml, and
+  the builder lives in _shared/emails.ts with its escaping asserted. An
+  interpolation added straight into a function body is untestable by
+  construction.
 - Coverage thresholds are a ratchet: up, never down. Lowering one to make a
   build green is the change under review, not a fix.
 - Before marking a task done: pnpm verify must pass. When the change touches

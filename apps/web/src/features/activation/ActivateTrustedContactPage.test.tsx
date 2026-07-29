@@ -3,12 +3,16 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ActivateTrustedContactPage } from "@/features/activation/ActivateTrustedContactPage";
 import { activationContent } from "@/features/activation/content";
+import { userFacingErrorMessage } from "@/lib/error-messages";
 import { repositories } from "@/lib/repositories";
 import { renderWithProviders } from "@/test/render";
+import { must } from "@/test/must";
 
 const TOKEN = "a".repeat(64);
 const ROUTE = `/contact-confiance/activer?token=${TOKEN}`;
 const PATH = "/contact-confiance/activer";
+
+const FROZEN = new Error("activation_frozen");
 
 const resolved = {
   dossierId: "11111111-1111-1111-1111-111111111111",
@@ -37,7 +41,7 @@ describe("ActivateTrustedContactPage", () => {
     renderPage();
 
     expect(await screen.findByText(activationContent.activate.invalidTitle)).toBeInTheDocument();
-    expect(screen.queryByText(/Jeanne/)).not.toBeInTheDocument();
+    expect(screen.queryByText(new RegExp(resolved.subjectFirstName))).not.toBeInTheDocument();
   });
 
   it("keeps the button unavailable until a death date is given", async () => {
@@ -54,24 +58,28 @@ describe("ActivateTrustedContactPage", () => {
     vi.spyOn(repositories.trustedContacts, "resolveActivation").mockResolvedValue(resolved);
     const requestActivation = vi
       .spyOn(repositories.trustedContacts, "requestActivation")
-      .mockRejectedValue(new Error("activation_frozen"));
+      .mockRejectedValue(FROZEN);
 
     renderPage();
     await screen.findByText(activationContent.activate.notice);
 
-    const [dayField] = screen.getAllByRole("spinbutton");
-    if (dayField) {
-      await userEvent.click(dayField);
-      await userEvent.keyboard("15012026");
-    }
+    // HeroUI's DateField renders one spinbutton per segment; the first is the day.
+    const dayField = must(screen.getAllByRole("spinbutton")[0], "day segment of the date field");
+    await userEvent.click(dayField);
+    await userEvent.keyboard("15012026");
 
     const submit = screen.getByRole("button", { name: activationContent.activate.submitButton });
     await waitFor(() => expect(submit).toBeEnabled());
     await userEvent.click(submit);
 
+    // Read through the translation the screen itself uses, so the sentence is not spelled out
+    // twice. The comparison against an unmapped error is what keeps that from being circular:
+    // it fails if activation_frozen ever loses its own message and falls back to the generic
+    // one, which is the regression that would leave the person with nothing to act on.
     await waitFor(() => expect(requestActivation).toHaveBeenCalled());
-    expect(
-      await screen.findByText("L'activation de ce dossier est suspendue suite à une opposition."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(userFacingErrorMessage(FROZEN))).toBeInTheDocument();
+    expect(userFacingErrorMessage(FROZEN)).not.toBe(
+      userFacingErrorMessage(new Error("no_message_for_this_one")),
+    );
   });
 });

@@ -62,7 +62,7 @@ jobs:
         run: pnpm check:docs
 
   test:
-    name: Unit tests and coverage
+    name: Unit tests, Edge Function tests and coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,6 +79,18 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # The shared code every function runs before anything else: token hashing, the cron
+      # secret comparison, CORS, payload parsing, the email bodies and the gate on the
+      # development endpoints. It runs here rather than in a job of its own because it emits
+      # the lcov the diff-coverage step below reads, and an artifact handed between two jobs
+      # would be a slower way to say the same thing. The step name says which half failed.
+      - name: Test the shared Edge Function code
+        run: pnpm test:functions
 
       # Fails on its own if any package falls under its threshold. The gate lives in the
       # vitest configs, not here, so `pnpm verify` locally enforces exactly the same bar.
@@ -104,33 +116,9 @@ jobs:
           path: |
             packages/*/coverage
             apps/*/coverage
+            supabase/coverage
           retention-days: 7
           if-no-files-found: ignore
-
-  functions:
-    name: Edge Function unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      # The shared code every function runs before anything else: token hashing, the cron
-      # secret comparison, CORS, payload parsing, and the gate on the development endpoints.
-      - name: Test the shared Edge Function code
-        run: pnpm test:functions
 
   # Everything that needs a database and a running stack, in one job: starting Supabase twice
   # costs more than the clarity of splitting it, and the step names say which half failed.
