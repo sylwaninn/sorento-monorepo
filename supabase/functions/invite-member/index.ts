@@ -1,4 +1,5 @@
 import { env } from "@shared/env.ts";
+import { escapeHtml } from "@shared/html.ts";
 import { internalError, json, parseBody, preflight } from "@shared/http.ts";
 import { sendEmail } from "@shared/mailer.ts";
 import { inviteMemberPayloadSchema } from "@shared/schemas.ts";
@@ -81,9 +82,9 @@ Deno.serve(async (request) => {
 
     await sendEmail(normalizedEmail, {
       subject: "Invitation à rejoindre un dossier",
-      bodyHtml: `<p>${inviterProfile?.first_name ?? ""} vous invite à rejoindre le dossier de ${
-        dossier?.subject_first_name ?? ""
-      } sur Sorento.</p><p><a href="${acceptUrl}">Accepter l'invitation</a></p>`,
+      bodyHtml: `<p>${escapeHtml(inviterProfile?.first_name ?? "")} vous invite à rejoindre le dossier de ${escapeHtml(
+        dossier?.subject_first_name ?? "",
+      )} sur Sorento.</p><p><a href="${acceptUrl}">Accepter l'invitation</a></p>`,
       unsubscribeType: "invitation",
     });
 

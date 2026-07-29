@@ -1,4 +1,5 @@
 import { env } from "@shared/env.ts";
+import { escapeHtml } from "@shared/html.ts";
 import { internalError, json, parseBody, preflight } from "@shared/http.ts";
 import { sendEmail } from "@shared/mailer.ts";
 import { opposeActivationPayloadSchema } from "@shared/schemas.ts";
@@ -98,8 +99,8 @@ Deno.serve(async (request) => {
     if (env.supportEmail) {
       await sendEmail(env.supportEmail, {
         subject: `Opposition à une activation, dossier ${dossierId}`,
-        bodyHtml: `<p>Dossier ${dossierId} (${dossier.subject_first_name}) : activation gelée suite à une opposition.</p>
-         <p>Motif indiqué : ${reason ?? "non précisé"}</p>
+        bodyHtml: `<p>Dossier ${dossierId} (${escapeHtml(dossier.subject_first_name)}) : activation gelée suite à une opposition.</p>
+         <p>Motif indiqué : ${escapeHtml(reason ?? "non précisé")}</p>
          <p>Levée de gel : release_activation_freeze('${dossierId}') côté administration.</p>`,
       });
     } else {
