@@ -96,7 +96,15 @@ keep the packages reusable.
 - Generated letters are templates for the user to review and sign.
 - Components displaying a piece of catalog data require source_url,
   last_verified_date and caution_text as non-optional props.
-- Deletions: soft delete + 30-day bin. Never a direct hard delete.
+- Deletions of content a person can regret losing (dossiers, comments,
+  documents): soft delete + 30-day bin, purged by purge_soft_deleted().
+  Never a direct hard delete.
+- Closing an account is the exception, and it is an erasure, not a bin:
+  someone asking to be forgotten is not asking to be kept for thirty days.
+  profiles has no deleted_at on purpose. The shared history other members
+  rely on survives because the foreign keys null out, so a dossier keeps its
+  comments and its trace without naming whoever left. Deletion is refused
+  while the person still owns a dossier, which would otherwise be orphaned.
 - Emails: sober, no name of the deceased in the subject, one-click unsubscribe.
 - UI never guilt-inducing: no aggressive red on overdue items, no overdue
   counter, at most 2-3 "to do now" items highlighted.
@@ -117,10 +125,12 @@ keep the packages reusable.
   at a deleted function, and a verify_jwt that disagrees with the tested guard.
 - A rule stated in both SQL and TypeScript is compared by the mirror suite.
   Never write the same list twice and hope.
-- User-facing copy an E2E journey clicks on is repeated in e2e/support/copy.ts,
-  because the journeys import none of the app's packages. Every entry names the
-  dictionary it came from and check:tests refuses one that has drifted. Change
-  the wording in both, in the same commit.
+- User-facing copy an E2E journey clicks on is repeated in e2e/support/copy.ts
+  for the shared helpers, or in the copy-<area>.ts module beside the journey
+  that uses it, because the journeys import none of the app's packages. Every
+  entry goes through mirrors(), which names the dictionary it came from, and
+  check:tests refuses one that has drifted. Change the wording in both, in the
+  same commit.
 - Email bodies interpolating anything a user typed go through escapeHtml, and
   the builder lives in _shared/emails.ts with its escaping asserted. An
   interpolation added straight into a function body is untestable by

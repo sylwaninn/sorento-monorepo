@@ -15,4 +15,19 @@ export const SERVICE_ROLE_KEY =
 // Pinned by supabase/seed.sql so the cron-guarded jobs can be driven from a test.
 export const CRON_SECRET = process.env["CRON_SECRET"] ?? "local-dev-cron-secret";
 
-export const APP_URL = process.env["E2E_APP_URL"] ?? "http://127.0.0.1:5173";
+/**
+ * A port of its own, and localhost rather than 127.0.0.1.
+ *
+ * The port keeps the journeys off 5173, where a developer's `pnpm dev` lives: Playwright reuses
+ * an existing server, so sharing the port means the suite silently tests the dev server instead
+ * of the production build it exists to test.
+ *
+ * The host is not interchangeable. supabase/config.toml declares a strict redirect allow-list on
+ * this exact origin, so a link out of a confirmation email is refused from the other one, and a
+ * session stored under one origin would be invisible to the other. The journeys have to run where
+ * the emails point.
+ */
+export const APP_URL = process.env["E2E_APP_URL"] ?? "http://localhost:5273";
+
+/** Mailpit catches everything the local stack sends, which is what makes an email link followable. */
+export const MAILPIT_URL = process.env["MAILPIT_URL"] ?? "http://127.0.0.1:57324";

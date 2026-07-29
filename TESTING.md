@@ -27,6 +27,8 @@ that existed at the time.
 
 Ordered by how close they run to production. Each answers a question the ones above it cannot.
 
+The journeys cover every screen the route table declares, driven the way a person drives them.
+
 | Layer             | Where                                            | Runs with               | Answers                                               |
 | ----------------- | ------------------------------------------------ | ----------------------- | ----------------------------------------------------- |
 | Unit, rules       | `packages/core`                                  | `pnpm test`             | does the rule compute the right thing?                |
@@ -61,7 +63,21 @@ Ordered by how close they run to production. Each answers a question the ones ab
   machine: the local stack has no provider key, so a send is observable only as delivery
   bookkeeping.
 - **Journeys** are a black box. They import none of the app's packages and speak HTTP to the
-  running stack, so a bug shared with the app cannot hide itself.
+  running stack, so a bug shared with the app cannot hide itself. They also open the mailbox:
+  signing up, resetting a password and asking for a magic link all end with a person leaving the
+  browser, and a journey stopping at "the screen said an email was sent" proves the screen rather
+  than the flow.
+
+### A journey that records a defect instead of hiding it
+
+Five journeys are marked `test.fail()`. Each asserts what a person is entitled to expect, meets a
+real defect, and says so in a comment naming why the fix is a separate change: French email
+templates, re-evaluating a journey after its answers are corrected, guides that were never
+written, and the missing `main` landmark.
+
+The marker is not a `skip`. Playwright fails the run the moment one of them starts passing, so the
+annotation cannot outlive the defect it records, and the assertion is never weakened to match what
+the code happens to do.
 
 ## Keeping the suites honest
 
@@ -155,9 +171,13 @@ is a copy of a content dictionary rather than a reference to one. Left uncompare
 drifts, and it surfaces as the worst failure a suite can produce: a selector finding nothing,
 minutes into CI, pointing at the test rather than at the wording that moved.
 
-Every entry in `e2e/support/copy.ts` names the dictionary it came from, and `check:tests` refuses
-one whose dictionary no longer contains that text. A rewording then fails in milliseconds, before
-the commit, naming both sides.
+Every string is declared through `mirrors(...)`, which names the dictionary it came from, and
+`check:tests` reads every such call under `e2e/` and refuses one whose dictionary no longer
+contains that text. A rewording then fails in milliseconds, before the commit, naming both sides.
+
+`e2e/support/copy.ts` holds what the shared helpers drive the app through; copy belonging to one
+area lives beside that area's journey, in its own `copy-<area>.ts`, so two journeys never queue
+behind the same file.
 
 Inside the app the same problem is solved by the compiler: a test asserts on `authContent.login.
 submitButtonPassword`, never on the sentence, so a renamed key does not build and a removed one
@@ -235,4 +255,6 @@ started from nothing, mutation testing, a build, and a secret scan.
   is how three escaping holes were fixed without a test noticing.
 - **A rule stated in both SQL and TypeScript**: add the pair to the mirror suite. Do not write the
   same list twice and hope.
-- **Copy an E2E journey clicks on**: add it to `e2e/support/copy.ts` naming its dictionary.
+- **Copy an E2E journey clicks on**: declare it with `mirrors(...)`, naming its dictionary, in
+  `e2e/support/copy.ts` if the shared helpers use it and in the area's own `copy-<area>.ts`
+  otherwise.

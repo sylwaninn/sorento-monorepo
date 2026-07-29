@@ -14,35 +14,31 @@ concurrency:
 permissions:
   contents: read
 
+# Job names carry a prefix so the list of checks on a pull request reads as a pyramid rather than
+# as seven unrelated lines: what is static, what each test layer asserts, what ships, what is
+# scanned. A red cross should say which of those broke before anyone opens it.
+#
+# Every job also carries a timeout. GitHub's default is six hours, and the two jobs that start a
+# database are exactly the ones that can hang without ever failing.
+
 jobs:
-  # Everything that reads the code without running it. Split from `test` so a failing
-  # assertion and a formatting slip are never reported as the same red cross.
-  quality:
-    name: Quality (format, lint, types, suite hygiene)
+  check:
+    name: "check: format, lint, types, docs"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+          deno: "true"
 
       # Runs before lint: an unformatted file is the cheapest failure to diagnose.
       - name: Check formatting
         run: pnpm format:check
 
-      # Structural audit of the suites: an orphan test, a module with none, a `.only`. Runs no
-      # test, so it reports in seconds and before anything slower has a chance to fail first.
+      # Structural audit of the suites: an orphan test, a module with none, a `.only`, an Edge
+      # Function no case names, a journey's French copy its dictionary no longer contains. Runs
+      # no test, so it reports in seconds and before anything slower has a chance to fail first.
       - name: Audit the test suites
         run: pnpm check:tests
 
@@ -61,34 +57,25 @@ jobs:
       - name: Check documentation freshness
         run: pnpm check:docs
 
-  test:
-    name: Unit tests, Edge Function tests and coverage
+  test-unit:
+    # The Edge Function suite runs here rather than in a job of its own because it emits the lcov
+    # the diff-coverage step below reads, and an artifact handed between two jobs would be a
+    # slower way to say the same thing.
+    name: "test: unit and edge functions"
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           # check-diff-coverage compares against the base branch, which needs its history.
           fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-          cache: pnpm
+          deno: "true"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      # The shared code every function runs before anything else: token hashing, the cron
-      # secret comparison, CORS, payload parsing, the email bodies and the gate on the
-      # development endpoints. It runs here rather than in a job of its own because it emits
-      # the lcov the diff-coverage step below reads, and an artifact handed between two jobs
-      # would be a slower way to say the same thing. The step name says which half failed.
+      # The shared code every function runs before anything else: token hashing, the cron secret
+      # comparison, CORS, payload parsing, the email bodies and the gate on the development
+      # endpoints.
       - name: Test the shared Edge Function code
         run: pnpm test:functions
 
@@ -120,23 +107,17 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # Everything that needs a database and a running stack, in one job: starting Supabase twice
-  # costs more than the clarity of splitting it, and the step names say which half failed.
-  stack:
-    name: Integration and journeys
+  test-integration:
+    # Split from the journeys, which it used to share a job with. The two need the same database
+    # and nothing else: one asks whether the policies refuse the right people, the other whether
+    # a person can get through the app. Grouping them by the infrastructure they happen to share
+    # meant one red cross for two unrelated failures, and reading the step log to tell which.
+    name: "test: integration (database, policies, jobs)"
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # Pinned: `latest` turned a Supabase release into a red build nobody had committed for.
       - uses: supabase/setup-cli@v1
@@ -156,16 +137,39 @@ jobs:
       - name: Start Supabase
         run: supabase start
 
-      # RLS policies, the policy snapshot, the SQL-to-TypeScript mirrors, and the thirteen Edge
-      # Functions over real HTTP.
+      # RLS policies, the policy snapshot, the SQL-to-TypeScript mirrors, the thirteen Edge
+      # Functions over real HTTP, and the scheduled jobs asserted on what they leave behind.
       - name: Integration tests
         run: pnpm test:integration
+
+      - name: Stack state on failure
+        if: failure()
+        run: supabase status || true
+
+  test-journeys:
+    name: "test: journeys (browser)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+
+      - name: Write the function environment the local stack needs
+        run: echo "CRON_SECRET=local-dev-cron-secret" > supabase/functions/.env
+
+      - name: Start Supabase
+        run: supabase start
 
       - name: Install Playwright browser
         run: pnpm --filter @sorento/e2e exec playwright install --with-deps chromium
 
-      # The journeys no other suite can see fail: the diagnostic funnel, an invitation crossing
-      # from one account to another, and the 48-hour activation grace period.
+      # Every screen the route table declares, driven through a production build in a real
+      # browser: the funnel, the account lifecycle through the local mailbox, a dossier worked
+      # end to end, sharing it, the trusted contact, the public pages and the back office.
       - name: End-to-end journeys
         run: pnpm test:e2e
 
@@ -182,24 +186,16 @@ jobs:
         if: failure()
         run: supabase status || true
 
-  # Coverage says a line ran; the mutation score says an assertion would have caught it
-  # changing. Only the two pure packages are mutated: they have no DOM and no I/O, so the whole
-  # run is seconds, and they are where the rules live.
-  mutation:
-    name: Mutation score (core, domain)
+  test-mutation:
+    # Coverage says a line ran; the mutation score says an assertion would have caught it
+    # changing. Only the two pure packages are mutated: they have no DOM and no I/O, so the whole
+    # run is seconds, and they are where the rules live.
+    name: "test: mutation (core, domain)"
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # Each package breaks the build under its own threshold, set in its stryker.config.json.
       - name: Mutation testing
@@ -215,27 +211,20 @@ jobs:
           if-no-files-found: ignore
 
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Build
         run: pnpm build
 
-  secrets:
-    name: Secret scan
+  security:
+    name: "security: secret scan"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # gitleaks lists the commits of the pull request through the API before scanning them.
     permissions:
       contents: read

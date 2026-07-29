@@ -71,8 +71,12 @@ const TEST_ROOTS = ["packages", "apps", "supabase/functions", "e2e"];
 const EDGE_FUNCTION_TABLE =
   "packages/supabase-client/src/integration-tests/edge-functions.integration.test.ts";
 
-/** Where the journeys record which dictionary each French string was copied from. */
-const E2E_COPY = "e2e/support/copy.ts";
+/**
+ * Where the journeys record which dictionary each French string was copied from. Every file
+ * under e2e/ is scanned rather than one module, so a journey can keep its own copy beside itself
+ * instead of every area queueing behind a single file.
+ */
+const E2E_ROOT = "e2e";
 
 /** Content dictionaries live under this root; the paths in E2E_COPY are relative to it. */
 const CONTENT_ROOT = "apps/web/src";
@@ -92,7 +96,7 @@ const walk = (dir) => {
     return [];
   }
   return entries.flatMap((entry) => {
-    if (entry.name.startsWith(".") && entry.name !== ".") return [];
+    if (entry.name.startsWith(".")) return [];
     const child = join(dir, entry.name);
     if (entry.isDirectory()) return IGNORED_DIRS.has(entry.name) ? [] : walk(child);
     return [child];
@@ -295,39 +299,42 @@ for (const testFile of testFiles) {
  * that copy drifts, and it surfaces as the worst failure a suite can produce: a selector finding
  * nothing, minutes into CI, pointing at the test rather than at the wording that moved.
  *
- * Each entry in e2e/support/copy.ts names the dictionary it came from. This checks the text is
- * still in there, which turns a rename into a failure that names both sides, before the commit.
+ * Each mirrors(...) call names the dictionary its string came from. This checks the text is still
+ * in there, which turns a rename into a failure that names both sides, before the commit.
  */
 const MIRRORS = /\bmirrors\(\s*("(?:[^"\\]|\\.)*")\s*,\s*("(?:[^"\\]|\\.)*")\s*,?\s*\)/g;
 
-if (exists(E2E_COPY)) {
-  const entries = Array.from(read(E2E_COPY).matchAll(MIRRORS));
+let mirrored = 0;
 
-  if (entries.length === 0) {
-    fail(
-      "unmirrored-e2e-copy",
-      E2E_COPY,
-      "no mirrors(...) entry found. Either the file stopped declaring where its strings come from, or this rule stopped reading it.",
-    );
-  }
+for (const file of walk(E2E_ROOT)) {
+  if (!file.endsWith(".ts")) continue;
 
-  for (const [, rawDictionary, rawText] of entries) {
-    const dictionary = JSON.parse(rawDictionary);
+  for (const [, rawDictionary, rawText] of read(file).matchAll(MIRRORS)) {
+    mirrored += 1;
     const text = JSON.parse(rawText);
-    const source = join(CONTENT_ROOT, dictionary);
+    const source = join(CONTENT_ROOT, JSON.parse(rawDictionary));
 
     if (!exists(source)) {
-      fail("unmirrored-e2e-copy", E2E_COPY, `names ${source}, which does not exist.`);
+      fail("unmirrored-e2e-copy", file, `names ${source}, which does not exist.`);
       continue;
     }
     if (!read(source).includes(text)) {
       fail(
         "unmirrored-e2e-copy",
-        E2E_COPY,
+        file,
         `${source} no longer contains "${text}". The wording changed: update the journey's copy to match, do not delete the entry.`,
       );
     }
   }
+}
+
+// A rule that silently stops finding anything is a rule that stopped being a rule.
+if (mirrored === 0) {
+  fail(
+    "unmirrored-e2e-copy",
+    E2E_ROOT,
+    "no mirrors(...) call found anywhere. Either the journeys stopped declaring where their strings come from, or this rule stopped reading them.",
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -79,7 +79,14 @@ export const DiagnosticWizardPage = () => {
             maxValue={Math.max(total, 1)}
             aria-label="Progression du diagnostic"
           />
-          <Card.Title>{diagnosticContent.page.title}</Card.Title>
+          {/*
+            Level 1: this is the page's own title, and the heading list has to start somewhere.
+            Card.Title alone renders an h3, so the only screen a visitor meets before signing up
+            announced itself at level three, under nothing.
+          */}
+          <Card.Title render={(props) => <h1 {...props} />}>
+            {diagnosticContent.page.title}
+          </Card.Title>
         </Card.Header>
         <Card.Content>
           <QuestionField

@@ -159,14 +159,21 @@ const dep = (pkg, name) => {
   return range.replace(/^[~^]/, "");
 };
 
+/**
+ * Read from wherever CI actually pins it. It moved out of the workflow and into the composite
+ * setup action once six jobs stopped repeating the same four steps, and this rule silently
+ * reported "?" as the version until the pre-commit hook caught it. Both files are searched so
+ * the next move does not need a third edit.
+ */
+const DENO_VERSION_SOURCES = [".github/actions/setup/action.yml", ".github/workflows/ci.yml"];
+
 const denoVersion = () => {
-  const ci = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8");
-  const match = ci.match(/deno-version:\s*v?(\S+)/);
-  if (!match) {
-    problems.push("deno-version not found in .github/workflows/ci.yml");
-    return "?";
+  for (const source of DENO_VERSION_SOURCES) {
+    const match = readFileSync(join(root, source), "utf8").match(/deno-version:\s*v?(\S+)/);
+    if (match) return match[1];
   }
-  return match[1];
+  problems.push(`deno-version not found in ${DENO_VERSION_SOURCES.join(" or ")}`);
+  return "?";
 };
 
 const workspaceDirs = () => {
