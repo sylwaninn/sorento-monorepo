@@ -1,0 +1,15 @@
+title = "sorento-monorepo"
+
+[extend]
+useDefault = true
+
+# The integration harness pins the keys `supabase start` hands out on an unconfigured local
+# instance. They are published constants, identical on every machine, signed with the demo JWT
+# secret and accepted only by 127.0.0.1 — `iss: supabase-demo` is what identifies them. Both
+# conditions must hold, so a real key pasted into this same file is still reported.
+[allowlist]
+description = "Supabase local demo JWTs in the integration harness"
+condition = "AND"
+paths = ['''^packages/supabase-client/src/integration-tests/env\.ts$''']
+regexes = ['''eyJpc3MiOiJzdXBhYmFzZS1kZW1v''']
+regexTarget = "match"
