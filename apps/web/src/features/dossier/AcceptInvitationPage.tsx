@@ -6,6 +6,7 @@ import { InvitationRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
 import { savePendingInvitationToken } from "@/features/dossier/pending-invitation";
+import { userFacingErrorMessage } from "@/lib/error-messages";
 import { dossierContent } from "@/features/dossier/content";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
@@ -37,9 +38,7 @@ export const AcceptInvitationPage = () => {
       const { dossierId } = await new InvitationRepository(supabase).accept(token);
       navigate(`/dossiers/${dossierId}`);
     } catch (error) {
-      setAcceptError(
-        error instanceof Error ? error.message : "Échec de l'acceptation de l'invitation.",
-      );
+      setAcceptError(userFacingErrorMessage(error));
     } finally {
       setAccepting(false);
     }

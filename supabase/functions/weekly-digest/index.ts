@@ -15,6 +15,18 @@ const isSettled = (entry: TrackingDigestRow): boolean =>
   entry.status === "done" || entry.status === "not_applicable";
 
 /**
+ * Monday 00:00 UTC, matching the schedule this job runs on. Everything that could fire it more
+ * than once in a week looks identical from in here: a pg_net retry, a manual re-run, a scheduler
+ * that ticked twice. Without a window to check against, each one sends the same digest again.
+ */
+const startOfWeek = (now: Date): string => {
+  const monday = new Date(now);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  monday.setUTCHours(0, 0, 0, 0);
+  return monday.toISOString();
+};
+
+/**
  * Opt-in only (default off in resolve_notification_preference), and a progress summary
  * rather than a nudge: it says what has advanced, never what is late.
  */
@@ -45,6 +57,7 @@ Deno.serve(async (request) => {
 
   try {
     const client = serviceClient();
+    const weekStart = startOfWeek(new Date());
 
     // Only people who explicitly switched the digest on, which the default never does.
     const { data: subscribers } = await client
@@ -67,6 +80,20 @@ Deno.serve(async (request) => {
           ? membership.dossiers[0]
           : membership.dossiers;
         if (!dossier || dossier.status !== "ACTIVE" || dossier.deleted_at !== null) continue;
+
+        // One digest per recipient per dossier per week, the same cap daily-reminders applies
+        // per day. Checked before the summary is computed: a second run should cost one query,
+        // not a scan of every tracking row it already summarised.
+        const { data: alreadyThisWeek } = await client
+          .from("notifications")
+          .select("id")
+          .eq("dossier_id", membership.dossier_id)
+          .eq("user_id", subscriber.user_id)
+          .eq("type", "weekly_digest")
+          .gte("created_at", weekStart)
+          .limit(1)
+          .maybeSingle();
+        if (alreadyThisWeek) continue;
 
         const summary = await digestFor(client, membership.dossier_id);
         if (summary === null) continue;
