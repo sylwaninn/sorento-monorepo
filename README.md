@@ -242,7 +242,7 @@ Integration and E2E suites need the local stack up (`supabase start`). Every new
 
 The same bar is enforced three times, closest gate first:
 
-1. **Pre-commit** (husky): gitleaks secret scan, `lint-staged` (ESLint + Prettier), `pnpm typecheck`. `--no-verify` is not used, ever.
+1. **Pre-commit** (husky): gitleaks secret scan, `lint-staged` (ESLint + Prettier), `pnpm check:tests`, `pnpm typecheck`; pre-push replays `pnpm verify`. `--no-verify` is not used, ever.
 2. **`pnpm verify`**: format check, lint, typecheck, Edge Function checks, docs freshness, unit tests with coverage thresholds: the full local gate.
 3. **CI** (`.github/workflows/ci.yml`), on every PR and push to `main`:
 
@@ -253,6 +253,12 @@ The same bar is enforced three times, closest gate first:
 | Mutation    | Stryker on `core` and `domain`, per-package score thresholds |
 | Build       | Full workspace build                                         |
 | Secret scan | gitleaks over the commits the PR adds                        |
+
+Ahead of those deterministic gates, four review agents in `.claude/agents/`
+(security, code practices, design system, test integrity) review every
+change set for regressions before commit or PR; the `/guards` skill in
+`.claude/skills/` runs all four in parallel and merges their findings.
+They report, the developer fixes: enforcement stays with the gates above.
 
 ## Documentation
 
