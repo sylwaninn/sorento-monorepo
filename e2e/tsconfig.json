@@ -1,0 +1,12 @@
+{
+  "//": "Extended by path, not by package name, and with no project references: Playwright loads this file with its own resolver, which does neither. Same base options as every other package.",
+  "extends": "../packages/config/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    // The journeys run code inside the browser through page.waitForFunction, so the DOM types
+    // have to be visible even though nothing here executes in a browser.
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts"]
+}
