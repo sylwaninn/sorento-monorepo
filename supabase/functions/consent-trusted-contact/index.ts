@@ -15,11 +15,11 @@ Deno.serve(async (request) => {
   if (preflightResponse) return preflightResponse;
 
   try {
-    const parsed = await parseBody(request, consentTrustedContactPayloadSchema);
-    if (!parsed.ok) return parsed.response;
-
     const user = await currentUser(request);
     if (!user) return json(request, { error: "unauthorized" }, 401);
+
+    const parsed = await parseBody(request, consentTrustedContactPayloadSchema);
+    if (!parsed.ok) return parsed.response;
 
     const service = serviceClient();
     const consentTokenHash = await hashToken(parsed.value.token);

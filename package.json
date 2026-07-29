@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:integration": "pnpm --filter @sorento/supabase-client test:integration",
+    "test:integration": "turbo run test:integration --filter @sorento/supabase-client",
     "sync:functions-imports": "node scripts/sync-functions-import-map.mjs",
     "sync:docs": "node scripts/sync-docs.mjs",
     "check:docs": "node scripts/sync-docs.mjs --check",
