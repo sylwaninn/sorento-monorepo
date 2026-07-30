@@ -396,7 +396,7 @@ test.describe("working through a dossier", () => {
     await expect(page.getByRole("link", { name: survivorPension.title }).first()).toBeVisible();
 
     await page.goto(`/dossiers/${dossierId}/ma-situation`);
-    // HeroUI hides the real radio behind its own control, so the click has to be forced onto the
+    // The radio is a button carrying the role, so the click has to be forced onto the
     // input that actually handles the event.
     await page.getByRole("radio", { name: workspaceCopy.maritalSingle }).check({ force: true });
     await page.getByRole("button", { name: workspaceCopy.situationSave }).click();

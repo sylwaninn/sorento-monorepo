@@ -73,7 +73,7 @@ export const copyPublic = {
     "Cet article n'existe pas ou n'est pas encore publié.",
   ),
   articleCtaTitle: mirrors("features/content/content.ts", "Savoir ce qui vous concerne, vous"),
-  articleCtaButton: mirrors("features/content/content.ts", "Commencer mon diagnostic"),
+  articleCtaButton: mirrors("features/content/content.ts", "Faire le point sur ma situation"),
 
   back: mirrors("components/content.ts", "Retour"),
   myDossiers: mirrors("features/dossiers/DossiersPage.tsx", "Mes dossiers"),

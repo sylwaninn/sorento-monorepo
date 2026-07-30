@@ -20,8 +20,8 @@ export const copy = {
     "features/diagnostic/content.ts",
     "Ils ne constituent pas un conseil individuel.",
   ),
-  noDiagnostic: mirrors("features/diagnostic/content.ts", "Aucun diagnostic en cours."),
-  restartDiagnostic: mirrors("features/diagnostic/content.ts", "Recommencer le diagnostic"),
+  noDiagnostic: mirrors("features/diagnostic/content.ts", "Aucune synthèse en cours."),
+  restartDiagnostic: mirrors("features/diagnostic/content.ts", "Répondre aux questions"),
 
   loginEmail: mirrors("features/auth/content.ts", "Email"),
   loginPassword: mirrors("features/auth/content.ts", "Mot de passe"),

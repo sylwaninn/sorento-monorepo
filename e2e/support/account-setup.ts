@@ -37,9 +37,8 @@ export const signUpThroughTheForm = async (
   await page.getByRole("textbox", { name: copyAccount.signupEmail }).fill(email);
   await passwordField(page, copyAccount.signupPassword).fill(password);
 
-  // HeroUI renders the real checkbox visually hidden behind its own control, so an unforced click
-  // lands on the decoration while the input is the thing handling the event. Same reason as the
-  // diagnostic radios in app.ts.
+  // The checkbox is a button carrying the role rather than a native input, so the click is
+  // forced past the label that sits on top of it.
   await page.getByRole("checkbox", { name: copyAccount.signupTerms }).check({ force: true });
 
   await page.getByRole("button", { name: copyAccount.signupSubmit }).click();

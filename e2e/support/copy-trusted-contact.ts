@@ -20,7 +20,7 @@ export const trustedContactCopy = {
   revoke: mirrors("features/dossier/content.ts", "Révoquer"),
   confirmRevocation: mirrors("features/dossier/content.ts", "Confirmer la révocation"),
   noTrustedContact: mirrors("features/dossier/content.ts", "Aucun contact de confiance désigné."),
-  preparationTitle: mirrors("features/dossier/content.ts", "Organiser mes affaires"),
+  preparationTitle: mirrors("features/dossier/content.ts", "Préparer l'après"),
 
   consentTitle: mirrors(
     "features/activation/content.ts",

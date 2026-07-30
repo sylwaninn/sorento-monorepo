@@ -33,7 +33,7 @@ const PRIVATE_ROUTES = [
  * The signed-in chrome, and the one thing on screen that exists only once a session does. A
  * visitor about to be redirected must never see it, not even for a frame.
  */
-const PRIVATE_CHROME = "[role=toolbar]";
+const PRIVATE_CHROME = '[data-slot="app-header"]';
 const FLASH_ATTRIBUTE = "data-e2e-private-chrome-seen";
 
 /**
@@ -64,6 +64,10 @@ const headingLevels = (page: Page): Promise<number[]> =>
       Number(heading.tagName.slice(1)),
     ),
   );
+
+/** Route-level chunks can finish after navigation; audit the screen only once its title exists. */
+const waitForScreen = (page: Page): Promise<void> =>
+  expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
 const imagesWithoutAlternative = (page: Page): Promise<(string | null)[]> =>
   page.evaluate(() =>
@@ -236,6 +240,7 @@ test.describe("what a visitor sees before they trust anyone", () => {
       // Headings are the table of contents a screen reader reads out. Exactly one level 1 says
       // what the page is, and a jump of more than one level down says a section went missing.
       await page.goto(route);
+      await waitForScreen(page);
       const levels = await headingLevels(page);
 
       expect(levels.filter((level) => level === 1)).toHaveLength(1);
@@ -253,6 +258,7 @@ test.describe("what a visitor sees before they trust anyone", () => {
       // over the page rather than over the images that happen to exist today, so the first
       // decorative flourish someone adds arrives with its alternative or fails here.
       await page.goto(route);
+      await waitForScreen(page);
       expect(await imagesWithoutAlternative(page)).toEqual([]);
     });
   }
