@@ -27,7 +27,7 @@ export const copyAccount = {
   ),
   diagnosticKept: mirrors(
     "features/auth/content.ts",
-    "Votre diagnostic est conservé et sera rattaché à votre compte une fois l'email confirmé.",
+    "Vos réponses sont conservées et seront rattachées à votre compte une fois l'email confirmé.",
   ),
 
   magicLinkTab: mirrors("features/auth/content.ts", "Lien magique"),

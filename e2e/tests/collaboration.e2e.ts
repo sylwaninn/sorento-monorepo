@@ -38,12 +38,12 @@ const OWNER_FIRST_NAME = "Camille";
 const logEntry = (action: string): string => `${OWNER_FIRST_NAME} ${action}`;
 
 /**
- * HeroUI renders a Select as a button opening a listbox in a popover, and that button's
- * accessible name is its label followed by the value it currently shows. Naming the label alone
- * therefore reaches it whatever it is currently set to.
+ * A select is a combobox opening a listbox in a portal, and the trigger's accessible name is
+ * its label followed by the value it currently shows. Naming the label alone therefore reaches
+ * it whatever it is currently set to.
  */
 const chooseInSelect = async (page: Page, label: string, option: string): Promise<void> => {
-  await page.getByRole("button", { name: label }).first().click();
+  await page.getByRole("combobox", { name: label }).first().click();
   await page.getByRole("option", { name: option }).click();
 };
 

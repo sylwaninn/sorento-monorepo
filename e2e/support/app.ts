@@ -20,7 +20,7 @@ export const TEST_PASSWORD = "E2ePassword1234!";
 export const DIAGNOSTIC_SUBJECT_NAME = "Jean Dupont";
 
 /**
- * HeroUI's own slot attribute, and the only structural selector in the suite. The wizard swaps
+ * The registry's own slot attribute, and the only structural selector in the suite. The wizard swaps
  * its question in place, so the step's container is the one thing a journey has to hold on to in
  * order to tell "the next question arrived" from "the same question is still there". Named once
  * so a change in the component library is one edit rather than a hunt.
@@ -62,17 +62,23 @@ export const completeDiagnostic = async (
     const before = await step.innerText();
 
     const finish = page.getByRole("button", { name: copy.finish });
-    const advance = (await finish.isVisible())
-      ? finish
-      : page.getByRole("button", { name: copy.next });
+    const isFinalQuestion = await finish.isVisible();
+    const advance = isFinalQuestion ? finish : page.getByRole("button", { name: copy.next });
     await advance.click();
 
+    // The last answer first removes the wizard, then the effect navigates to the lazy result
+    // route. Waiting only for the old card to disappear races that navigation and can make the
+    // next loop inspect the result screen as though it were another question.
+    if (isFinalQuestion) {
+      await page.waitForURL(/\/diagnostic\/resultat$/);
+      return;
+    }
+
     // The wizard swaps the question in place, so there is no navigation to wait for except on
-    // the last step. Waiting on the step's own content is what makes the next iteration read
-    // the new question rather than the one it just answered.
+    // the last step handled above. Waiting on the step's own content is what makes the next
+    // iteration read the new question rather than the one it just answered.
     await page.waitForFunction(
       ({ previous, selector }) =>
-        globalThis.location.pathname.includes("/diagnostic/resultat") ||
         (document.querySelector(selector)?.textContent ?? "") !== previous,
       { previous: before, selector: WIZARD_STEP },
     );
@@ -133,31 +139,31 @@ export const pathOf = (absoluteUrl: string): string => {
 const answerCurrentQuestion = async (page: Page): Promise<void> => {
   const radios = page.getByRole("radio");
   if ((await radios.count()) > 0) {
-    // HeroUI renders the real input visually hidden behind its own control, so a plain click
-    // lands on the decoration. The input still handles the event, hence the forced check.
+    // The radio is a button carrying the role rather than a native input, so the click is
+    // forced past the label that sits on top of it.
     await radios.first().check({ force: true });
     return;
   }
 
-  // Segmented date field. The locale is pinned to fr-FR, so the segments read day, month, year
-  // and typing eight digits into the first one fills all three.
-  const dateSegments = page.getByRole("spinbutton");
-  if ((await dateSegments.count()) > 0) {
-    await dateSegments.first().click();
-    await page.keyboard.type("01012026");
+  // A native date input takes the ISO value whatever the displayed locale is.
+  const dateField = page.locator('input[type="date"]');
+  if ((await dateField.count()) > 0) {
+    await dateField.first().fill("2026-01-01");
     return;
   }
 
-  // A number field also exposes its input as a textbox, so the stepper buttons are what tells
-  // the two apart: a name typed into an age field leaves the step invalid and Next disabled,
-  // which is a very slow way to discover the wrong branch was taken.
-  const isNumberField = (await page.getByRole("button", { name: /Augmenter/ }).count()) > 0;
+  // A number input exposes itself as a spinbutton rather than a textbox, which is what tells the
+  // two apart: a name typed into an age field leaves the step invalid and Next disabled, a very
+  // slow way to discover the wrong branch was taken.
+  const numberField = page.getByRole("spinbutton");
+  if ((await numberField.count()) > 0) {
+    await numberField.first().fill("70");
+    return;
+  }
 
   const textbox = page.getByRole("textbox");
   if ((await textbox.count()) > 0) {
-    await textbox.first().fill(isNumberField ? "70" : DIAGNOSTIC_SUBJECT_NAME);
-    // React Aria commits a number on blur; without this the value never reaches the answer.
-    await textbox.first().blur();
+    await textbox.first().fill(DIAGNOSTIC_SUBJECT_NAME);
     return;
   }
 

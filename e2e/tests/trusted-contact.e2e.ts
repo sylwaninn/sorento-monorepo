@@ -27,11 +27,11 @@ import { createConfirmedAccount, dossierStatus, membershipRole, rest } from "#e2
 const OWNER_FIRST_NAME = "Camille";
 
 /**
- * HeroUI renders a Select as a button opening a listbox in a popover, and that button's
- * accessible name is its label followed by the value it currently shows.
+ * A select is a combobox opening a listbox in a portal, and the trigger's accessible name is
+ * its label followed by the value it currently shows.
  */
 const chooseInSelect = async (page: Page, label: string, option: string): Promise<void> => {
-  await page.getByRole("button", { name: label }).first().click();
+  await page.getByRole("combobox", { name: label }).first().click();
   await page.getByRole("option", { name: option }).click();
 };
 
@@ -286,8 +286,7 @@ test.describe("designating a trusted contact", () => {
       // And the delay is announced before the button, not discovered after it.
       await expect(trustedPage.getByText(trustedContactCopy.gracePeriodNotice)).toBeVisible();
 
-      await trustedPage.getByRole("spinbutton").first().click();
-      await trustedPage.keyboard.type("04052026");
+      await trustedPage.locator('input[type="date"]').first().fill("2026-05-04");
       await trustedPage.getByRole("button", { name: trustedContactCopy.reportDeathButton }).click();
 
       await expect(trustedPage.getByText(trustedContactCopy.deathReported)).toBeVisible();
