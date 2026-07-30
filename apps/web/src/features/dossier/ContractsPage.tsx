@@ -226,7 +226,7 @@ const ContractForm = ({
           <Button type="submit" variant="default" pending={save.isPending}>
             {dossierContent.contracts.saveButton}
           </Button>
-          <Button variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {dossierContent.contracts.cancelButton}
           </Button>
         </CardFooter>
