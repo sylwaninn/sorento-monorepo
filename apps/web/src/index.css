@@ -1,7 +1,4 @@
 @import "tailwindcss";
-/* The two public pages still render with HeroUI: they are rebuilt, not ported, in their own
-   change, and this import leaves with them. */
-@import "@heroui/styles";
 @import "tw-animate-css";
 @import "@fontsource-variable/instrument-sans";
 
