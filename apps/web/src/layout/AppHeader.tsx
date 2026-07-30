@@ -1,15 +1,16 @@
-import { Link as RouterLink } from "react-router";
-import { Toolbar } from "@heroui/react";
+import { SorentoBrand } from "@/components/SorentoBrand";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 
 export const AppHeader = () => (
-  <Toolbar
+  <nav
+    // The one piece of furniture that exists only once a session does, so the public journeys
+    // can assert a signed-out visitor never sees it. Named here rather than through a class,
+    // which is a styling decision and free to change.
+    data-slot="app-header"
     aria-label="Navigation principale"
-    className="flex items-center justify-between border-b px-4 py-3"
+    className="bg-card flex items-center justify-between border-b px-4 py-3"
   >
-    <RouterLink className="link font-semibold" to="/mes-dossiers">
-      Sorento
-    </RouterLink>
+    <SorentoBrand href="/mes-dossiers" />
     <NotificationBell />
-  </Toolbar>
+  </nav>
 );
