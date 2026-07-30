@@ -25,6 +25,7 @@ export default defineConfig({
   reporter: isCI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
 
   use: {
     baseURL: APP_URL,
