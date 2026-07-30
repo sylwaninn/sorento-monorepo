@@ -19,7 +19,7 @@ export const authContent = {
     description:
       "Nous vous avons envoyé un lien de confirmation. Cliquez dessus pour activer votre compte.",
     diagnosticKept:
-      "Votre diagnostic est conservé et sera rattaché à votre compte une fois l'email confirmé.",
+      "Vos réponses sont conservées et seront rattachées à votre compte une fois l'email confirmé.",
     resendButton: "Renvoyer l'email de confirmation",
     emailResent: "Email renvoyé.",
     cooldownPrefix: "Renvoyer dans",
