@@ -50,7 +50,7 @@ Sorento is a French web application that turns the administrative maze following
 - **The rules engine** (`packages/core`) evaluates the answers collected in the dossier and produces the journey: procedures, deadlines, possible benefits, letter templates. It is pure, clocked by injection, and fully unit- and mutation-tested.
 - **Authorization lives in the database**: every table has RLS enabled with explicit policies; the UI hides, RLS forbids. The full model is in [SECURITY.md](SECURITY.md).
 
-Web only, by design. A mobile app may come later: the packages stay reusable, but no mobile code lives here.
+Web only, by design: there is no mobile app and no mobile code here.
 
 ## Architecture
 
