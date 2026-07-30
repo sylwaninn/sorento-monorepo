@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { DiagnosticWizardPage } from "@/features/diagnostic/DiagnosticWizardPage";
 import type { QuestionContent } from "@/features/diagnostic/QuestionField";
 import { diagnosticContent } from "@/features/diagnostic/content";
-import { loadAnswersFromSession } from "@/features/diagnostic/diagnostic-session";
+import {
+  loadAnswersFromSession,
+  saveAnswersToSession,
+} from "@/features/diagnostic/diagnostic-session";
 import { renderWithProviders } from "@/test/render";
 import { must } from "@/test/must";
 
@@ -85,5 +88,25 @@ describe("DiagnosticWizardPage", () => {
 
     expect(screen.getByText(questionTitle("mode"))).toBeInTheDocument();
     expect(loadAnswersFromSession()["mode"]).toBe("preparation");
+  });
+
+  it("names the action clearly when the last answer will open the result", async () => {
+    saveAnswersToSession({
+      mode: "preparation",
+      fullName: "Jean Dupont",
+      maritalStatus: "single",
+      employmentStatus: "retired",
+      ownsVehicle: false,
+      housingStatus: "owner",
+    });
+
+    renderWithProviders(<DiagnosticWizardPage />, { route: "/diagnostic", path: "/diagnostic" });
+
+    await chooseOption("hasMinorChildren", "false");
+
+    expect(screen.getByRole("button", { name: diagnosticContent.page.finishButton })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: diagnosticContent.page.nextButton }),
+    ).not.toBeInTheDocument();
   });
 });

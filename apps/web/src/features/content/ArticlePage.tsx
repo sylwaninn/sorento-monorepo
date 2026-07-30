@@ -1,7 +1,18 @@
+import { linkVariants } from "@/components/ui/link";
 import { useParams, Link as RouterLink } from "react-router";
-import { Alert, Button, Card, Typography } from "@heroui/react";
 import { sharedContent } from "@/components/content";
 import { contentPagesContent } from "@/features/content/content";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
 
 /**
  * E04 shell. The editorial content itself is not part of this build; the route, the layout
@@ -15,39 +26,35 @@ export const ArticlePage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 p-4 py-12">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>
-          {article?.title ?? contentPagesContent.notFoundTitle}
-        </Typography.Heading>
-        <RouterLink className="link text-sm" to="/">
+        <Heading level={1}>{article?.title ?? contentPagesContent.notFoundTitle}</Heading>
+        <RouterLink className={linkVariants()} to="/">
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{sharedContent.legalNotice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{sharedContent.legalNotice}</AlertDescription>
       </Alert>
 
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {(article?.paragraphs ?? [contentPagesContent.notFoundBody]).map((paragraph) => (
-            <Typography.Paragraph key={paragraph}>{paragraph}</Typography.Paragraph>
+            <Text key={paragraph}>{paragraph}</Text>
           ))}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       <Card>
-        <Card.Header>
-          <Card.Title>{contentPagesContent.cta.title}</Card.Title>
-          <Card.Description>{contentPagesContent.cta.description}</Card.Description>
-        </Card.Header>
-        <Card.Footer>
+        <CardHeader>
+          <CardTitle>{contentPagesContent.cta.title}</CardTitle>
+          <CardDescription>{contentPagesContent.cta.description}</CardDescription>
+        </CardHeader>
+        <CardFooter>
           <RouterLink to="/diagnostic">
-            <Button variant="primary">{contentPagesContent.cta.button}</Button>
+            <Button variant="default">{contentPagesContent.cta.button}</Button>
           </RouterLink>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );

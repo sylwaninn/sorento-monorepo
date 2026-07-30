@@ -1,6 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
+import { cn } from "@/lib/utils";
 import { useNavigate, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, Typography } from "@heroui/react";
 import { evaluateJourney, isDiagnosticComplete } from "@sorento/core";
 import type { TimeWindow } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
@@ -12,6 +13,10 @@ import { loadAnswersFromSession } from "@/features/diagnostic/diagnostic-session
 import { attachDiagnosticFromSession } from "@/features/diagnostic/attach-diagnostic";
 import { diagnosticContent } from "@/features/diagnostic/content";
 import { PageLoader } from "@/components/PageLoader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator, AlertTitle } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
 
 const TIME_WINDOWS: TimeWindow[] = ["24h", "7d", "30d", "6m"];
 
@@ -44,17 +49,15 @@ export const DiagnosticResultPage = () => {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <Card.Content className="flex flex-col gap-4 py-6">
-            <Alert status="default">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{diagnosticContent.result.diagnosticNotFound}</Alert.Description>
-              </Alert.Content>
+          <CardContent className="flex flex-col gap-4 py-6">
+            <Alert>
+              <AlertIndicator />
+              <AlertDescription>{diagnosticContent.result.diagnosticNotFound}</AlertDescription>
             </Alert>
-            <RouterLink className="link text-center text-sm" to="/diagnostic">
+            <RouterLink className={cn(linkVariants(), "text-center")} to="/diagnostic">
               {diagnosticContent.result.restart}
             </RouterLink>
-          </Card.Content>
+          </CardContent>
         </Card>
       </div>
     );
@@ -89,17 +92,15 @@ export const DiagnosticResultPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{diagnosticContent.result.title}</Card.Title>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-4">
+        <CardHeader>
+          <CardTitle>{diagnosticContent.result.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
           <ErrorAlert message={createDossier.errorMessage} />
 
-          <Alert status="default">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>{diagnosticContent.result.notice}</Alert.Description>
-            </Alert.Content>
+          <Alert>
+            <AlertIndicator />
+            <AlertDescription>{diagnosticContent.result.notice}</AlertDescription>
           </Alert>
 
           <div className="grid grid-cols-2 gap-4 text-center">
@@ -121,51 +122,49 @@ export const DiagnosticResultPage = () => {
             {countsByTimeWindow.map(({ timeWindow, count }) => (
               <li key={timeWindow} className="flex justify-between">
                 <span>{diagnosticContent.result.timeWindows[timeWindow]}</span>
-                <Typography weight="medium">{count}</Typography>
+                <Text className="font-medium">{count}</Text>
               </li>
             ))}
           </ul>
 
           {journey.benefits.length > 0 ? (
-            <Alert status="accent">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{diagnosticContent.result.forgottenMoneyBlock.title}</Alert.Title>
-                <Alert.Description className="select-none blur-sm">
-                  {diagnosticContent.result.forgottenMoneyBlock.description}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="accent">
+              <AlertIndicator />
+              <AlertTitle>{diagnosticContent.result.forgottenMoneyBlock.title}</AlertTitle>
+              <AlertDescription className="select-none blur-sm">
+                {diagnosticContent.result.forgottenMoneyBlock.description}
+              </AlertDescription>
             </Alert>
           ) : null}
-        </Card.Content>
-        <Card.Footer className="flex flex-col gap-3">
+        </CardContent>
+        <CardFooter className="flex flex-col gap-3">
           {session ? (
             <>
-              <Typography.Paragraph align="center" color="muted" size="sm">
+              <Text align="center" tone="muted" size="sm">
                 {diagnosticContent.result.alreadyLoggedIn.description}
-              </Typography.Paragraph>
+              </Text>
               <Button
-                variant="primary"
-                fullWidth
-                isPending={createDossier.isPending}
-                onPress={() => createDossier.mutate(undefined)}
+                variant="default"
+                className="w-full"
+                pending={createDossier.isPending}
+                onClick={() => createDossier.mutate(undefined)}
               >
                 {diagnosticContent.result.alreadyLoggedIn.button}
               </Button>
             </>
           ) : (
             <>
-              <Typography.Paragraph align="center" color="muted" size="sm">
+              <Text align="center" tone="muted" size="sm">
                 {diagnosticContent.result.cta.description}
-              </Typography.Paragraph>
+              </Text>
               <RouterLink to="/inscription">
-                <Button variant="primary" fullWidth>
+                <Button variant="default" className="w-full">
                   {diagnosticContent.result.cta.button}
                 </Button>
               </RouterLink>
             </>
           )}
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );

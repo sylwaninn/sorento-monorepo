@@ -2,7 +2,7 @@ import type { QuestionContent } from "@/features/diagnostic/QuestionField";
 
 export const diagnosticContent = {
   page: {
-    title: "Diagnostic",
+    title: "Faire le point",
     backButton: "Retour",
     nextButton: "Suivant",
     finishButton: "Voir mon résultat",
@@ -74,12 +74,12 @@ export const diagnosticContent = {
       button: "Créer mon compte gratuit",
     },
     alreadyLoggedIn: {
-      description: "Vous êtes connecté : créez un dossier à partir de ce diagnostic.",
+      description: "Votre compte est connecté : créez un dossier à partir de cette synthèse.",
       button: "Créer mon dossier",
       inProgress: "Création du dossier…",
     },
-    diagnosticNotFound: "Aucun diagnostic en cours. Recommencez pour obtenir votre synthèse.",
-    restart: "Recommencer le diagnostic",
+    diagnosticNotFound: "Aucune synthèse en cours. Répondez à quelques questions pour l'obtenir.",
+    restart: "Répondre aux questions",
   },
   notice:
     "Ce service fournit de l'information générale personnalisée. Il ne remplace ni un notaire, ni un avocat, ni un conseiller.",
