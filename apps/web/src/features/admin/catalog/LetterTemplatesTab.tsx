@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   letterTemplateInputSchema,
@@ -158,6 +158,9 @@ const LetterTemplateForm = ({
     onSuccess: onDone,
   });
 
+  // The trigger is what carries the name, so the visible label has to point at it.
+  const procedureFieldId = useId();
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const input: LetterTemplateInput = {
@@ -187,8 +190,8 @@ const LetterTemplateForm = ({
           <ErrorAlert message={save.errorMessage} />
 
           <Select value={procedureId} onValueChange={(value) => setProcedureId(String(value))}>
-            <Label>{c.procedureLabel}</Label>
-            <SelectTrigger>
+            <Label htmlFor={procedureFieldId}>{c.procedureLabel}</Label>
+            <SelectTrigger id={procedureFieldId}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -253,7 +256,7 @@ const LetterTemplateForm = ({
           <Button type="submit" variant="default" pending={save.isPending}>
             {adminContent.catalog.saveButton}
           </Button>
-          <Button variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {adminContent.catalog.cancelButton}
           </Button>
         </CardFooter>
