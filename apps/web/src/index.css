@@ -1,2 +1,335 @@
 @import "tailwindcss";
+/* The two public pages still render with HeroUI: they are rebuilt, not ported, in their own
+   change, and this import leaves with them. */
 @import "@heroui/styles";
+@import "tw-animate-css";
+@import "@fontsource-variable/instrument-sans";
+
+@font-face {
+  font-family: "Young Serif";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("@fontsource/young-serif/files/young-serif-latin-400-normal.woff2") format("woff2");
+}
+
+/*
+ * The brand palette is authored in hex because these are the values the design is defined in.
+ * Everything below maps them onto the shadcn token names, so a component never names a colour:
+ * it names a role, and this file decides what the role looks like.
+ */
+:root {
+  --brand-ink: #172019;
+  --brand-cream: #f5f6f2;
+  /* The public pages' ground and hairlines: neutral greys, so the sage accents stay accents. */
+  --brand-canvas: #f0f0ed;
+  --line: #e3e4de;
+  --line-strong: #d7d8d1;
+  --brand-mist: #eef3e9;
+  --brand-sage: #e1edd8;
+  --brand-sage-strong: #4f7045;
+  --brand-sage-deep: #6f9258;
+  --brand-meadow: #c3dfab;
+  --brand-moss: #e8f3df;
+  --brand-leaf: #29471f;
+  --brand-danger: #a65452;
+  --brand-warning: #d9c9b4;
+
+  --background: var(--brand-cream);
+  --foreground: var(--brand-ink);
+  --card: #ffffff;
+  --card-foreground: var(--brand-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--brand-mist);
+  --secondary-foreground: var(--brand-ink);
+  --muted: #e9efe4;
+  --muted-foreground: #606b5c;
+  --accent: var(--brand-sage);
+  --accent-foreground: var(--brand-ink);
+  --success: var(--brand-sage);
+  --success-foreground: var(--brand-ink);
+  --warning: var(--brand-warning);
+  --warning-foreground: var(--brand-ink);
+  --destructive: var(--brand-danger);
+  --destructive-foreground: #ffffff;
+  --border: #dce5d6;
+  --input: #dce5d6;
+  --ring: #5f8250;
+
+  --surface-raised: #fbfcfa;
+  --surface-done: #f9fcf7;
+  --sage-ink: #36502d;
+
+  /* The three macOS window controls, quoted literally by the product shot on the home page. */
+  --window-close: #ff5f57;
+  --window-minimise: #febc2e;
+  --window-expand: #28c840;
+
+  --radius: 1rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: var(--brand-ink);
+  --color-cream: var(--brand-cream);
+  --color-canvas: var(--brand-canvas);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-mist: var(--brand-mist);
+  --color-sage: var(--brand-sage);
+  --color-sage-strong: var(--brand-sage-strong);
+  --color-sage-deep: var(--brand-sage-deep);
+  --color-meadow: var(--brand-meadow);
+  --color-moss: var(--brand-moss);
+  --color-leaf: var(--brand-leaf);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-done: var(--surface-done);
+  --color-sage-ink: var(--sage-ink);
+  --color-window-close: var(--window-close);
+  --color-window-minimise: var(--window-minimise);
+  --color-window-expand: var(--window-expand);
+
+  --font-sans: "Instrument Sans Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Young Serif", Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-brand-sm: 1.25rem;
+  --radius-brand-md: 1.75rem;
+  --radius-brand-lg: 2rem;
+
+  --container-shell: 76rem;
+  --container-wide: 88rem;
+  --container-legal: 62rem;
+  /* Measured in characters: these cap a line of text, not a box. */
+  --container-audience-line: 16ch;
+  --container-display-line: 18ch;
+  --container-title-line: 20ch;
+  --container-headline-line: 30ch;
+  --container-prose: 72ch;
+
+  --spacing-section: clamp(4.75rem, 8vw, 7.5rem);
+  --spacing-frame: 1.25rem;
+  /*
+   * The document does not opt into viewport-fit=cover (see index.html), so these insets resolve
+   * to 0 in a browser tab and the browser reserves the space itself. They stay folded into the
+   * two offsets the pinned header pieces use so that a display mode which does hand the frame
+   * over, an installed window for instance, still lands clear of the notch.
+   */
+  --spacing-safe-top: env(safe-area-inset-top, 0px);
+  --spacing-safe-top-3: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  --spacing-safe-top-frame: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+  --spacing-gutter: clamp(1.25rem, 3vw, 2.5rem);
+  --spacing-shell-gutter: clamp(1.25rem, 3vw, 3rem);
+  --spacing-card: clamp(1.5rem, 4vw, 2.5rem);
+
+  /*
+   * A named type scale keeps the clamp() curves in one place. Sizes that always travel with a
+   * line height or a tracking value carry them here, so a heading is one utility and never a
+   * stack of three that can drift apart.
+   */
+  --text-micro: 0.63rem;
+  --text-tag: 0.65rem;
+  --text-meta: 0.7rem;
+  --text-caption: 0.72rem;
+  --text-body-sm: 0.96rem;
+  --text-body: 0.98rem;
+  --text-body-lg: 1.08rem;
+  --text-card-title: 1.2rem;
+  --text-card-title-lg: 1.25rem;
+  --text-step-title: 1.65rem;
+
+  --text-display: clamp(2.35rem, 3.7vw, 3.8rem);
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.048em;
+  --text-display-sm: clamp(2.15rem, 9.5vw, 2.85rem);
+  --text-display-sm--line-height: 0.94;
+  --text-display-sm--letter-spacing: -0.048em;
+
+  --text-section: clamp(2rem, 4vw, 3.65rem);
+  --text-section--line-height: 0.98;
+  --text-section--letter-spacing: -0.04em;
+
+  --text-final: clamp(1.6rem, 2.4vw, 2.3rem);
+  --text-final--line-height: 1.08;
+  --text-final--letter-spacing: -0.03em;
+
+  --text-audience: clamp(1.8rem, 3vw, 2.6rem);
+  --text-audience--line-height: 1;
+  --text-audience--letter-spacing: -0.035em;
+
+  --text-preview: clamp(1.8rem, 2.7vw, 2.2rem);
+  --text-preview--letter-spacing: -0.035em;
+
+  --text-lead: clamp(1rem, 1.5vw, 1.16rem);
+  --text-lead--line-height: 1.7;
+  --text-hero-lead: clamp(0.92rem, 1.4vw, 1.05rem);
+  --text-hero-lead--line-height: 1.65;
+
+  --text-legal-title: clamp(2.5rem, 6vw, 4.75rem);
+  --text-legal-title--line-height: 0.96;
+  --text-legal-title--letter-spacing: -0.045em;
+  --text-legal-title-sm: clamp(2.35rem, 13vw, 3.5rem);
+  --text-legal-title-sm--line-height: 0.96;
+  --text-legal-title-sm--letter-spacing: -0.045em;
+  --text-legal-section: clamp(1.55rem, 3vw, 2rem);
+  --text-legal-section--line-height: 1.08;
+  --text-legal-section--letter-spacing: -0.03em;
+
+  --text-showcase: clamp(2.75rem, 7vw, 5.25rem);
+  --text-showcase--line-height: 0.95;
+  --text-showcase--letter-spacing: -0.045em;
+  --text-showcase-section: clamp(1.8rem, 4vw, 2.75rem);
+  --text-showcase-section--letter-spacing: -0.035em;
+  --text-showcase-sample: clamp(2.4rem, 7vw, 4.75rem);
+  --text-showcase-sample--line-height: 0.98;
+  --text-showcase-sample--letter-spacing: -0.045em;
+
+  --font-weight-medium-plus: 550;
+  --font-weight-strong: 650;
+  --font-weight-heavy: 750;
+
+  --tracking-title: -0.035em;
+  --tracking-tight: -0.03em;
+
+  --shadow-surface: 0 2px 6px --alpha(var(--brand-ink) / 6%);
+  --shadow-overlay: 0 20px 60px --alpha(var(--brand-ink) / 14%);
+  --shadow-field: 0 1px 3px --alpha(var(--brand-ink) / 5%);
+  --shadow-preview: 0 2px 6px --alpha(var(--brand-ink) / 3%);
+  --shadow-nav: 0 0 26px --alpha(var(--brand-ink) / 16%);
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-stream-up: stream-up 30s linear infinite;
+  --animate-stream-down: stream-down 30s linear infinite;
+  --animate-stream-left: stream-left 30s linear infinite;
+  --animate-stream-right: stream-right 30s linear infinite;
+
+  @keyframes stream-up {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
+
+  @keyframes stream-down {
+    from {
+      transform: translateY(-50%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes stream-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes stream-right {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+    background-color: var(--brand-canvas);
+
+    /*
+     * Nothing outside the window is ever painted, on every page rather than page by page.
+     * `clip` and not `hidden`: `hidden` would turn the viewport into a scroll container and
+     * every `position: sticky` under it would stop sticking, while `clip` only cuts what
+     * leaves the frame.
+     * The overscroll rule is the other half of the same guarantee. A rubber-band bounce at
+     * either end drags the document away from the frame and shows the strip just outside it,
+     * which is how something parked above the top edge between two scroll states becomes
+     * visible on the browsers that bounce and stays hidden on the ones that do not. It also
+     * stops a scroll inside a dialog or a menu from carrying on into the page behind it.
+     */
+    overflow-x: clip;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    @apply bg-background text-foreground min-w-80 font-sans;
+
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    @apply bg-sage text-ink;
+  }
+
+  /*
+   * A visible focus ring on every interactive element, including the ones a component library
+   * renders for us. Keyboard users are the reason, and they never opt in.
+   */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-3 outline-ring outline-offset-[3px];
+  }
+
+  /*
+   * The system setting is the whole of the answer for a reader that motion costs: no screen
+   * carries a pause control. It is written here rather than as a `motion-reduce:` utility
+   * because a breakpoint variant on the same element outranks one, so the escape hatch would
+   * hold on a phone and quietly fail on a laptop. `!important` is what puts it out of reach.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
