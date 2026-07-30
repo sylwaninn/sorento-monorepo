@@ -110,10 +110,12 @@ const LetterEditor = ({
         </Alert>
 
         {manualFields.map((name) => (
-          <Field>
-            <FieldLabel htmlFor="name">{fieldLabel(name)}</FieldLabel>
+          // The id carries the variable name: one id for every field would point every label at
+          // the same input, and typing into the second one would land in the first.
+          <Field key={name}>
+            <FieldLabel htmlFor={`letter-field-${name}`}>{fieldLabel(name)}</FieldLabel>
             <Input
-              id="name"
+              id={`letter-field-${name}`}
               value={manualValues[name] ?? ""}
               onChange={(event) =>
                 setManualValues((previous) => ({ ...previous, [name]: event.target.value }))
