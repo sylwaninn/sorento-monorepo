@@ -114,6 +114,10 @@ const ENV_DESCRIPTIONS = {
     scope: "Client",
     text: "Supabase anonymous key. Safe client-side: RLS does the guarding.",
   },
+  VITE_SITE_URL: {
+    scope: "Client",
+    text: "Public origin of the deployed site. Unset, the build ships no sitemap.xml and no canonical link rather than an invented domain.",
+  },
   SUPABASE_SERVICE_ROLE_KEY: {
     scope: "Server",
     text: "Bypasses RLS. Edge Functions and server-side scripts only: never client-side, never committed.",
