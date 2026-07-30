@@ -1,20 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Alert,
-  AlertDialog,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  ListBox,
-  Select,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import {
   designateTrustedContactInputSchema,
   type DesignateTrustedContactInput,
@@ -29,6 +16,31 @@ import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const TrustedContactPage = () => {
   const { dossierId = "" } = useParams();
@@ -51,10 +63,10 @@ export const TrustedContactPage = () => {
   if (!access.can("trustedContact:manage")) {
     return (
       <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-        <Typography.Heading level={1}>{dossierContent.trustedContact.title}</Typography.Heading>
-        <Typography.Paragraph color="muted" size="sm">
+        <Heading level={1}>{dossierContent.trustedContact.title}</Heading>
+        <Text tone="muted" size="sm">
           {dossierContent.trustedContact.notice}
-        </Typography.Paragraph>
+        </Text>
       </div>
     );
   }
@@ -62,21 +74,19 @@ export const TrustedContactPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.trustedContact.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.trustedContact.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{dossierContent.trustedContact.notice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{dossierContent.trustedContact.notice}</AlertDescription>
       </Alert>
 
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {designationsQuery.data && designationsQuery.data.length > 0 ? (
             designationsQuery.data.map((designation) => (
               <div
@@ -84,13 +94,13 @@ export const TrustedContactPage = () => {
                 className="flex items-center justify-between gap-3 border-b pb-3"
               >
                 <div className="flex flex-col">
-                  <Typography weight="medium">{designation.email}</Typography>
-                  <Typography type="body-sm" color="muted">
+                  <Text className="font-medium">{designation.email}</Text>
+                  <Text size="sm" tone="muted">
                     {dossierContent.trustedContact.futureRoleOptions[designation.futureRole]} ·{" "}
                     {designation.consentedAt
                       ? dossierContent.trustedContact.statusConsented
                       : dossierContent.trustedContact.statusPending}
-                  </Typography>
+                  </Text>
                 </div>
                 <RevokeDialog
                   email={designation.email}
@@ -99,11 +109,11 @@ export const TrustedContactPage = () => {
               </div>
             ))
           ) : (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {dossierContent.trustedContact.empty}
-            </Typography.Paragraph>
+            </Text>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       <DesignateForm dossierId={dossierId} />
@@ -113,35 +123,25 @@ export const TrustedContactPage = () => {
 
 const RevokeDialog = ({ email, onConfirm }: { email: string; onConfirm: () => void }) => (
   <AlertDialog>
-    <Button variant="ghost" size="sm">
-      {dossierContent.trustedContact.revokeButton}
-    </Button>
-    <AlertDialog.Backdrop>
-      <AlertDialog.Container>
-        <AlertDialog.Dialog className="sm:max-w-[400px]">
-          <AlertDialog.CloseTrigger />
-          <AlertDialog.Header>
-            <AlertDialog.Icon status="warning" />
-            <AlertDialog.Heading>
-              {dossierContent.trustedContact.revokeConfirmTitle}
-            </AlertDialog.Heading>
-          </AlertDialog.Header>
-          <AlertDialog.Body>
-            <p>
-              {dossierContent.trustedContact.revokeConfirmDescription} ({email})
-            </p>
-          </AlertDialog.Body>
-          <AlertDialog.Footer>
-            <Button slot="close" variant="tertiary">
-              Annuler
-            </Button>
-            <Button slot="close" variant="danger" onPress={onConfirm}>
-              {dossierContent.trustedContact.revokeConfirmButton}
-            </Button>
-          </AlertDialog.Footer>
-        </AlertDialog.Dialog>
-      </AlertDialog.Container>
-    </AlertDialog.Backdrop>
+    <AlertDialogTrigger asChild>
+      <Button variant="ghost" size="sm">
+        {dossierContent.trustedContact.revokeButton}
+      </Button>
+    </AlertDialogTrigger>
+    <AlertDialogContent className="sm:max-w-100">
+      <AlertDialogHeader>
+        <AlertDialogTitle>{dossierContent.trustedContact.revokeConfirmTitle}</AlertDialogTitle>
+      </AlertDialogHeader>
+      <AlertDialogDescription>
+        {dossierContent.trustedContact.revokeConfirmDescription} ({email})
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Annuler</AlertDialogCancel>
+        <AlertDialogAction variant="destructive" onClick={onConfirm}>
+          {dossierContent.trustedContact.revokeConfirmButton}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
   </AlertDialog>
 );
 
@@ -170,71 +170,60 @@ const DesignateForm = ({ dossierId }: { dossierId: string }) => {
 
   return (
     <Card>
-      <Card.Header>
-        <Card.Title>{dossierContent.trustedContact.designateButton}</Card.Title>
-      </Card.Header>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
+      <CardHeader>
+        <CardTitle>{dossierContent.trustedContact.designateButton}</CardTitle>
+      </CardHeader>
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
           {designate.isSuccess ? (
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{dossierContent.trustedContact.success}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>{dossierContent.trustedContact.success}</AlertDescription>
             </Alert>
           ) : null}
           <ErrorAlert message={designate.errorMessage} />
 
-          <TextField
-            isRequired
-            name="email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            isInvalid={Boolean(errors["email"])}
-          >
-            <Label>{dossierContent.trustedContact.emailLabel}</Label>
-            <Input placeholder="contact@exemple.fr" />
+          <Field>
+            <FieldLabel htmlFor="email">{dossierContent.trustedContact.emailLabel}</FieldLabel>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(errors["email"])}
+              placeholder="contact@exemple.fr"
+            />
             {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
-          </TextField>
+          </Field>
 
           <Select
             value={futureRole}
-            onChange={(value) =>
+            onValueChange={(value) =>
               setFutureRole(designateTrustedContactInputSchema.shape.futureRole.parse(value))
             }
           >
             <Label>{dossierContent.trustedContact.futureRoleLabel}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item
-                  id="owner"
-                  textValue={dossierContent.trustedContact.futureRoleOptions.owner}
-                >
-                  {dossierContent.trustedContact.futureRoleOptions.owner}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item
-                  id="collaborator"
-                  textValue={dossierContent.trustedContact.futureRoleOptions.collaborator}
-                >
-                  {dossierContent.trustedContact.futureRoleOptions.collaborator}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              </ListBox>
-            </Select.Popover>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="owner">
+                {dossierContent.trustedContact.futureRoleOptions.owner}
+              </SelectItem>
+              <SelectItem value="collaborator">
+                {dossierContent.trustedContact.futureRoleOptions.collaborator}
+              </SelectItem>
+            </SelectContent>
           </Select>
-        </Card.Content>
-        <Card.Footer>
-          <Button type="submit" variant="primary" isPending={designate.isPending}>
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" variant="default" pending={designate.isPending}>
             {dossierContent.trustedContact.submitButton}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

@@ -1,17 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Alert,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import {
   dossierInfoUpdateSchema,
   type AnswerValue,
@@ -31,6 +21,12 @@ import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
 import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 // mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic;
 // an existing dossier already has its own identity fields and death date flow.
@@ -112,60 +108,64 @@ export const SubjectFormPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.subjectForm.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.subjectForm.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
       <Card>
-        <Form onSubmit={onSubmit}>
-          <Card.Content className="flex flex-col gap-4">
+        <form onSubmit={onSubmit}>
+          <CardContent className="flex flex-col gap-4">
             <ErrorAlert message={save.errorMessage} />
             {save.isSuccess ? (
-              <Alert status="success">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{dossierContent.subjectForm.saved}</Alert.Description>
-                </Alert.Content>
+              <Alert variant="success">
+                <AlertIndicator />
+                <AlertDescription>{dossierContent.subjectForm.saved}</AlertDescription>
               </Alert>
             ) : null}
 
-            <TextField
-              isRequired
-              isDisabled={!access.can("answers:update")}
-              name="firstName"
-              value={firstName}
-              onChange={setFirstName}
-              isInvalid={Boolean(errors["subjectFirstName"])}
-            >
-              <Label>{dossierContent.subjectForm.identity.firstNameLabel}</Label>
-              <Input />
+            <Field>
+              <FieldLabel htmlFor="firstName">
+                {dossierContent.subjectForm.identity.firstNameLabel}
+              </FieldLabel>
+              <Input
+                id="firstName"
+                name="firstName"
+                required
+                disabled={!access.can("answers:update")}
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                aria-invalid={Boolean(errors["subjectFirstName"])}
+              />
               {errors["subjectFirstName"] ? (
                 <FieldError>{errors["subjectFirstName"]}</FieldError>
               ) : null}
-            </TextField>
+            </Field>
 
-            <TextField
-              isRequired
-              isDisabled={!access.can("answers:update")}
-              name="lastName"
-              value={lastName}
-              onChange={setLastName}
-              isInvalid={Boolean(errors["subjectLastName"])}
-            >
-              <Label>{dossierContent.subjectForm.identity.lastNameLabel}</Label>
-              <Input />
+            <Field>
+              <FieldLabel htmlFor="lastName">
+                {dossierContent.subjectForm.identity.lastNameLabel}
+              </FieldLabel>
+              <Input
+                id="lastName"
+                name="lastName"
+                required
+                disabled={!access.can("answers:update")}
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                aria-invalid={Boolean(errors["subjectLastName"])}
+              />
               {errors["subjectLastName"] ? (
                 <FieldError>{errors["subjectLastName"]}</FieldError>
               ) : null}
-            </TextField>
+            </Field>
 
             <div className="flex flex-col gap-1 border-t pt-4">
-              <Typography weight="medium">{dossierContent.subjectForm.profile.title}</Typography>
-              <Typography type="body-sm" color="muted">
+              <Text className="font-medium">{dossierContent.subjectForm.profile.title}</Text>
+              <Text size="sm" tone="muted">
                 {dossierContent.subjectForm.profile.description}
-              </Typography>
+              </Text>
             </div>
 
             {profileQuestions.map((question) => (
@@ -178,15 +178,15 @@ export const SubjectFormPage = () => {
                 />
               </fieldset>
             ))}
-          </Card.Content>
+          </CardContent>
           {access.can("answers:update") ? (
-            <Card.Footer>
-              <Button type="submit" variant="primary" isPending={save.isPending}>
+            <CardFooter>
+              <Button type="submit" variant="default" pending={save.isPending}>
                 {dossierContent.subjectForm.saveButton}
               </Button>
-            </Card.Footer>
+            </CardFooter>
           ) : null}
-        </Form>
+        </form>
       </Card>
     </div>
   );

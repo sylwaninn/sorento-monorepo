@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useMemo } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQueries } from "@tanstack/react-query";
-import { Button, Card, Link as HeroLink, Typography } from "@heroui/react";
 import { eligibleBenefits } from "@sorento/core";
 import type { Benefit, DiagnosticAnswers } from "@sorento/domain";
 import { CatalogNotice } from "@/components/CatalogNotice";
@@ -14,6 +14,17 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Heading, Text } from "@/components/ui/typography";
+import { Link } from "@/components/ui/link";
 
 export const BenefitsPage = () => {
   const { dossierId = "" } = useParams();
@@ -75,8 +86,8 @@ export const BenefitsPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.benefits.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.benefits.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
@@ -85,45 +96,45 @@ export const BenefitsPage = () => {
 
       {eligible.length === 0 ? (
         <Card>
-          <Card.Content className="text-muted py-6 text-center text-sm">
+          <CardContent className="text-muted py-6 text-center text-sm">
             {dossierContent.benefits.empty}
-          </Card.Content>
+          </CardContent>
         </Card>
       ) : (
         eligible.map((benefit: Benefit) => (
           <div key={benefit.id} className="flex flex-col gap-2">
             <Card>
-              <Card.Header>
-                <Card.Title>{benefit.title}</Card.Title>
-                <Card.Description>{benefit.mainCondition}</Card.Description>
-              </Card.Header>
-              <Card.Content className="flex flex-col gap-3">
+              <CardHeader>
+                <CardTitle>{benefit.title}</CardTitle>
+                <CardDescription>{benefit.mainCondition}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
                 {/* The prudent wording comes from the catalog row and is always rendered. */}
                 <CautionNotice cautionText={benefit.cautionText} />
                 {benefit.estimatedAmount === null ? null : (
-                  <Typography.Paragraph size="sm">
+                  <Text size="sm">
                     {dossierContent.benefits.amountPrefix} {benefit.estimatedAmount}
-                  </Typography.Paragraph>
+                  </Text>
                 )}
-                <Typography.Paragraph color="muted" size="sm">
+                <Text tone="muted" size="sm">
                   {benefit.organization}
-                </Typography.Paragraph>
-                <HeroLink href={benefit.formUrl} target="_blank" rel="noreferrer noopener">
+                </Text>
+                <Link href={benefit.formUrl} target="_blank" rel="noreferrer noopener">
                   {dossierContent.benefits.formLink}
-                </HeroLink>
-              </Card.Content>
-              <Card.Footer>
+                </Link>
+              </CardContent>
+              <CardFooter>
                 <Button
-                  variant="primary"
-                  isDisabled={trackedBenefitIds.has(benefit.id) || !access.can("tracking:update")}
-                  isPending={addToTracking.isPending && addToTracking.variables === benefit.id}
-                  onPress={() => addToTracking.mutate(benefit.id)}
+                  variant="default"
+                  disabled={trackedBenefitIds.has(benefit.id) || !access.can("tracking:update")}
+                  pending={addToTracking.isPending && addToTracking.variables === benefit.id}
+                  onClick={() => addToTracking.mutate(benefit.id)}
                 >
                   {trackedBenefitIds.has(benefit.id)
                     ? dossierContent.benefits.alreadyAdded
                     : dossierContent.benefits.addButton}
                 </Button>
-              </Card.Footer>
+              </CardFooter>
             </Card>
             <CatalogNotice
               sourceUrl={benefit.sourceUrl}

@@ -1,12 +1,20 @@
 import { Bell } from "@gravity-ui/icons";
 import { useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Dropdown, Label } from "@heroui/react";
 import type { Notification } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
 import { repositories } from "@/lib/repositories";
 import { queryKeys } from "@/lib/query-keys";
 import { notificationsContent } from "@/features/notifications/content";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const targetPath = (notification: Notification): string | null => {
   if (!notification.dossierId) return null;
@@ -51,52 +59,42 @@ export const NotificationBell = () => {
   };
 
   return (
-    <Dropdown>
-      <Button aria-label={notificationsContent.bell.label} variant="ghost" isIconOnly>
-        <Badge.Anchor>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          aria-label={notificationsContent.bell.label}
+          className="relative"
+          size="icon"
+          variant="ghost"
+        >
           <Bell />
           {unreadCount > 0 ? (
-            <Badge color="danger" size="sm">
+            <Badge className="text-tag absolute -right-1 -top-1" variant="destructive">
               {unreadCount}
             </Badge>
           ) : null}
-        </Badge.Anchor>
-      </Button>
-      <Dropdown.Popover>
-        <Dropdown.Menu
-          onAction={(key) => {
-            if (key === "mark-all-read") {
-              markAllRead();
-              return;
-            }
-            const notification = notifications.find((n) => n.id === key);
-            if (notification) openNotification(notification);
-          }}
-        >
-          {notifications.length === 0 ? (
-            <Dropdown.Item id="empty" textValue={notificationsContent.bell.empty} isDisabled>
-              <Label>{notificationsContent.bell.empty}</Label>
-            </Dropdown.Item>
-          ) : (
-            notifications.slice(0, 10).map((notification) => (
-              <Dropdown.Item
-                key={notification.id}
-                id={notification.id}
-                textValue={notificationsContent.typeLabels[notification.type]}
-              >
-                <Label className={notification.read ? "text-muted" : "font-semibold"}>
-                  {notificationsContent.typeLabels[notification.type]}
-                </Label>
-              </Dropdown.Item>
-            ))
-          )}
-          {notifications.some((n) => !n.read) ? (
-            <Dropdown.Item id="mark-all-read" textValue={notificationsContent.bell.markAllRead}>
-              <Label>{notificationsContent.bell.markAllRead}</Label>
-            </Dropdown.Item>
-          ) : null}
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {notifications.length === 0 ? (
+          <DropdownMenuItem disabled>{notificationsContent.bell.empty}</DropdownMenuItem>
+        ) : (
+          notifications.slice(0, 10).map((notification) => (
+            <DropdownMenuItem
+              key={notification.id}
+              className={cn(notification.read ? "text-muted-foreground" : "font-semibold")}
+              onSelect={() => openNotification(notification)}
+            >
+              {notificationsContent.typeLabels[notification.type]}
+            </DropdownMenuItem>
+          ))
+        )}
+        {notifications.some((n) => !n.read) ? (
+          <DropdownMenuItem onSelect={() => markAllRead()}>
+            {notificationsContent.bell.markAllRead}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useMemo, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Card, ListBox, Select, Typography } from "@heroui/react";
 import { activityLogTypeSchema } from "@sorento/domain";
 import { ActivityLogRepository } from "@sorento/supabase-client";
 import { supabase } from "@/lib/supabase-client";
@@ -9,6 +9,15 @@ import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { Card, CardContent } from "@/components/ui/card";
+import { Heading, Text } from "@/components/ui/typography";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ALL_TYPES = "all-types";
 const ALL_MEMBERS = "all-members";
@@ -41,66 +50,48 @@ export const ActivityPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.activity.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.activity.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
       <div className="flex gap-3">
-        <Select value={typeFilter} onChange={(value) => setTypeFilter(String(value))}>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              <ListBox.Item id={ALL_TYPES} textValue={dossierContent.activity.filterAllTypes}>
-                {dossierContent.activity.filterAllTypes}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-              {actionTypes.map((type) => (
-                <ListBox.Item
-                  key={type}
-                  id={type}
-                  textValue={dossierContent.activity.actionLabels[type]}
-                >
-                  {dossierContent.activity.actionLabels[type]}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
+        <Select value={typeFilter} onValueChange={(value) => setTypeFilter(String(value))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_TYPES} textValue={dossierContent.activity.filterAllTypes}>
+              {dossierContent.activity.filterAllTypes}
+            </SelectItem>
+            {actionTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {dossierContent.activity.actionLabels[type]}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
 
-        <Select value={memberFilter} onChange={(value) => setMemberFilter(String(value))}>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              <ListBox.Item id={ALL_MEMBERS} textValue={dossierContent.activity.filterAllMembers}>
-                {dossierContent.activity.filterAllMembers}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-              {access.members.map((member) => (
-                <ListBox.Item
-                  key={member.userId}
-                  id={member.userId}
-                  textValue={access.profilesById.get(member.userId)?.firstName ?? member.userId}
-                >
-                  {access.profilesById.get(member.userId)?.firstName ?? member.userId}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
+        <Select value={memberFilter} onValueChange={(value) => setMemberFilter(String(value))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_MEMBERS} textValue={dossierContent.activity.filterAllMembers}>
+              {dossierContent.activity.filterAllMembers}
+            </SelectItem>
+            {access.members.map((member) => (
+              <SelectItem key={member.userId} value={member.userId}>
+                {access.profilesById.get(member.userId)?.firstName ?? member.userId}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
 
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {filtered.length > 0 ? (
             filtered.map((entry) => (
               <div key={entry.id} className="flex justify-between border-b pb-2 text-sm">
@@ -111,17 +102,15 @@ export const ActivityPage = () => {
                     : sharedContent.unknownMember}{" "}
                   {dossierContent.activity.actionLabels[entry.actionType]}
                 </span>
-                <Typography color="muted">
-                  {new Date(entry.createdAt).toLocaleString("fr-FR")}
-                </Typography>
+                <Text tone="muted">{new Date(entry.createdAt).toLocaleString("fr-FR")}</Text>
               </div>
             ))
           ) : (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {dossierContent.activity.empty}
-            </Typography.Paragraph>
+            </Text>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
     </div>
   );

@@ -1,18 +1,9 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
+import { todayIso } from "@/lib/dates";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { canOpposeActivation } from "@sorento/core";
-import {
-  Alert,
-  AlertDialog,
-  Button,
-  Card,
-  DateField,
-  Label,
-  ProgressBar,
-  Typography,
-} from "@heroui/react";
-import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { queryKeys } from "@/lib/query-keys";
@@ -21,6 +12,24 @@ import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const PreparationDashboardPage = () => {
   const { dossierId = "" } = useParams();
@@ -97,18 +106,18 @@ export const PreparationDashboardPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>
+        <Heading level={1}>
           {dossierContent.preparation.title} · {access.dossier?.subjectFirstName}{" "}
           {access.dossier?.subjectLastName}
-        </Typography.Heading>
-        <RouterLink className="link text-sm" to="/mes-dossiers">
+        </Heading>
+        <RouterLink className={linkVariants()} to="/mes-dossiers">
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Typography.Paragraph color="muted" size="sm">
+      <Text tone="muted" size="sm">
         {dossierContent.preparation.intro}
-      </Typography.Paragraph>
+      </Text>
 
       {access.dossier?.pendingActivationEffectiveAt ? (
         <ActivationPendingBanner
@@ -119,34 +128,30 @@ export const PreparationDashboardPage = () => {
       ) : null}
 
       <div className="flex flex-col gap-1">
-        <Typography type="body-sm" color="muted">
+        <Text size="sm" tone="muted">
           {dossierContent.preparation.progressLabel} · {doneCount}/{blocks.length}
-        </Typography>
-        <ProgressBar
-          value={(doneCount / blocks.length) * 100}
+        </Text>
+        <Progress
           aria-label={dossierContent.preparation.progressLabel}
-        >
-          <ProgressBar.Track>
-            <ProgressBar.Fill />
-          </ProgressBar.Track>
-        </ProgressBar>
+          value={(doneCount / blocks.length) * 100}
+        />
       </div>
 
       <div className="flex flex-col gap-3">
         {blocks.map((block) => (
           <RouterLink key={block.key} to={block.href}>
             <Card className="hover:bg-muted/50 transition-colors">
-              <Card.Content className="flex items-center justify-between gap-3 py-4">
+              <CardContent className="flex items-center justify-between gap-3 py-4">
                 <div className="flex flex-col gap-1">
-                  <Typography weight="medium">
+                  <Text className="font-medium">
                     {dossierContent.preparation.blocks[block.key].title}
-                  </Typography>
-                  <Typography type="body-sm" color="muted">
+                  </Text>
+                  <Text size="sm" tone="muted">
                     {dossierContent.preparation.blocks[block.key].description}
-                  </Typography>
+                  </Text>
                 </div>
                 {block.done ? <span className="text-success text-sm">✓</span> : null}
-              </Card.Content>
+              </CardContent>
             </Card>
           </RouterLink>
         ))}
@@ -173,54 +178,46 @@ const ActivationPendingBanner = ({
   const opposed = oppose.isSuccess;
 
   return (
-    <Alert status="warning">
-      <Alert.Indicator />
-      <Alert.Content>
-        <Alert.Description>
-          {opposed
-            ? dossierContent.activationPending.opposed
-            : `${dossierContent.activationPending.description} ${new Date(effectiveAt).toLocaleString("fr-FR")}.`}
-        </Alert.Description>
-        <ErrorAlert message={oppose.errorMessage} />
+    <Alert variant="warning">
+      <AlertIndicator />
+      <AlertDescription>
+        {opposed
+          ? dossierContent.activationPending.opposed
+          : `${dossierContent.activationPending.description} ${new Date(effectiveAt).toLocaleString("fr-FR")}.`}
+      </AlertDescription>
+      <ErrorAlert message={oppose.errorMessage} />
 
-        {canOppose && !opposed ? (
-          <AlertDialog>
+      {canOppose && !opposed ? (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
             <Button variant="ghost" size="sm">
               {dossierContent.activationPending.opposeButton}
             </Button>
-            <AlertDialog.Backdrop>
-              <AlertDialog.Container>
-                <AlertDialog.Dialog className="sm:max-w-[400px]">
-                  <AlertDialog.CloseTrigger />
-                  <AlertDialog.Header>
-                    <AlertDialog.Icon status="warning" />
-                    <AlertDialog.Heading>
-                      {dossierContent.activationPending.opposeConfirmTitle}
-                    </AlertDialog.Heading>
-                  </AlertDialog.Header>
-                  <AlertDialog.Body>
-                    <p>{dossierContent.activationPending.opposeConfirmDescription}</p>
-                  </AlertDialog.Body>
-                  <AlertDialog.Footer>
-                    <Button slot="close" variant="tertiary">
-                      Annuler
-                    </Button>
-                    <Button slot="close" variant="danger" onPress={() => oppose.mutate(undefined)}>
-                      {dossierContent.activationPending.opposeConfirmButton}
-                    </Button>
-                  </AlertDialog.Footer>
-                </AlertDialog.Dialog>
-              </AlertDialog.Container>
-            </AlertDialog.Backdrop>
-          </AlertDialog>
-        ) : null}
-      </Alert.Content>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="sm:max-w-100">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {dossierContent.activationPending.opposeConfirmTitle}
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogDescription>
+              {dossierContent.activationPending.opposeConfirmDescription}
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => oppose.mutate(undefined)}>
+                {dossierContent.activationPending.opposeConfirmButton}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
     </Alert>
   );
 };
 
 const DeclareDeathDialog = ({ dossierId }: { dossierId: string }) => {
-  const [deathDate, setDeathDate] = useState<DateValue | null>(null);
+  const [deathDate, setDeathDate] = useState("");
 
   // Irreversible: the modal states so before the action, never after.
   const declare = useAppMutation({
@@ -233,53 +230,47 @@ const DeclareDeathDialog = ({ dossierId }: { dossierId: string }) => {
   });
 
   const confirm = () => {
-    if (deathDate) declare.mutate(deathDate.toString());
+    if (deathDate) declare.mutate(deathDate);
   };
 
   return (
     <AlertDialog>
-      <Button variant="tertiary">{dossierContent.preparation.declareDeath.button}</Button>
-      <AlertDialog.Backdrop>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-[420px]">
-            <AlertDialog.CloseTrigger />
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="warning" />
-              <AlertDialog.Heading>
-                {dossierContent.preparation.declareDeath.dialogTitle}
-              </AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body className="flex flex-col gap-4">
-              <p>{dossierContent.preparation.declareDeath.dialogDescription}</p>
-              <DateField
-                maxValue={today(getLocalTimeZone())}
-                value={deathDate}
-                onChange={(v) => setDeathDate(v ?? null)}
-              >
-                <Label>{dossierContent.preparation.declareDeath.deathDateLabel}</Label>
-                <DateField.Group>
-                  <DateField.Input>
-                    {(segment) => <DateField.Segment segment={segment} />}
-                  </DateField.Input>
-                </DateField.Group>
-              </DateField>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button slot="close" variant="tertiary">
-                Annuler
-              </Button>
-              <Button
-                variant="danger"
-                isDisabled={!deathDate}
-                isPending={declare.isPending}
-                onPress={confirm}
-              >
-                {dossierContent.preparation.declareDeath.confirmButton}
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
+      <AlertDialogTrigger asChild>
+        <Button variant="secondary">{dossierContent.preparation.declareDeath.button}</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="sm:max-w-105">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{dossierContent.preparation.declareDeath.dialogTitle}</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogDescription>
+          {dossierContent.preparation.declareDeath.dialogDescription}
+        </AlertDialogDescription>
+        {/* A form control is not prose: the description is a paragraph, so the field sits beside it. */}
+        <Field>
+          <FieldLabel htmlFor="deathDate">
+            {dossierContent.preparation.declareDeath.deathDateLabel}
+          </FieldLabel>
+          <Input
+            id="deathDate"
+            max={todayIso()}
+            name="deathDate"
+            onChange={(event) => setDeathDate(event.target.value)}
+            type="date"
+            value={deathDate}
+          />
+        </Field>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <Button
+            variant="destructive"
+            disabled={!deathDate}
+            pending={declare.isPending}
+            onClick={confirm}
+          >
+            {dossierContent.preparation.declareDeath.confirmButton}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   );
 };

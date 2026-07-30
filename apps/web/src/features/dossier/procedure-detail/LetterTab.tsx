@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Alert, Button, Card, Input, Label, TextField } from "@heroui/react";
 import jsPDF from "jspdf";
 import { extractVariables, resolveLetterVariables } from "@sorento/core";
 import type { Dossier, LetterTemplate } from "@sorento/domain";
@@ -10,6 +9,11 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 // Variables the dossier itself can answer; anything else in the template is a manual field.
 const deriveAutoValues = (dossier: Dossier): Record<string, string> => ({
@@ -39,9 +43,9 @@ export const LetterTab = ({ dossierId, procedureId, dossier, canGenerate }: Lett
   if (!template || !dossier) {
     return (
       <Card>
-        <Card.Content className="text-muted py-6 text-center text-sm">
+        <CardContent className="text-muted py-6 text-center text-sm">
           {dossierContent.procedureDetail.letter.noTemplate}
-        </Card.Content>
+        </CardContent>
       </Card>
     );
   }
@@ -98,51 +102,48 @@ const LetterEditor = ({
 
   return (
     <Card>
-      <Card.Content className="flex flex-col gap-4 py-4">
+      <CardContent className="flex flex-col gap-4 py-4">
         {/* Non-dismissible and above the button: this is a template to review and sign. */}
-        <Alert status="default">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{dossierContent.procedureDetail.letter.notice}</Alert.Description>
-          </Alert.Content>
+        <Alert>
+          <AlertIndicator />
+          <AlertDescription>{dossierContent.procedureDetail.letter.notice}</AlertDescription>
         </Alert>
 
         {manualFields.map((name) => (
-          <TextField
-            key={name}
-            value={manualValues[name] ?? ""}
-            onChange={(value) => setManualValues((previous) => ({ ...previous, [name]: value }))}
-          >
-            <Label>{fieldLabel(name)}</Label>
-            <Input />
-          </TextField>
+          <Field>
+            <FieldLabel htmlFor="name">{fieldLabel(name)}</FieldLabel>
+            <Input
+              id="name"
+              value={manualValues[name] ?? ""}
+              onChange={(event) =>
+                setManualValues((previous) => ({ ...previous, [name]: event.target.value }))
+              }
+            />
+          </Field>
         ))}
 
         <pre className="whitespace-pre-wrap rounded-md border p-4 text-sm">{body}</pre>
 
         {missingVariables.length > 0 ? (
-          <Alert status="warning">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>
-                {dossierContent.procedureDetail.letter.missingVariables}{" "}
-                {missingVariables.join(", ")}
-              </Alert.Description>
-            </Alert.Content>
+          <Alert variant="warning">
+            <AlertIndicator />
+            <AlertDescription>
+              {dossierContent.procedureDetail.letter.missingVariables} {missingVariables.join(", ")}
+            </AlertDescription>
           </Alert>
         ) : null}
 
         <ErrorAlert message={generate.errorMessage} />
 
         <Button
-          variant="primary"
-          isDisabled={!canGenerate}
-          isPending={generate.isPending}
-          onPress={() => generate.mutate(undefined)}
+          variant="default"
+          disabled={!canGenerate}
+          pending={generate.isPending}
+          onClick={() => generate.mutate(undefined)}
         >
           {dossierContent.procedureDetail.letter.downloadButton}
         </Button>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 };

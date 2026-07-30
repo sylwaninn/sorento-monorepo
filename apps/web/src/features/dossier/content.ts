@@ -102,6 +102,7 @@ export const dossierContent = {
       emailLabel: "Email",
       roleLabel: "Rôle",
       messageLabel: "Message personnel (optionnel)",
+      emailPlaceholder: "membre@exemple.fr",
       submitButton: "Envoyer l'invitation",
       success: "Invitation envoyée.",
       linkNotice: "Lien d'invitation (à copier si l'email n'a pas pu être envoyé) :",
@@ -112,6 +113,7 @@ export const dossierContent = {
       expiresOn: "Expire le",
       revokeButton: "Révoquer",
     },
+    selfSuffix: "(vous)",
     list: {
       title: "Membres",
       joinedOn: "Membre depuis le",
@@ -172,7 +174,7 @@ export const dossierContent = {
     addedBy: "ajouté par",
   },
   preparation: {
-    title: "Organiser mes affaires",
+    title: "Préparer l'après",
     intro:
       "Prenez votre temps. Chaque élément rangé ici allège la tâche de vos proches, le moment venu.",
     progressLabel: "Éléments renseignés",

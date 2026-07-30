@@ -1,17 +1,6 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { isMentionable } from "@sorento/core";
-import {
-  Autocomplete,
-  Button,
-  Card,
-  Label,
-  ListBox,
-  SearchField,
-  TextArea,
-  Typography,
-  useFilter,
-} from "@heroui/react";
 import { useAuth } from "@/auth/useAuth";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { InlineLoader } from "@/components/PageLoader";
@@ -20,6 +9,18 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import type { DossierContext } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
+import { Textarea } from "@/components/ui/textarea";
+import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface CommentsTabProps {
   dossierId: string;
@@ -73,13 +74,13 @@ export const CommentsTab = ({ dossierId, procedureId, access }: CommentsTabProps
 
   return (
     <Card>
-      <Card.Content className="flex flex-col gap-4 py-4">
+      <CardContent className="flex flex-col gap-4 py-4">
         {commentsQuery.isPending ? <InlineLoader /> : null}
 
         {!commentsQuery.isPending && comments.length === 0 ? (
-          <Typography.Paragraph color="muted" size="sm">
+          <Text tone="muted" size="sm">
             {dossierContent.procedureDetail.comments.empty}
-          </Typography.Paragraph>
+          </Text>
         ) : null}
 
         {comments.map((comment) => (
@@ -92,13 +93,13 @@ export const CommentsTab = ({ dossierId, procedureId, access }: CommentsTabProps
             ) : (
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col">
-                  <Typography type="body-xs" color="muted" weight="medium">
+                  <Text className="text-caption font-medium" tone="muted">
                     {access.firstNameOf(comment.authorId)}
-                  </Typography>
+                  </Text>
                   <span>{comment.content}</span>
                 </div>
                 {comment.authorId === user?.id || access.can("comments:deleteAny") ? (
-                  <Button variant="ghost" size="sm" onPress={() => remove.mutate(comment.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => remove.mutate(comment.id)}>
                     {dossierContent.procedureDetail.comments.deleteButton}
                   </Button>
                 ) : null}
@@ -109,7 +110,7 @@ export const CommentsTab = ({ dossierId, procedureId, access }: CommentsTabProps
 
         <ErrorAlert message={publish.errorMessage ?? remove.errorMessage} />
 
-        <TextArea
+        <Textarea
           aria-label={dossierContent.procedureDetail.comments.placeholder}
           placeholder={dossierContent.procedureDetail.comments.placeholder}
           value={content}
@@ -119,21 +120,22 @@ export const CommentsTab = ({ dossierId, procedureId, access }: CommentsTabProps
         <MentionPicker access={access} onSelect={addMention} />
 
         <Button
-          variant="primary"
-          isDisabled={content.trim() === "" || !access.can("comments:write")}
-          isPending={publish.isPending}
-          onPress={() => publish.mutate(undefined)}
+          variant="default"
+          disabled={content.trim() === "" || !access.can("comments:write")}
+          pending={publish.isPending}
+          onClick={() => publish.mutate(undefined)}
         >
           {dossierContent.procedureDetail.comments.submitButton}
         </Button>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 };
 
-// HeroUI's Autocomplete is a discrete picker (its own trigger + popover), not an inline "@"
-// trigger inside a textarea: that pattern isn't offered by the component. Composed here as a
-// standalone "mention someone" picker next to the comment box.
+/**
+ * A discrete picker beside the comment box rather than an inline "@" inside the textarea: a
+ * dossier holds a handful of members, so a list to choose from beats a search nobody needs.
+ */
 const MentionPicker = ({
   access,
   onSelect,
@@ -141,41 +143,25 @@ const MentionPicker = ({
   access: DossierContext;
   onSelect: (userId: string) => void;
 }) => {
-  const { contains } = useFilter({ sensitivity: "base" });
+  const id = useId();
 
   return (
-    <Autocomplete onChange={(key) => key && onSelect(String(key))}>
-      <Label>{dossierContent.procedureDetail.comments.mentionLabel}</Label>
-      <Autocomplete.Trigger>
-        <Autocomplete.Value />
-        <Autocomplete.Indicator />
-      </Autocomplete.Trigger>
-      <Autocomplete.Popover>
-        <Autocomplete.Filter filter={contains}>
-          <SearchField autoFocus name="mention-search">
-            <SearchField.Group>
-              <SearchField.SearchIcon />
-              <SearchField.Input
-                placeholder={dossierContent.procedureDetail.comments.mentionPlaceholder}
-              />
-            </SearchField.Group>
-          </SearchField>
-          <ListBox>
-            {access.members
-              .filter((member) => isMentionable(member.role))
-              .map((member) => (
-                <ListBox.Item
-                  key={member.userId}
-                  id={member.userId}
-                  textValue={access.firstNameOf(member.userId)}
-                >
-                  {access.firstNameOf(member.userId)}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-          </ListBox>
-        </Autocomplete.Filter>
-      </Autocomplete.Popover>
-    </Autocomplete>
+    <Field>
+      <FieldLabel htmlFor={id}>{dossierContent.procedureDetail.comments.mentionLabel}</FieldLabel>
+      <Select onValueChange={onSelect} value="">
+        <SelectTrigger id={id}>
+          <SelectValue placeholder={dossierContent.procedureDetail.comments.mentionPlaceholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {access.members
+            .filter((member) => isMentionable(member.role))
+            .map((member) => (
+              <SelectItem key={member.userId} value={member.userId}>
+                {access.firstNameOf(member.userId)}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
+    </Field>
   );
 };
