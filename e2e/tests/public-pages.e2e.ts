@@ -326,17 +326,31 @@ test.describe("what a visitor sees before they trust anyone", () => {
     });
   }
 
-  test("the landing page puts its first tab stop on the way in", async ({ page }) => {
+  /**
+   * The budget: three tab stops from a fresh page to the way in.
+   *
+   * It used to be one, because the page opened straight onto its call to action. The redesign
+   * gave the homepage a header, so the brand and the login link now stand in front of it, and
+   * this number moved with the design rather than the assertion being dropped. Anyone using a
+   * keyboard, a switch or a screen reader arrives at the top of the document with no way to skip
+   * the furniture, so how much furniture there is is the whole of their first impression.
+   */
+  const TAB_STOPS_TO_THE_WAY_IN = 3;
+
+  test("the landing page puts the way in within reach of the keyboard", async ({ page }) => {
     await page.goto("/");
 
-    // One tab from a fresh page has to reach the thing the page exists for. Anyone using a
-    // keyboard, a switch or a screen reader arrives at the top of the document with no way to
-    // skip the furniture, so what comes first is the whole of their first impression.
-    await page.keyboard.press("Tab");
-    await expect(page.getByRole("link", { name: copy.landingCta })).toBeFocused();
+    for (let stop = 0; stop < TAB_STOPS_TO_THE_WAY_IN; stop += 1) {
+      await page.keyboard.press("Tab");
+      const focused = page.locator(":focus");
+      if ((await focused.getAttribute("href")) === "/diagnostic") {
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(/\/diagnostic$/);
+        return;
+      }
+    }
 
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/diagnostic$/);
+    throw new Error(`No way into the diagnostic within ${TAB_STOPS_TO_THE_WAY_IN} tab stops`);
   });
 
   test("the diagnostic can be answered with the keyboard alone", async ({ page }) => {
