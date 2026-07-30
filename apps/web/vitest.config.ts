@@ -34,7 +34,7 @@ export default defineConfig({
         "src/routes.tsx",
         "src/test/**",
       ],
-      thresholds: { lines: 54, statements: 54, functions: 60, branches: 71 },
+      thresholds: { lines: 58, statements: 58, functions: 63, branches: 75 },
     }),
   },
 });
