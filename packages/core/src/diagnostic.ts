@@ -14,7 +14,7 @@ export interface QuestionDefinition {
 
 // Canonical diagnostic order. The (French) label of each question and its options lives
 // in apps/web/src/features/diagnostic/content.ts; this module only knows structure and
-// branches, so it stays reusable by a future mobile client.
+// branches, which is what lets the order be tested without rendering anything.
 export const DIAGNOSTIC_QUESTIONS: QuestionDefinition[] = [
   { id: "mode", type: "single_choice", options: ["death", "preparation"] },
   { id: "fullName", type: "text" },
