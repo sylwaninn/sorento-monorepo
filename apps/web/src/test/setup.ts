@@ -13,7 +13,7 @@ vi.stubEnv("VITE_SUPABASE_URL", "http://localhost:57321");
 vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
 
 /**
- * Browser APIs jsdom does not implement but HeroUI measures with. Without them a component
+ * Browser APIs jsdom does not implement but the component library measures with. Without them a component
  * throws on mount into React's error boundary, which reads as a rendered page: the test passes
  * while the screen is broken. Stubs, not fakes: nothing here asserts on layout.
  */
@@ -24,8 +24,13 @@ class ObserverStub {
   takeRecords = (): [] => [];
 }
 
-Object.defineProperty(globalThis, "ResizeObserver", { writable: true, value: ObserverStub });
-Object.defineProperty(globalThis, "IntersectionObserver", { writable: true, value: ObserverStub });
+// Configurable, so a test with something to say about visibility can put its own recorder in
+// place through vi.stubGlobal and have it restored afterwards.
+const stubGlobal = (name: string, value: unknown) =>
+  Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+
+stubGlobal("ResizeObserver", ObserverStub);
+stubGlobal("IntersectionObserver", ObserverStub);
 
 Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
