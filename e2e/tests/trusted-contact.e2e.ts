@@ -27,8 +27,8 @@ import { createConfirmedAccount, dossierStatus, membershipRole, rest } from "#e2
 const OWNER_FIRST_NAME = "Camille";
 
 /**
- * A select is a combobox opening a listbox in a portal, and the trigger's accessible name is
- * its label followed by the value it currently shows.
+ * A select is a combobox opening a listbox in a portal, and the trigger is named by its label
+ * rather than by the value it shows.
  */
 const chooseInSelect = async (page: Page, label: string, option: string): Promise<void> => {
   await page.getByRole("combobox", { name: label }).first().click();

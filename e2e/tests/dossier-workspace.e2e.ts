@@ -137,11 +137,11 @@ test.describe("working through a dossier", () => {
     await page.getByRole("link", { name: bank.title }).first().click();
     await expect(page).toHaveURL(new RegExp(`/demarches/${bank.id}$`));
 
-    // The picker announces itself as its current value followed by its label, which is also the
-    // shortest proof that the procedure starts where a new dossier should start it.
-    await page
-      .getByRole("button", { name: `${workspaceCopy.statusTodo} ${workspaceCopy.statusLabel}` })
-      .click();
+    // The picker is a combobox named by its label, and what it currently shows is the shortest
+    // proof that the procedure starts where a new dossier should start it.
+    const status = page.getByRole("combobox", { name: workspaceCopy.statusLabel });
+    await expect(status).toHaveText(workspaceCopy.statusTodo);
+    await status.click();
     await page.getByRole("option", { name: workspaceCopy.statusDone }).click();
 
     // Marking one thing done is the only reward this product can offer, so the dashboard has to

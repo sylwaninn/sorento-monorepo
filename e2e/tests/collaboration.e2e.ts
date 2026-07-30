@@ -38,9 +38,8 @@ const OWNER_FIRST_NAME = "Camille";
 const logEntry = (action: string): string => `${OWNER_FIRST_NAME} ${action}`;
 
 /**
- * A select is a combobox opening a listbox in a portal, and the trigger's accessible name is
- * its label followed by the value it currently shows. Naming the label alone therefore reaches
- * it whatever it is currently set to.
+ * A select is a combobox opening a listbox in a portal, and the trigger is named by its label
+ * rather than by the value it shows, so naming the label reaches it whatever it is set to.
  */
 const chooseInSelect = async (page: Page, label: string, option: string): Promise<void> => {
   await page.getByRole("combobox", { name: label }).first().click();
@@ -121,10 +120,10 @@ test.describe("several relatives sharing one dossier", () => {
       // it are visible so the screen stays legible, and inert so nothing sends them into a
       // refusal from the database they have no way to interpret.
       await expect(
-        viewerPage.getByRole("button", { name: collaborationCopy.statusLabel }),
+        viewerPage.getByRole("combobox", { name: collaborationCopy.statusLabel }),
       ).toBeDisabled();
       await expect(
-        viewerPage.getByRole("button", { name: collaborationCopy.assigneeLabel }),
+        viewerPage.getByRole("combobox", { name: collaborationCopy.assigneeLabel }),
       ).toBeDisabled();
 
       // Reading and saying something are the whole point of the role.
@@ -224,7 +223,9 @@ test.describe("several relatives sharing one dossier", () => {
 
       const title = await openFirstProcedure(page, dossierId);
       await chooseInSelect(page, collaborationCopy.assigneeLabel, "Dominique");
-      await expect(page.getByRole("button", { name: "Dominique" })).toBeVisible();
+      await expect(
+        page.getByRole("combobox", { name: collaborationCopy.assigneeLabel }),
+      ).toHaveText("Dominique");
 
       // Sharing a dossier is dividing the work: what the person carries has to reach the view
       // they open to find out what is waiting for them.
@@ -262,7 +263,9 @@ test.describe("several relatives sharing one dossier", () => {
       await openFirstProcedure(page, dossierId);
       const procedureUrl = page.url();
       await chooseInSelect(page, collaborationCopy.assigneeLabel, "Dominique");
-      await expect(page.getByRole("button", { name: "Dominique" })).toBeVisible();
+      await expect(
+        page.getByRole("combobox", { name: collaborationCopy.assigneeLabel }),
+      ).toHaveText("Dominique");
 
       await page.goto(`/dossiers/${dossierId}/membres`);
       await page.getByRole("button", { name: collaborationCopy.removeMember }).click();
@@ -273,7 +276,9 @@ test.describe("several relatives sharing one dossier", () => {
       // than pointing at a person nobody can reach any more. A family reading "assigned to
       // Dominique" would wait for someone who no longer has the dossier.
       await page.goto(procedureUrl);
-      await expect(page.getByRole("button", { name: collaborationCopy.unassigned })).toBeVisible();
+      await expect(
+        page.getByRole("combobox", { name: collaborationCopy.assigneeLabel }),
+      ).toHaveText(collaborationCopy.unassigned);
 
       // Removing a relative from a shared bereavement space is not a silent act.
       await page.goto(`/dossiers/${dossierId}/activite`);
