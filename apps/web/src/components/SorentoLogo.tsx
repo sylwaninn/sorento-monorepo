@@ -1,0 +1,29 @@
+import type { SVGProps } from "react";
+
+export interface SorentoLogoProps extends Omit<
+  SVGProps<SVGSVGElement>,
+  "color" | "height" | "style" | "width"
+> {
+  title?: string;
+}
+
+export const SorentoLogo = ({ title, ...props }: SorentoLogoProps) => (
+  <svg
+    aria-hidden={title ? undefined : true}
+    focusable="false"
+    role={title ? "img" : undefined}
+    viewBox="0 0 508 527"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    {title ? <title>{title}</title> : null}
+    <path
+      d="M264.137 375.849C179.137 355.849 79.1371 305.849 29.1371 225.849C-20.8629 145.849 -5.86286 55.8489 69.1371 15.8489C134.137 -19.1511 214.137 5.8489 244.137 70.8489C264.137 110.849 254.137 157.849 224.137 175.849C209.137 184.849 191.137 179.849 173.137 185.849C139.137 197.849 119.137 230.849 126.137 265.849C134.137 310.849 179.137 345.849 264.137 375.849Z"
+      fill="currentColor"
+    />
+    <path
+      d="M243 526.849C328 506.849 428 456.849 478 376.849C528 296.849 513 206.849 438 166.849C373 131.849 293 156.849 263 221.849C243 261.849 253 308.849 283 326.849C298 335.849 316 330.849 334 336.849C368 348.849 388 381.849 381 416.849C373 461.849 328 496.849 243 526.849Z"
+      fill="currentColor"
+    />
+  </svg>
+);

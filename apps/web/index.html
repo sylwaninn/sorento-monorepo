@@ -2,6 +2,12 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      No viewport-fit=cover on purpose. Safari 26 extends the document behind its translucent
+      toolbars when a page opts into cover, so the content scrolls visibly through the browser
+      chrome. The default keeps the document below the bars, and the safe-area tokens in
+      index.css fall back to 0px, which is exactly right once nothing sits under the notch.
+    -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
       Sessions are kept in localStorage (see SECURITY.md), so an XSS would be enough to
@@ -26,6 +32,12 @@
                form-action 'self'"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="color-scheme" content="light" />
+    <!-- Matches --brand-cream, the body ground. Chrome on Android colours its bar with this;
+         Safari 26 ignores the tag entirely and samples fixed elements instead, which is what
+         BrowserChromeTint is for. -->
+    <meta name="theme-color" content="#f5f6f2" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Sorento</title>
   </head>
   <body>
