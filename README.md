@@ -144,30 +144,31 @@ All commands run from the repository root.
 
 <!-- sync-docs:commands -->
 
-| Command                       | What it does                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm dev`                    | Start every dev server (Vite for `apps/web`) through Turborepo.                      |
-| `pnpm build`                  | Build all packages and the web app.                                                  |
-| `pnpm lint`                   | ESLint across the workspace, import boundaries included.                             |
-| `pnpm typecheck`              | TypeScript checks across the workspace.                                              |
-| `pnpm test`                   | Unit tests (Vitest) across the workspace.                                            |
-| `pnpm test:integration`       | Integration tests (RLS, hardening, Edge Functions) against the local Supabase stack. |
-| `pnpm sync:functions-imports` | Regenerate the Deno import map for the Edge Functions.                               |
-| `pnpm sync:docs`              | Regenerate this README's generated blocks.                                           |
-| `pnpm check:docs`             | Fail if this README's generated blocks are stale (CI and hooks run this).            |
-| `pnpm check:functions`        | Verify the Deno import map, then lint and typecheck every Edge Function.             |
-| `pnpm test:functions`         | Deno tests for the Edge Functions' shared modules.                                   |
-| `pnpm check:tests`            | Structural test audit: every rule module has a test, every test has a subject.       |
-| `pnpm format`                 | Prettier, write mode.                                                                |
-| `pnpm format:check`           | Prettier, check mode.                                                                |
-| `pnpm prepare`                | Husky bootstrap; runs automatically on install.                                      |
-| `pnpm test:coverage`          | Unit tests with per-package coverage thresholds.                                     |
-| `pnpm test:e2e`               | Playwright end-to-end journeys (needs the local stack and a production build).       |
-| `pnpm coverage:diff`          | Coverage of the lines the current branch changed, from the existing lcov reports.    |
-| `pnpm coverage:ratchet`       | Raise each package's coverage thresholds to what it actually achieves.               |
-| `pnpm coverage:ratchet:check` | Fail when coverage thresholds have too much slack under them.                        |
-| `pnpm verify`                 | The full local quality gate: the same bar CI enforces.                               |
-| `pnpm test:mutation`          | Stryker mutation testing on `core` and `domain`.                                     |
+| Command                       | What it does                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm dev`                    | Start every dev server (Vite for `apps/web`) through Turborepo.                          |
+| `pnpm build`                  | Build all packages and the web app.                                                      |
+| `pnpm lint`                   | ESLint across the workspace, import boundaries included.                                 |
+| `pnpm typecheck`              | TypeScript checks across the workspace.                                                  |
+| `pnpm test`                   | Unit tests (Vitest) across the workspace.                                                |
+| `pnpm test:integration`       | Integration tests (RLS, hardening, Edge Functions) against the local Supabase stack.     |
+| `pnpm sync:functions-imports` | Regenerate the Deno import map for the Edge Functions.                                   |
+| `pnpm sync:docs`              | Regenerate this README's generated blocks.                                               |
+| `pnpm check:docs`             | Fail if this README's generated blocks are stale (CI and hooks run this).                |
+| `pnpm check:functions`        | Verify the Deno import map, then lint and typecheck every Edge Function.                 |
+| `pnpm test:functions`         | Deno tests for the Edge Functions' shared modules.                                       |
+| `pnpm check:tests`            | Structural test audit: every rule module has a test, every test has a subject.           |
+| `pnpm check:styles`           | Reject stray stylesheets, inline styles and raw palette colors outside the shared theme. |
+| `pnpm format`                 | Prettier, write mode.                                                                    |
+| `pnpm format:check`           | Prettier, check mode.                                                                    |
+| `pnpm prepare`                | Husky bootstrap; runs automatically on install.                                          |
+| `pnpm test:coverage`          | Unit tests with per-package coverage thresholds.                                         |
+| `pnpm test:e2e`               | Playwright end-to-end journeys (needs the local stack and a production build).           |
+| `pnpm coverage:diff`          | Coverage of the lines the current branch changed, from the existing lcov reports.        |
+| `pnpm coverage:ratchet`       | Raise each package's coverage thresholds to what it actually achieves.                   |
+| `pnpm coverage:ratchet:check` | Fail when coverage thresholds have too much slack under them.                            |
+| `pnpm verify`                 | The full local quality gate: the same bar CI enforces.                                   |
+| `pnpm test:mutation`          | Stryker mutation testing on `core` and `domain`.                                         |
 
 <!-- /sync-docs:commands -->
 
