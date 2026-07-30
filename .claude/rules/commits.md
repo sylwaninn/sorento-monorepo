@@ -8,7 +8,8 @@ type(scope): description
 
 - **ONE LINE ONLY** - Multiline commits are forbidden
 - **Types**: feat, fix, docs, style, refactor, test, chore
-- **Scope**: Required for app-specific changes (web, mobile, shared, supabase)
+- **Scope**: The workspace the change belongs to: web, supabase, core, domain,
+  client, e2e, config, deps
 - **Description**: Lowercase, no period, imperative mood
 - **Start with a verb**: add, fix, update, remove, configure, refactor, etc. Never a bare noun list
 

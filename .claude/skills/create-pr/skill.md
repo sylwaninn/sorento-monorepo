@@ -46,23 +46,25 @@ If not already on a feature branch:
 **How to split commits:**
 
 1. Analyze all changed files and group them by concern:
-   - Feature logic (new components, services, hooks)
-   - UI/styling changes (CSS, layout, design tokens)
-   - i18n/translations (locale JSON files)
+   - Business rules (`packages/core`) and the schemas they read (`packages/domain`)
+   - Data access and migrations (`packages/supabase-client`, `supabase/`)
+   - Feature logic (screens, hooks, repositories)
+   - UI and design tokens (`apps/web/src/index.css`, the shared components)
+   - User-facing copy (a feature's `content.ts`, the catalog)
    - Refactoring (renaming, extracting, restructuring existing code)
-   - Configuration (build, linting, CI)
+   - Configuration (build, linting, CI, quality gates)
    - Bug fixes
 2. Each group becomes its own commit
 3. Order commits logically: foundational changes first, dependent changes after
 
-**Example split for a profile modal rework:**
+**Example split for a homepage rework:**
 
 ```
-refactor(web): remove size prop from Button component
-style(web): add frosted-header utility and float animation
-feat(web): add account deletion flow
-feat(web): rework profile modal as single scrollable page
-chore(web): update profile i18n keys for all locales
+refactor(web): route public links through the router instead of a full reload
+style(web): drop the theme tokens nothing names
+feat(web): generate robots.txt and sitemap.xml from the route table
+fix(web): re-encode the hero AVIF variants Chromium paints as transparent
+test(web): cover the landing header hook and the crawler files
 ```
 
 **For each commit:**
@@ -72,13 +74,13 @@ chore(web): update profile i18n keys for all locales
    - Format: `type(scope): description`
    - **ONE LINE ONLY**, multiline commits are forbidden
    - Types: feat, fix, docs, style, refactor, test, chore
-   - Scope: required for app-specific changes (web, mobile, shared, supabase)
+   - Scope: the workspace the change belongs to (web, supabase, core, domain, client, e2e, config, deps)
    - Description: lowercase, no period at end, start with a verb
    - Examples:
      - `feat(web): add PIN verification flow`
-     - `fix(mobile): resolve button alignment issue`
-     - `refactor(shared): extract user profile types`
-     - `chore(web): update profile i18n keys for all locales`
+     - `fix(supabase): escape user-supplied text in outbound emails`
+     - `refactor(core): extract the eligibility window into its own rule`
+     - `chore(web): move the landing copy into one module per section`
 
 3. **NEVER use `--no-verify`**, all commits must pass pre-commit hooks
 4. If hooks fail, fix the issues and retry
@@ -92,6 +94,30 @@ pnpm verify
 ```
 
 This must pass with zero warnings/errors. Fix any issues before proceeding.
+
+If the branch touches the database, an Edge Function or a user journey
+(check with `git diff main...HEAD --name-only`), also run, needs
+`supabase start` first:
+
+```bash
+pnpm test:integration
+pnpm test:e2e
+```
+
+These are not run after every task, only here, before opening the PR
+(GitHub CI also runs them on the PR itself).
+
+If the branch changes anything a public page renders, the Playwright screenshot
+baselines are part of the change. Review the diff images, then regenerate them
+in a commit of their own:
+
+```bash
+pnpm --filter @sorento/e2e exec playwright test tests/public-quality.e2e.ts --update-snapshots
+```
+
+A numeric layout budget a journey asserts (a maximum action width, for instance)
+moves with the design that moved it. Never relax one to make a run green without
+saying so in the PR: that is the change under review.
 
 ### 5. Update Documentation (MANDATORY check, conditional update)
 
@@ -133,7 +159,7 @@ Steps 5.1 and 5.3 always run. Step 5.2 may be skipped only when `pnpm check:docs
 
 ### 5b. Check Legal Pages (if needed)
 
-If the PR introduces changes that affect legal obligations, check whether the legal pages (`apps/web/src/locales/*/pages.json`) need updating. Look for:
+If the PR introduces changes that affect legal obligations, check whether the three legal documents in `apps/web/src/features/legal/content.ts` need updating. Look for:
 
 - New **third-party services** or SDKs added (e.g., analytics, crash reporting, payment providers)
 - Changes to **data collection** (new personal data fields, new tracking events)
@@ -143,82 +169,9 @@ If the PR introduces changes that affect legal obligations, check whether the le
 - Changes to the **hosting infrastructure** (new providers)
 - Addition of **paid features** or subscription model
 
-If any of these are detected, update the relevant sections in `apps/web/src/locales/*/pages.json` (all 5 locales: fr, en-GB, es-ES, de, pt-BR) and bump the `lastUpdated` date. The legal pages commit should use `chore(web): update legal pages` format.
+If any of these are detected, update the relevant sections of `legalContent` (French, following WORDING.md) and check whether `public-pages.e2e.ts` still names the sections it asserts. The legal pages commit uses `chore(web): update legal pages`.
 
 If none of the above apply, skip this step.
-
-### 5c. Detect Native Mobile Changes (MANDATORY for mobile scope)
-
-If any commit on the branch touches `apps/mobile/`, you MUST check whether the changes require a native rebuild. The `[native]` flag in the PR title controls whether the CI triggers an OTA update or a full native version bump.
-
-**Run this detection by diffing the branch against main:**
-
-```bash
-git diff main...HEAD --name-only
-```
-
-**The PR title MUST include `[native]` if ANY of these conditions are true:**
-
-1. **Native directories changed:**
-   - `apps/mobile/ios/**`
-   - `apps/mobile/android/**`
-   - `apps/mobile/plugins/**`
-
-2. **Expo plugins changed in `app.config.ts`:**
-   - Lines added/removed/modified inside the `plugins: [...]` array
-   - Check with: `git diff main...HEAD -- apps/mobile/app.config.ts` and look for changes in plugin entries
-
-3. **Native-impacting fields changed in `app.config.ts`:**
-   - `bundleIdentifier`, `package` (Android package name)
-   - `icon`, `splash`, `adaptiveIcon` (requires rebuild for native assets)
-   - `orientation`, `newArchEnabled`
-   - `infoPlist`, `entitlements`
-   - Any field inside `ios: { ... }` or `android: { ... }` blocks (except `buildNumber` and `versionCode` which are handled by the version workflow)
-
-4. **New native dependencies added in `package.json`:**
-   - Check `git diff main...HEAD -- apps/mobile/package.json` for new dependencies
-   - Packages matching these patterns are native: `react-native-*`, `@react-native-*`, `@react-native-community/*`, `expo-*` (NEW additions only, not version bumps)
-   - Use this heuristic: if a line was added in `"dependencies"` or `"devDependencies"` with a package name matching the above patterns, it is native
-
-5. **EAS build config changed:**
-   - `apps/mobile/eas.json`
-
-**How to apply:**
-
-- If native changes detected, append ` [native]` to the PR title
-- Example: `feat(mobile): add camera support [native]`
-- If mixed mobile+web PR with native mobile changes, still append `[native]`
-- If only JS/TS changes in `apps/mobile/src/`, NO `[native]` needed
-
-**Detection script (run in bash):**
-
-```bash
-NATIVE_CHANGES=false
-
-# Check native directories
-if git diff main...HEAD --name-only | grep -qE '^apps/mobile/(ios|android|plugins)/'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check app.config.ts for plugin/native config changes
-if git diff main...HEAD -- apps/mobile/app.config.ts | grep -qE '^\+.*plugins|^\+.*bundleIdentifier|^\+.*package:|^\+.*infoPlist|^\+.*entitlements|^\+.*newArchEnabled|^\+.*orientation'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check for new native dependencies
-if git diff main...HEAD -- apps/mobile/package.json | grep -qE '^\+\s*"(react-native-|@react-native|expo-)'; then
-  NATIVE_CHANGES=true
-fi
-
-# Check EAS config
-if git diff main...HEAD --name-only | grep -q '^apps/mobile/eas.json'; then
-  NATIVE_CHANGES=true
-fi
-
-echo "Native changes detected: $NATIVE_CHANGES"
-```
-
-If `NATIVE_CHANGES=true`, the PR title MUST end with ` [native]`.
 
 ### 6. Push Branch
 
@@ -315,13 +268,13 @@ After creation:
 ## Commit Message Examples
 
 ```
-feat(auth): add biometric authentication support
-fix(home): resolve application list refresh issue
-refactor(ui): extract Button component from screens
-chore(i18n): add missing French translations
-docs(api): update authentication endpoints
-style(components): apply consistent spacing
-test(services): add user profile service tests
+feat(web): add the trusted contact activation screen
+fix(supabase): escape user-supplied text in outbound emails
+refactor(core): extract the eligibility window into its own rule
+docs(security): record the grace period the activation flow enforces
+style(web): drop the theme tokens nothing names
+test(e2e): drive every public screen the way a person drives it
+chore(deps): update dependency X to v5
 ```
 
 ## PR Title Guidelines
@@ -343,6 +296,7 @@ Bad: `Updated some auth stuff`
 - [ ] `pnpm check:docs` passes (generated README blocks in sync)
 - [ ] README prose updated if env vars, scripts, deps, or structure changed (via `/technical-writer`)
 - [ ] CLAUDE.md / SECURITY.md / TESTING.md audited against the diff by the subagent (step 5.3)
+- [ ] Screenshot baselines regenerated if a public page changed, in a commit of their own
 - [ ] Legal pages updated if new third-party services, data collection, or hosting changes
 - [ ] Branch name follows conventions
 - [ ] PR description is complete
