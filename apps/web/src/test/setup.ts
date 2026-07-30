@@ -68,6 +68,22 @@ if (!globalThis.Element.prototype.getAnimations) {
 }
 
 /**
+ * Pointer capture and scrolling, which the registry's select calls the moment its trigger is
+ * pressed. jsdom implements neither, and the throw lands outside React: the listbox never opens
+ * and the test reads as "the option is not there" rather than as "the environment is missing an
+ * API". Answering false is what a mouse that has captured nothing would answer.
+ */
+if (!globalThis.Element.prototype.hasPointerCapture) {
+  globalThis.Element.prototype.hasPointerCapture = (): boolean => false;
+  globalThis.Element.prototype.setPointerCapture = (): void => {};
+  globalThis.Element.prototype.releasePointerCapture = (): void => {};
+}
+
+if (!globalThis.Element.prototype.scrollIntoView) {
+  globalThis.Element.prototype.scrollIntoView = (): void => {};
+}
+
+/**
  * React Router builds a `Request` for every navigation and hands it the current AbortSignal.
  * Under vitest that signal comes from jsdom while `Request` comes from Node's undici, which
  * rejects it as a foreign type: every `navigate()` in a test then produces an unhandled
