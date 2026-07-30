@@ -87,7 +87,8 @@ export const ProcedureDetailPage = () => {
         </RouterLink>
       </div>
 
-      <Tabs>
+      {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
+      <Tabs defaultValue="procedure">
         <TabsList aria-label={dossierContent.procedureDetail.tabsLabel}>
           {TABS.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id}>

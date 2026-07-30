@@ -18,7 +18,8 @@ export const CatalogPage = () => (
       </RouterLink>
     </div>
 
-    <Tabs>
+    {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
+    <Tabs defaultValue="procedures">
       <TabsList aria-label={adminContent.catalog.title}>
         <TabsTrigger value="procedures">{adminContent.catalog.tabs.procedures}</TabsTrigger>
         <TabsTrigger value="benefits">{adminContent.catalog.tabs.benefits}</TabsTrigger>
