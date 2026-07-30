@@ -205,7 +205,7 @@ export const ProcedureForm = ({
           <Button type="submit" variant="default" pending={save.isPending}>
             {adminContent.catalog.saveButton}
           </Button>
-          <Button variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {adminContent.catalog.cancelButton}
           </Button>
         </CardFooter>
