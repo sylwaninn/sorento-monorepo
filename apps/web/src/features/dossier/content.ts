@@ -131,6 +131,8 @@ export const dossierContent = {
     empty: "Aucun événement pour l'instant.",
     filterAllTypes: "Tous les types",
     filterAllMembers: "Tous les membres",
+    filterTypeLabel: "Filtrer par type d'événement",
+    filterMemberLabel: "Filtrer par membre",
     systemActor: "Le système",
     actionLabels: {
       status_changed: "a changé un statut",

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import {
@@ -171,6 +171,9 @@ const ConditionForm = ({
     condition ? JSON.stringify(condition.expression, null, 2) : "",
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // The trigger is what carries the name, so the visible label has to point at it.
+  const targetTypeFieldId = useId();
+  const targetFieldId = useId();
 
   const save = useAppMutation({
     mutationFn: (payload: ConditionInput) =>
@@ -221,8 +224,8 @@ const ConditionForm = ({
               setTargetId("");
             }}
           >
-            <Label>{c.targetLabel}</Label>
-            <SelectTrigger>
+            <Label htmlFor={targetTypeFieldId}>{c.targetLabel}</Label>
+            <SelectTrigger id={targetTypeFieldId}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -236,8 +239,10 @@ const ConditionForm = ({
           </Select>
 
           <Select value={targetId} onValueChange={(value) => setTargetId(String(value))}>
-            <Label>{targetType === "procedure" ? c.targetProcedure : c.targetBenefit}</Label>
-            <SelectTrigger>
+            <Label htmlFor={targetFieldId}>
+              {targetType === "procedure" ? c.targetProcedure : c.targetBenefit}
+            </Label>
+            <SelectTrigger id={targetFieldId}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -266,7 +271,7 @@ const ConditionForm = ({
           <Button type="submit" variant="default" pending={save.isPending} disabled={!targetId}>
             {adminContent.catalog.saveButton}
           </Button>
-          <Button variant="ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {adminContent.catalog.cancelButton}
           </Button>
         </CardFooter>

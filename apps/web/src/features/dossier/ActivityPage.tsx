@@ -3,8 +3,7 @@ import { useMemo, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { activityLogTypeSchema } from "@sorento/domain";
-import { ActivityLogRepository } from "@sorento/supabase-client";
-import { supabase } from "@/lib/supabase-client";
+import { repositories } from "@/lib/repositories";
 import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
@@ -30,7 +29,7 @@ export const ActivityPage = () => {
 
   const activityQuery = useQuery({
     queryKey: ["activity-log", dossierId],
-    queryFn: () => new ActivityLogRepository(supabase).listForDossier(dossierId),
+    queryFn: () => repositories.activityLog.listForDossier(dossierId),
   });
 
   const filtered = useMemo(() => {
@@ -58,7 +57,8 @@ export const ActivityPage = () => {
 
       <div className="flex gap-3">
         <Select value={typeFilter} onValueChange={(value) => setTypeFilter(String(value))}>
-          <SelectTrigger>
+          {/* No visible label beside a filter row, so the trigger names itself. */}
+          <SelectTrigger aria-label={dossierContent.activity.filterTypeLabel}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -74,7 +74,7 @@ export const ActivityPage = () => {
         </Select>
 
         <Select value={memberFilter} onValueChange={(value) => setMemberFilter(String(value))}>
-          <SelectTrigger>
+          <SelectTrigger aria-label={dossierContent.activity.filterMemberLabel}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
