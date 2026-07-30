@@ -33,7 +33,12 @@ mobile workspace here, and none is to be added.
   presentation catalog and rendered through OptimizedPicture, never as a bare `<img>`.
   Encode the AVIF with libaom (sharp, avifenc), never with macOS `sips`: its output carries
   the right dimensions and satisfies `complete`, `naturalWidth` and `decode()`, and Chromium
-  then paints it as a fully transparent surface.
+  then paints it as a fully transparent surface. Only a check that samples the pixels sees
+  it, and public-quality.e2e.ts does, per viewport, because srcset is what picks the file.
+- A visual change carries its own evidence in the same commit: the Playwright
+  screenshot baselines are regenerated, and a numeric layout budget the journeys
+  assert is moved with the design that moved it. A stale baseline is a red suite
+  nobody trusts, and the next real regression hides behind it.
 - No eyebrow or kicker label above a heading, ever: the parenthesised
   uppercase "( LABEL )" line with its coloured dot was removed deliberately
   and must never come back, nor any small tracked-out uppercase label

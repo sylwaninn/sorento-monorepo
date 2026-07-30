@@ -183,6 +183,24 @@ Inside the app the same problem is solved by the compiler: a test asserts on `au
 submitButtonPassword`, never on the sentence, so a renamed key does not build and a removed one
 fails by name through `must(...)`.
 
+### 8. What the page actually looks like
+
+Three assertions in `public-quality.e2e.ts` cover what no other layer can see, because jsdom
+lays nothing out and a component test renders a tree rather than a page: axe over each public
+route, a screenshot per viewport, and the painted pixels of every image.
+
+The pixel sampling is not redundant with the screenshot. `complete`, `naturalWidth` and even
+`decode()` all answered yes for a hero photograph that rendered as nothing, its AVIF variants
+written by an encoder Chromium decodes to a fully transparent surface; the page shipped its main
+photograph invisible on every viewport wide enough to choose those variants. It is asserted per
+viewport because srcset is what picks the file, so a variant chosen only on a wide screen is a
+variant no narrow run ever looks at.
+
+A baseline is regenerated in the commit that changes the design, and the same goes for a numeric
+budget a journey asserts, a maximum button width for instance. Neither is a test failing: it is
+the design change arriving without the half of itself that records what it decided. Left behind,
+they turn the suite red for a known reason, which is how the next real regression goes unread.
+
 ## Where TypeScript and SQL both state a rule
 
 Whichever side is not the authority is a copy, and a copy that nothing compares is a copy that
@@ -258,3 +276,6 @@ started from nothing, mutation testing, a build, and a secret scan.
 - **Copy an E2E journey clicks on**: declare it with `mirrors(...)`, naming its dictionary, in
   `e2e/support/copy.ts` if the shared helpers use it and in the area's own `copy-<area>.ts`
   otherwise.
+- **A photograph**: add every width to the feature's presentation catalog, render it through
+  `OptimizedPicture`, and regenerate the screenshot baselines. The painted-pixel assertion covers
+  it automatically; nothing else will notice an image that loads and paints nothing.
