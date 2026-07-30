@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, Typography } from "@heroui/react";
 import { InvitationRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
@@ -10,6 +10,10 @@ import { userFacingErrorMessage } from "@/lib/error-messages";
 import { dossierContent } from "@/features/dossier/content";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator, AlertTitle } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
 
 export const AcceptInvitationPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,21 +51,19 @@ export const AcceptInvitationPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{dossierContent.acceptInvitation.title}</Card.Title>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-4">
+        <CardHeader>
+          <CardTitle>{dossierContent.acceptInvitation.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
           {resolveQuery.isPending ? (
             <InlineLoader />
           ) : resolveQuery.isError || !resolveQuery.data ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{dossierContent.acceptInvitation.invalidTitle}</Alert.Title>
-                <Alert.Description>
-                  {dossierContent.acceptInvitation.invalidDescription}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertTitle>{dossierContent.acceptInvitation.invalidTitle}</AlertTitle>
+              <AlertDescription>
+                {dossierContent.acceptInvitation.invalidDescription}
+              </AlertDescription>
             </Alert>
           ) : (
             <>
@@ -74,39 +76,45 @@ export const AcceptInvitationPage = () => {
               </p>
 
               {acceptError ? (
-                <Alert status="danger">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Description>{acceptError}</Alert.Description>
-                  </Alert.Content>
+                <Alert variant="destructive">
+                  <AlertIndicator />
+                  <AlertDescription>{acceptError}</AlertDescription>
                 </Alert>
               ) : null}
 
               {session ? (
-                <Button variant="primary" fullWidth isPending={accepting} onPress={accept}>
+                <Button variant="default" className="w-full" pending={accepting} onClick={accept}>
                   {dossierContent.acceptInvitation.acceptButton}
                 </Button>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <Typography.Paragraph color="muted" size="sm">
+                  <Text tone="muted" size="sm">
                     {dossierContent.acceptInvitation.needAccount}
-                  </Typography.Paragraph>
-                  <Button variant="primary" fullWidth onPress={() => goToAuth("/inscription")}>
+                  </Text>
+                  <Button
+                    variant="default"
+                    className="w-full"
+                    onClick={() => goToAuth("/inscription")}
+                  >
                     {dossierContent.acceptInvitation.signupButton}
                   </Button>
-                  <Button variant="outline" fullWidth onPress={() => goToAuth("/connexion")}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => goToAuth("/connexion")}
+                  >
                     {dossierContent.acceptInvitation.loginButton}
                   </Button>
                 </div>
               )}
             </>
           )}
-        </Card.Content>
-        <Card.Footer>
-          <RouterLink className="link text-sm" to="/">
+        </CardContent>
+        <CardFooter>
+          <RouterLink className={linkVariants()} to="/">
             {sharedContent.backHome}
           </RouterLink>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );
