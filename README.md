@@ -13,7 +13,7 @@ Sorento is a French web application that turns the administrative maze following
 ![React 19.0.0](https://img.shields.io/badge/React-19.0.0-087EA4?style=flat-square&logo=react&logoColor=white)
 ![Vite 6.0.7](https://img.shields.io/badge/Vite-6.0.7-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Tailwind CSS 4.0.0](https://img.shields.io/badge/Tailwind%20CSS-4.0.0-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-![HeroUI 3.0.5](https://img.shields.io/badge/HeroUI-3.0.5-006FEE?style=flat-square)
+![shadcn/ui 1.6.7](https://img.shields.io/badge/shadcn%2Fui-1.6.7-000000?style=flat-square&logo=shadcnui&logoColor=white)
 ![supabase-js 2.47.10](https://img.shields.io/badge/supabase--js-2.47.10-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Zod 3.24.1](https://img.shields.io/badge/Zod-3.24.1-3E67B1?style=flat-square&logo=zod&logoColor=white)
 ![Deno 2.x](https://img.shields.io/badge/Deno-2.x-70FFAF?style=flat-square&logo=deno&logoColor=white)

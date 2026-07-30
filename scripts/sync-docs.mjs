@@ -253,7 +253,7 @@ const badgesBlock = () =>
     badge("React", dep(webPkg, "react"), "087EA4", "react"),
     badge("Vite", dep(webPkg, "vite"), "646CFF", "vite"),
     badge("Tailwind CSS", dep(webPkg, "tailwindcss"), "06B6D4", "tailwindcss"),
-    badge("HeroUI", dep(webPkg, "@heroui/react"), "006FEE"),
+    badge("shadcn/ui", dep(webPkg, "radix-ui"), "000000", "shadcnui"),
     badge("supabase-js", dep(clientPkg, "@supabase/supabase-js"), "3FCF8E", "supabase"),
     badge("Zod", dep(domainPkg, "zod"), "3E67B1", "zod"),
     badge("Deno", denoVersion(), "70FFAF", "deno"),
