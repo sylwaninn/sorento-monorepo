@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { invitableRoleSchema, type InvitableRole } from "@sorento/domain";
 import { dossierContent } from "@/features/dossier/content";
 import { Label } from "@/components/ui/label";
@@ -24,23 +25,24 @@ export interface RoleSelectProps {
  * The list of assignable roles, in one place: the member list and the invitation form used to
  * declare their own copy of it, which is one rename away from offering two different sets.
  */
-export const RoleSelect = ({ role, onChange, label }: RoleSelectProps) => (
-  <Select
-    // A labelled field names itself; without a visible label the control still needs a name.
-    {...(label ? {} : { "aria-label": list.changeRoleTo })}
-    value={role}
-    onValueChange={(value) => onChange(invitableRoleSchema.parse(value))}
-  >
-    {label ? <Label>{label}</Label> : null}
-    <SelectTrigger>
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      {INVITABLE_ROLES.map((id) => (
-        <SelectItem key={id} value={id} textValue={roleLabels[id]}>
-          {roleLabels[id]}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-);
+export const RoleSelect = ({ role, onChange, label }: RoleSelectProps) => {
+  // The trigger is what carries the name, so the visible label has to point at it. Rendering the
+  // label beside an unassociated trigger leaves the control anonymous to a screen reader.
+  const triggerId = useId();
+
+  return (
+    <Select value={role} onValueChange={(value) => onChange(invitableRoleSchema.parse(value))}>
+      {label ? <Label htmlFor={triggerId}>{label}</Label> : null}
+      <SelectTrigger id={triggerId} {...(label ? {} : { "aria-label": list.changeRoleTo })}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {INVITABLE_ROLES.map((id) => (
+          <SelectItem key={id} value={id} textValue={roleLabels[id]}>
+            {roleLabels[id]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
