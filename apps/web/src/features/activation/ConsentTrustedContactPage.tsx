@@ -1,6 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link as RouterLink } from "react-router";
-import { Alert, Button, Card, Typography } from "@heroui/react";
 import { TrustedContactRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { supabase } from "@/lib/supabase-client";
@@ -8,6 +9,10 @@ import { savePendingConsentToken } from "@/features/activation/pending-consent";
 import { isExpiredLinkError, userFacingErrorMessage } from "@/lib/error-messages";
 import { activationContent } from "@/features/activation/content";
 import { sharedContent } from "@/components/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator, AlertTitle } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
 
 export const ConsentTrustedContactPage = () => {
   const [searchParams] = useSearchParams();
@@ -48,37 +53,31 @@ export const ConsentTrustedContactPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{activationContent.consent.title}</Card.Title>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-4">
+        <CardHeader>
+          <CardTitle>{activationContent.consent.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
           {!token ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{activationContent.consent.invalidTitle}</Alert.Title>
-                <Alert.Description>
-                  {activationContent.consent.invalidDescription}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertTitle>{activationContent.consent.invalidTitle}</AlertTitle>
+              <AlertDescription>{activationContent.consent.invalidDescription}</AlertDescription>
             </Alert>
           ) : dossierId ? (
             <>
-              <Alert status="success">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{activationContent.consent.confirmed}</Alert.Description>
-                </Alert.Content>
+              <Alert variant="success">
+                <AlertIndicator />
+                <AlertDescription>{activationContent.consent.confirmed}</AlertDescription>
               </Alert>
               {activationUrl ? (
-                <a className="link break-all text-sm" href={activationUrl}>
+                <a className={cn(linkVariants(), "break-all")} href={activationUrl}>
                   Conserver mon lien d’activation
                 </a>
               ) : null}
               <Button
-                variant="primary"
-                fullWidth
-                onPress={() => navigate(`/dossiers/${dossierId}`)}
+                variant="default"
+                className="w-full"
+                onClick={() => navigate(`/dossiers/${dossierId}`)}
               >
                 {activationContent.consent.goToDossier}
               </Button>
@@ -86,39 +85,50 @@ export const ConsentTrustedContactPage = () => {
           ) : (
             <>
               {error ? (
-                <Alert status="danger">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Description>{error}</Alert.Description>
-                  </Alert.Content>
+                <Alert variant="destructive">
+                  <AlertIndicator />
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : null}
 
               {session ? (
-                <Button variant="primary" fullWidth isPending={isConfirming} onPress={confirm}>
+                <Button
+                  variant="default"
+                  className="w-full"
+                  pending={isConfirming}
+                  onClick={confirm}
+                >
                   {activationContent.consent.confirmButton}
                 </Button>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <Typography.Paragraph color="muted" size="sm">
+                  <Text tone="muted" size="sm">
                     {activationContent.consent.needAccount}
-                  </Typography.Paragraph>
-                  <Button variant="primary" fullWidth onPress={() => goToAuth("/inscription")}>
+                  </Text>
+                  <Button
+                    variant="default"
+                    className="w-full"
+                    onClick={() => goToAuth("/inscription")}
+                  >
                     {activationContent.consent.signupButton}
                   </Button>
-                  <Button variant="outline" fullWidth onPress={() => goToAuth("/connexion")}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => goToAuth("/connexion")}
+                  >
                     {activationContent.consent.loginButton}
                   </Button>
                 </div>
               )}
             </>
           )}
-        </Card.Content>
-        <Card.Footer>
-          <RouterLink className="link text-sm" to="/">
+        </CardContent>
+        <CardFooter>
+          <RouterLink className={linkVariants()} to="/">
             {sharedContent.backHome}
           </RouterLink>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );

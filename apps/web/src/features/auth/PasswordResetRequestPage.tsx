@@ -1,21 +1,24 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
-import {
-  Alert,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import { passwordResetRequestSchema } from "@sorento/domain";
 import { fieldErrors } from "@/lib/zod-form-errors";
 import { authErrorMessage } from "@/auth/auth-error-messages";
 import { usePasswordResetRequestMutation } from "@/auth/use-auth-mutations";
 import { authContent } from "@/features/auth/content";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 export const PasswordResetRequestPage = () => {
   const request = usePasswordResetRequestMutation();
@@ -36,62 +39,65 @@ export const PasswordResetRequestPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{authContent.passwordResetRequest.title}</Card.Title>
-          <Card.Description>{authContent.passwordResetRequest.description}</Card.Description>
-        </Card.Header>
+        <CardHeader>
+          <CardTitle>{authContent.passwordResetRequest.title}</CardTitle>
+          <CardDescription>{authContent.passwordResetRequest.description}</CardDescription>
+        </CardHeader>
 
         {request.isSuccess ? (
-          <Card.Content>
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>
-                  {authContent.passwordResetRequest.confirmation}
-                </Alert.Description>
-              </Alert.Content>
+          <CardContent>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>{authContent.passwordResetRequest.confirmation}</AlertDescription>
             </Alert>
-          </Card.Content>
+          </CardContent>
         ) : (
-          <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            <Card.Content className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            <CardContent className="flex flex-col gap-4">
               {request.isError ? (
-                <Alert status="danger">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Description>{authErrorMessage(request.error)}</Alert.Description>
-                  </Alert.Content>
+                <Alert variant="destructive">
+                  <AlertIndicator />
+                  <AlertDescription>{authErrorMessage(request.error)}</AlertDescription>
                 </Alert>
               ) : null}
 
-              <TextField
-                isRequired
-                name="email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                isInvalid={Boolean(errors["email"])}
-              >
-                <Label>{authContent.passwordResetRequest.emailLabel}</Label>
-                <Input placeholder="vous@exemple.fr" />
+              <Field>
+                <FieldLabel htmlFor="email">
+                  {authContent.passwordResetRequest.emailLabel}
+                </FieldLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  aria-invalid={Boolean(errors["email"])}
+                  placeholder="vous@exemple.fr"
+                />
                 {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
-              </TextField>
-            </Card.Content>
-            <Card.Footer>
-              <Button type="submit" variant="primary" fullWidth isPending={request.isPending}>
+              </Field>
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="submit"
+                variant="default"
+                className="w-full"
+                pending={request.isPending}
+              >
                 {authContent.passwordResetRequest.submitButton}
               </Button>
-            </Card.Footer>
-          </Form>
+            </CardFooter>
+          </form>
         )}
 
-        <Card.Footer>
-          <Typography.Paragraph align="center" size="sm">
-            <RouterLink className="link" to="/connexion">
+        <CardFooter>
+          <Text align="center" size="sm">
+            <RouterLink className={linkVariants({ size: "inherit" })} to="/connexion">
               {authContent.passwordResetRequest.backToLogin}
             </RouterLink>
-          </Typography.Paragraph>
-        </Card.Footer>
+          </Text>
+        </CardFooter>
       </Card>
     </div>
   );

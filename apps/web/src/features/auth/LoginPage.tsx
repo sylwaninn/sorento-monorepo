@@ -1,23 +1,19 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
 import { z } from "zod";
-import {
-  Alert,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  Tabs,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import { magicLinkLoginSchema, passwordLoginSchema } from "@sorento/domain";
 import { fieldErrors } from "@/lib/zod-form-errors";
 import { authErrorMessage } from "@/auth/auth-error-messages";
 import { useMagicLinkLoginMutation, usePasswordLoginMutation } from "@/auth/use-auth-mutations";
 import { authContent } from "@/features/auth/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const loginModeSchema = z.enum(["password", "magic-link"]);
 
@@ -27,42 +23,31 @@ export const LoginPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{authContent.login.title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <Tabs
-            selectedKey={mode}
-            onSelectionChange={(key) => setMode(loginModeSchema.parse(String(key)))}
-          >
-            <Tabs.ListContainer>
-              <Tabs.List aria-label="Méthode de connexion">
-                <Tabs.Tab id="password">
-                  {authContent.login.passwordTab}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-                <Tabs.Tab id="magic-link">
-                  {authContent.login.magicLinkTab}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              </Tabs.List>
-            </Tabs.ListContainer>
-            <Tabs.Panel id="password">
+        <CardHeader>
+          <CardTitle>{authContent.login.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={mode} onValueChange={(key) => setMode(loginModeSchema.parse(String(key)))}>
+            <TabsList aria-label="Méthode de connexion">
+              <TabsTrigger value="password">{authContent.login.passwordTab}</TabsTrigger>
+              <TabsTrigger value="magic-link">{authContent.login.magicLinkTab}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="password">
               <PasswordLoginForm />
-            </Tabs.Panel>
-            <Tabs.Panel id="magic-link">
+            </TabsContent>
+            <TabsContent value="magic-link">
               <MagicLinkLoginForm />
-            </Tabs.Panel>
+            </TabsContent>
           </Tabs>
-        </Card.Content>
-        <Card.Footer>
-          <Typography.Paragraph align="center" size="sm">
+        </CardContent>
+        <CardFooter>
+          <Text align="center" size="sm">
             {authContent.login.noAccount}{" "}
-            <RouterLink className="link" to="/inscription">
+            <RouterLink className={linkVariants({ size: "inherit" })} to="/inscription">
               {authContent.login.signupLink}
             </RouterLink>
-          </Typography.Paragraph>
-        </Card.Footer>
+          </Text>
+        </CardFooter>
       </Card>
     </div>
   );
@@ -96,60 +81,62 @@ const PasswordLoginForm = () => {
   };
 
   return (
-    <Form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
       {login.isError ? (
-        <Alert status="danger">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{authErrorMessage(login.error)}</Alert.Description>
-            {emailNotConfirmed ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                isPending={resendMagicLink.isPending}
-                onPress={() => resendMagicLink.mutate(email)}
-              >
-                {authContent.login.resendConfirmationLink}
-              </Button>
-            ) : null}
-          </Alert.Content>
+        <Alert variant="destructive">
+          <AlertIndicator />
+          <AlertDescription>{authErrorMessage(login.error)}</AlertDescription>
+          {emailNotConfirmed ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              pending={resendMagicLink.isPending}
+              onClick={() => resendMagicLink.mutate(email)}
+            >
+              {authContent.login.resendConfirmationLink}
+            </Button>
+          ) : null}
         </Alert>
       ) : null}
 
-      <TextField
-        isRequired
-        name="email"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        isInvalid={Boolean(errors["email"])}
-      >
-        <Label>{authContent.login.emailLabel}</Label>
-        <Input placeholder="vous@exemple.fr" />
+      <Field>
+        <FieldLabel htmlFor="email">{authContent.login.emailLabel}</FieldLabel>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          aria-invalid={Boolean(errors["email"])}
+          placeholder="vous@exemple.fr"
+        />
         {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
-      </TextField>
+      </Field>
 
-      <TextField
-        isRequired
-        name="password"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        isInvalid={Boolean(errors["password"])}
-      >
-        <Label>{authContent.login.passwordLabel}</Label>
-        <Input placeholder="••••••••••••" />
+      <Field>
+        <FieldLabel htmlFor="password">{authContent.login.passwordLabel}</FieldLabel>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          aria-invalid={Boolean(errors["password"])}
+          placeholder="••••••••••••"
+        />
         {errors["password"] ? <FieldError>{errors["password"]}</FieldError> : null}
-      </TextField>
+      </Field>
 
-      <RouterLink className="link text-sm" to="/mot-de-passe-oublie">
+      <RouterLink className={linkVariants()} to="/mot-de-passe-oublie">
         {authContent.login.forgotPasswordLink}
       </RouterLink>
 
-      <Button type="submit" variant="primary" fullWidth isPending={login.isPending}>
+      <Button type="submit" variant="default" className="w-full" pending={login.isPending}>
         {authContent.login.submitButtonPassword}
       </Button>
-    </Form>
+    </form>
   );
 };
 
@@ -170,41 +157,39 @@ const MagicLinkLoginForm = () => {
   };
 
   return (
-    <Form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
       {magicLink.isError ? (
-        <Alert status="danger">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{authErrorMessage(magicLink.error)}</Alert.Description>
-          </Alert.Content>
+        <Alert variant="destructive">
+          <AlertIndicator />
+          <AlertDescription>{authErrorMessage(magicLink.error)}</AlertDescription>
         </Alert>
       ) : null}
 
       {magicLink.isSuccess ? (
-        <Alert status="success">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{authContent.login.magicLinkSent}</Alert.Description>
-          </Alert.Content>
+        <Alert variant="success">
+          <AlertIndicator />
+          <AlertDescription>{authContent.login.magicLinkSent}</AlertDescription>
         </Alert>
       ) : null}
 
-      <TextField
-        isRequired
-        name="email"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        isInvalid={Boolean(errors["email"])}
-      >
-        <Label>{authContent.login.emailLabel}</Label>
-        <Input placeholder="vous@exemple.fr" />
+      <Field>
+        <FieldLabel htmlFor="email">{authContent.login.emailLabel}</FieldLabel>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          aria-invalid={Boolean(errors["email"])}
+          placeholder="vous@exemple.fr"
+        />
         {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
-      </TextField>
+      </Field>
 
-      <Button type="submit" variant="primary" fullWidth isPending={magicLink.isPending}>
+      <Button type="submit" variant="default" className="w-full" pending={magicLink.isPending}>
         {authContent.login.submitButtonMagicLink}
       </Button>
-    </Form>
+    </form>
   );
 };

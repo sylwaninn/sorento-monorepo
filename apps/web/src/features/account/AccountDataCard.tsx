@@ -1,11 +1,32 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, AlertDialog, Button, Card, Typography } from "@heroui/react";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { sharedContent } from "@/components/content";
 import { accountContent } from "@/features/account/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const downloadJson = (payload: unknown, fileName: string): void => {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -43,81 +64,68 @@ export const AccountDataCard = () => {
   return (
     <>
       <Card>
-        <Card.Header>
-          <Card.Title>{accountContent.dataExport.title}</Card.Title>
-          <Card.Description>{accountContent.dataExport.description}</Card.Description>
-        </Card.Header>
-        <Card.Content>
+        <CardHeader>
+          <CardTitle>{accountContent.dataExport.title}</CardTitle>
+          <CardDescription>{accountContent.dataExport.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
           <ErrorAlert message={exportData.errorMessage} />
-        </Card.Content>
-        <Card.Footer>
+        </CardContent>
+        <CardFooter>
           <Button
             variant="ghost"
-            isPending={exportData.isPending}
-            onPress={() => exportData.mutate(undefined)}
+            pending={exportData.isPending}
+            onClick={() => exportData.mutate(undefined)}
           >
             {accountContent.dataExport.button}
           </Button>
-        </Card.Footer>
+        </CardFooter>
       </Card>
 
       <Card>
-        <Card.Header>
-          <Card.Title>{accountContent.deleteAccount.title}</Card.Title>
-          <Card.Description>{accountContent.deleteAccount.description}</Card.Description>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-3">
+        <CardHeader>
+          <CardTitle>{accountContent.deleteAccount.title}</CardTitle>
+          <CardDescription>{accountContent.deleteAccount.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
           {blocked ? (
-            <Alert status="warning">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>
-                  {accountContent.deleteAccount.ownedDossiersWarning}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="warning">
+              <AlertIndicator />
+              <AlertDescription>
+                {accountContent.deleteAccount.ownedDossiersWarning}
+              </AlertDescription>
             </Alert>
           ) : null}
           <ErrorAlert message={deleteAccount.errorMessage} />
-        </Card.Content>
-        <Card.Footer>
+        </CardContent>
+        <CardFooter>
           <AlertDialog>
-            <Button variant="danger" isDisabled={blocked || ownedDossiers.isPending}>
-              {accountContent.deleteAccount.button}
-            </Button>
-            <AlertDialog.Backdrop>
-              <AlertDialog.Container>
-                <AlertDialog.Dialog className="sm:max-w-[420px]">
-                  <AlertDialog.CloseTrigger />
-                  <AlertDialog.Header>
-                    <AlertDialog.Icon status="danger" />
-                    <AlertDialog.Heading>
-                      {accountContent.deleteAccount.confirmTitle}
-                    </AlertDialog.Heading>
-                  </AlertDialog.Header>
-                  <AlertDialog.Body>
-                    {/* The warning belongs before the irreversible action, not after it. */}
-                    <Typography.Paragraph size="sm">
-                      {accountContent.deleteAccount.confirmDescription}
-                    </Typography.Paragraph>
-                  </AlertDialog.Body>
-                  <AlertDialog.Footer>
-                    <Button slot="close" variant="ghost">
-                      {sharedContent.cancel}
-                    </Button>
-                    <Button
-                      slot="close"
-                      variant="danger"
-                      isPending={deleteAccount.isPending}
-                      onPress={() => deleteAccount.mutate(undefined)}
-                    >
-                      {accountContent.deleteAccount.confirmButton}
-                    </Button>
-                  </AlertDialog.Footer>
-                </AlertDialog.Dialog>
-              </AlertDialog.Container>
-            </AlertDialog.Backdrop>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={blocked || ownedDossiers.isPending}>
+                {accountContent.deleteAccount.button}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-105">
+              <AlertDialogHeader>
+                <AlertDialogTitle>{accountContent.deleteAccount.confirmTitle}</AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogDescription>
+                {/* The warning belongs before the irreversible action, not after it. */}
+                <Text size="sm">{accountContent.deleteAccount.confirmDescription}</Text>
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{sharedContent.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={deleteAccount.isPending}
+                  onClick={() => deleteAccount.mutate(undefined)}
+                >
+                  {accountContent.deleteAccount.confirmButton}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
           </AlertDialog>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </>
   );
