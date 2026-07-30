@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
 afterEach(() => {
   cleanup();
@@ -9,8 +9,17 @@ afterEach(() => {
 
 // The app reads its Supabase configuration at module load; tests never reach the network,
 // they mock the repositories, but the client still has to be constructible.
-vi.stubEnv("VITE_SUPABASE_URL", "http://localhost:57321");
-vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
+const stubConfiguration = () => {
+  vi.stubEnv("VITE_SUPABASE_URL", "http://localhost:57321");
+  vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
+};
+
+// Once at import time, because a test file's own imports are evaluated before any hook runs,
+// and again before each test, because a test exercising its own variable calls
+// vi.unstubAllEnvs() and would otherwise take the client's configuration down with it. A
+// developer machine has a real .env and never notices; CI has none and fails on the next import.
+stubConfiguration();
+beforeEach(stubConfiguration);
 
 /**
  * Browser APIs jsdom does not implement but the component library measures with. Without them a component
