@@ -24,7 +24,7 @@ mobile workspace here, and none is to be added.
 - Tailwind everywhere else, driven by the tokens in apps/web/src/index.css.
   That file is the ONLY authored stylesheet: it holds `@theme`, the brand
   tokens and a minimal base layer. Every other style is a utility on the
-  element.
+  element. Enforced by pnpm check:styles.
 - A colour is always a semantic token (`bg-card`, `text-muted-foreground`,
   `bg-sage`), never a raw Tailwind palette utility and never a literal.
   A recurring size, radius, shadow or type scale earns a token rather than an
@@ -35,10 +35,8 @@ mobile workspace here, and none is to be added.
   the right dimensions and satisfies `complete`, `naturalWidth` and `decode()`, and Chromium
   then paints it as a fully transparent surface. Only a check that samples the pixels sees
   it, and public-quality.e2e.ts does, per viewport, because srcset is what picks the file.
-- A visual change carries its own evidence in the same commit: the Playwright
-  screenshot baselines are regenerated, and a numeric layout budget the journeys
-  assert is moved with the design that moved it. A stale baseline is a red suite
-  nobody trusts, and the next real regression hides behind it.
+- Nothing sits in apps/web/public that no source file names. A bundle drops what it does not
+  import; the public directory is copied verbatim and shipped. Enforced by pnpm check:styles.
 - No eyebrow or kicker label above a heading, ever: the parenthesised
   uppercase "( LABEL )" line with its coloured dot was removed deliberately
   and must never come back, nor any small tracked-out uppercase label
@@ -55,6 +53,41 @@ mobile workspace here, and none is to be added.
   (no eligibility condition, no deadline computation).
 - Import boundaries are enforced by ESLint (eslint-plugin-boundaries).
   This is a project rule, not a suggestion. Do not work around it.
+
+### Front-end craft
+
+- A component file stays under 300 lines. Past that it is doing more than one
+  job, and the split is cheaper now than after the next change. Enforced by
+  pnpm check:styles, which exempts tests and the shadcn registry.
+- One kind of thing per module, and a file is exactly one of them: a `content/`
+  module holds French copy and nothing else, `presentation.ts` maps a content
+  id to an icon or a tone, `sections/` and `components/` hold declarative
+  markup, and a `use-*.ts` hook holds behaviour. A component that reads the
+  scroll position, observes the viewport or holds a timer moves that logic into
+  a hook beside it, where it can be tested without a screen.
+- No user-facing string written in a component. Every label, alt text and
+  accessible name comes from the feature's content catalog. Enforced on the
+  public surface by pnpm check:styles.
+- No literal URL or anchor in a component: every public destination comes from
+  @/navigation. Enforced by pnpm check:styles.
+- Internal navigation goes through the router, never a bare href. A full
+  reload throws away the bundle the visitor has already paid for, which is the
+  whole point of the route-level code splitting in routes.tsx. `asChild` is how
+  a styled component borrows the router's link without knowing it exists.
+- Say it once. A value repeated in two files is one rename away from
+  disagreeing: name it in the theme, in the content catalog or in a shared
+  constant. When two lists genuinely have to exist twice, a check compares
+  them; never write the same list twice and hope.
+- Nothing ships without a reader. An exported symbol, a prop, a variant, a
+  theme token, a data attribute or an image that nothing reads is deleted, not
+  kept in case. "In case" is what a git history is for. A token nobody names is
+  worse than clutter: it reads as part of the system, so the next person picks
+  it believing the design calls for it. pnpm check:styles refuses an unnamed
+  theme token and an unnamed public asset; the rest is on review.
+- A visual change carries its own evidence in the same commit: the Playwright
+  screenshot baselines are regenerated, and a numeric layout budget the journeys
+  assert is moved with the design that moved it. A stale baseline is a red suite
+  nobody trusts, and the next real regression hides behind it.
 
 ### Security
 
@@ -163,9 +196,14 @@ mobile workspace here, and none is to be added.
   construction.
 - Coverage thresholds are a ratchet: up, never down. Lowering one to make a
   build green is the change under review, not a fix.
-- Before marking a task done: pnpm verify must pass. When the change touches
-  the database, an Edge Function or a user journey, also pnpm test:integration
-  and pnpm test:e2e (both need supabase start).
+- Before marking a task done: pnpm verify must pass.
+- pnpm test:integration and pnpm test:e2e (both need supabase start) are NOT
+  run after every task. Run them only: when explicitly asked, right before
+  opening a pull request, and in GitHub CI. Assume CI covers the full suite;
+  do not re-run it locally out of caution.
+- A dev server started to check a change (pnpm dev, supabase start) stays up
+  once the task is done. Never stop or kill it unless asked, it is running
+  because the user is using it.
 - The full strategy, and what each layer deliberately does not cover, is in
   TESTING.md.
 - Documentation follows the change that makes it stale, in the same PR.
