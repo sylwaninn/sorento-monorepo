@@ -1,5 +1,5 @@
 import { linkVariants } from "@/components/ui/link";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -149,6 +149,8 @@ const DesignateForm = ({ dossierId }: { dossierId: string }) => {
   const [email, setEmail] = useState("");
   const [futureRole, setFutureRole] = useState<TrustedContactFutureRole>("collaborator");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // The trigger is what carries the name, so the visible label has to point at it.
+  const futureRoleId = useId();
 
   const designate = useAppMutation({
     mutationFn: (input: DesignateTrustedContactInput) =>
@@ -204,8 +206,8 @@ const DesignateForm = ({ dossierId }: { dossierId: string }) => {
               setFutureRole(designateTrustedContactInputSchema.shape.futureRole.parse(value))
             }
           >
-            <Label>{dossierContent.trustedContact.futureRoleLabel}</Label>
-            <SelectTrigger>
+            <Label htmlFor={futureRoleId}>{dossierContent.trustedContact.futureRoleLabel}</Label>
+            <SelectTrigger id={futureRoleId}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
