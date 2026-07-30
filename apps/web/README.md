@@ -27,6 +27,24 @@ theme is what makes it ours. Where a component gained an API the whole app needs
 button, an `asChild` card title, an alert that derives its own icon), the reason sits in a
 comment beside it.
 
+A feature that grows past a screen splits the same way the homepage does: `sections/` for the
+bands of the page, `components/` for the pieces they share, `content/` for one copy module per
+section, and `presentation.ts` for the visuals keyed by content id. Nothing in `components/`
+imports a feature; a shared component that needs feature data takes it as a prop.
+
+## Images
+
+Every photograph ships as an AVIF and a JPEG at each width in `public/images/`, listed in the
+feature's `presentation.ts` and served through `OptimizedPicture`. The hero is preloaded from
+`index.html`, whose two candidate lists are compared against that catalog by
+`features/landing/presentation.test.ts`: a preload that selects a different candidate downloads
+the largest asset on the page twice.
+
+Encode the AVIF variants with libaom (`sharp`, `avifenc`), never with macOS `sips`. Its output
+carries the right dimensions and satisfies `complete`, `naturalWidth` and even `decode()`, and
+Chromium then paints it as a fully transparent surface. The homepage shipped its hero invisible
+on every viewport above 768px that way.
+
 ## Rules that bite here
 
 - **shadcn/ui components only.** Composing them is encouraged; reimplementing one is forbidden. Check every prop against the shadcn docs (MCP) and add components with the CLI, never by hand. A hand-drawn equivalent of something the registry ships (a dialog, a disclosure) is the bug, even when it looks right.
