@@ -1,4 +1,4 @@
-import { Alert } from "@heroui/react";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
 
 export interface CautionNoticeProps {
   /**
@@ -10,10 +10,8 @@ export interface CautionNoticeProps {
 }
 
 export const CautionNotice = ({ cautionText }: CautionNoticeProps) => (
-  <Alert status="default">
-    <Alert.Indicator />
-    <Alert.Content>
-      <Alert.Description>{cautionText}</Alert.Description>
-    </Alert.Content>
+  <Alert>
+    <AlertIndicator />
+    <AlertDescription>{cautionText}</AlertDescription>
   </Alert>
 );
