@@ -70,6 +70,8 @@ const SCRIPT_DESCRIPTIONS = {
   "test:functions": "Deno tests for the Edge Functions' shared modules.",
   "check:functions": "Verify the Deno import map, then lint and typecheck every Edge Function.",
   "check:tests": "Structural test audit: every rule module has a test, every test has a subject.",
+  "check:styles":
+    "Reject stray stylesheets, inline styles and raw palette colors outside the shared theme.",
   "test:e2e": "Playwright end-to-end journeys (needs the local stack and a production build).",
   "coverage:diff":
     "Coverage of the lines the current branch changed, from the existing lcov reports.",

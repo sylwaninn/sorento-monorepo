@@ -46,26 +46,26 @@ If not already on a feature branch:
 **How to split commits:**
 
 1. Analyze all changed files and group them by concern:
-   - Domain schemas (packages/domain) and business rules with their tests
-     (packages/core)
-   - Database migrations, RLS policies and Edge Functions (supabase)
-   - UI assembly (apps/web: screens, components, routing)
-   - E2E journeys and their copy mirrors (e2e)
+   - Business rules (`packages/core`) and the schemas they read (`packages/domain`)
+   - Data access and migrations (`packages/supabase-client`, `supabase/`)
+   - Feature logic (screens, hooks, repositories)
+   - UI and design tokens (`apps/web/src/index.css`, the shared components)
+   - User-facing copy (a feature's `content.ts`, the catalog)
    - Refactoring (renaming, extracting, restructuring existing code)
-   - Configuration (build, linting, CI)
+   - Configuration (build, linting, CI, quality gates)
    - Bug fixes
 2. Each group becomes its own commit
 3. Order commits logically: foundational changes first, dependent changes
    after (domain, then core, then supabase, then web, then e2e)
 
-**Example split for a new benefit journey:**
+**Example split for a homepage rework:**
 
 ```
-feat(domain): add allowance schema and inferred types
-feat(core): add allowance eligibility rule with unit tests
-feat(supabase): add allowance catalog migration with RLS and tests
-feat(web): add allowance screen composing HeroUI components
-test(e2e): cover the allowance journey with its copy mirror
+refactor(web): route public links through the router instead of a full reload
+style(web): drop the theme tokens nothing names
+feat(web): generate robots.txt and sitemap.xml from the route table
+fix(web): re-encode the hero AVIF variants Chromium paints as transparent
+test(web): cover the landing header hook and the crawler files
 ```
 
 **For each commit:**
@@ -91,6 +91,30 @@ pnpm verify
 ```
 
 This must pass with zero warnings/errors. Fix any issues before proceeding.
+
+If the branch touches the database, an Edge Function or a user journey
+(check with `git diff main...HEAD --name-only`), also run, needs
+`supabase start` first:
+
+```bash
+pnpm test:integration
+pnpm test:e2e
+```
+
+These are not run after every task, only here, before opening the PR
+(GitHub CI also runs them on the PR itself).
+
+If the branch changes anything a public page renders, the Playwright screenshot
+baselines are part of the change. Review the diff images, then regenerate them
+in a commit of their own:
+
+```bash
+pnpm --filter @sorento/e2e exec playwright test tests/public-quality.e2e.ts --update-snapshots
+```
+
+A numeric layout budget a journey asserts (a maximum action width, for instance)
+moves with the design that moved it. Never relax one to make a run green without
+saying so in the PR: that is the change under review.
 
 ### 4b. Anti-regression Guards (MANDATORY)
 
@@ -144,7 +168,7 @@ Steps 5.1 and 5.3 always run. Step 5.2 may be skipped only when `pnpm check:docs
 
 ### 5b. Check Legal Pages (if needed)
 
-If the PR introduces changes that affect legal obligations, check whether the legal pages (`apps/web/src/features/legal/content.ts`, rendered by `LegalPage.tsx`) need updating. Look for:
+If the PR introduces changes that affect legal obligations, check whether the three legal documents in `apps/web/src/features/legal/content.ts` need updating. Look for:
 
 - New **third-party services** or SDKs added (e.g., analytics, crash reporting, payment providers)
 - Changes to **data collection** (new personal data fields, new tracking events)
@@ -154,7 +178,7 @@ If the PR introduces changes that affect legal obligations, check whether the le
 - Changes to the **hosting infrastructure** (new providers)
 - Addition of **paid features** or subscription model
 
-If any of these are detected, update the relevant sections of the legal content (user-facing copy stays in French) and its last-updated date. The commit uses `chore(web): update legal pages`.
+If any of these are detected, update the relevant sections of `legalContent` (French, following WORDING.md) and check whether `public-pages.e2e.ts` still names the sections it asserts. The legal pages commit uses `chore(web): update legal pages`.
 
 If none of the above apply, skip this step.
 
@@ -217,6 +241,7 @@ Bad: `Updated some dossier stuff`
 - [ ] `pnpm check:docs` passes (generated README blocks in sync)
 - [ ] README prose updated if env vars, scripts, deps, or structure changed (via `/technical-writer`)
 - [ ] CLAUDE.md / SECURITY.md / TESTING.md audited against the diff by the subagent (step 5.3)
+- [ ] Screenshot baselines regenerated if a public page changed, in a commit of their own
 - [ ] Legal pages updated if new third-party services, data collection, or hosting changes
 - [ ] Branch name follows conventions
 - [ ] PR description is complete

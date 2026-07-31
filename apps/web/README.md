@@ -22,15 +22,28 @@ src/
 └── routes.tsx     # Route table
 ```
 
+A feature that grows past a screen splits the same way the homepage does: `sections/` for the
+bands of the page, `components/` for the pieces they share, `content/` for one copy module per
+section, and `presentation.ts` for the visuals keyed by content id. Nothing in `components/`
+imports a feature; a shared component that needs feature data takes it as a prop.
+
+## Styling
+
+`src/index.css` is the only authored stylesheet. It declares the brand palette, then maps it
+onto the shadcn token names inside `@theme`, along with the type scale, radii, containers,
+shadows, easings and the keyframes the homepage animates with. Everything else is a utility on
+the element, and a colour is always a semantic token (`bg-card`, `text-muted-foreground`,
+`bg-sage`), never a raw Tailwind palette utility and never a literal.
+
 `components/ui/` is the shadcn registry, added through its CLI and kept close to upstream: the
 theme is what makes it ours. Where a component gained an API the whole app needs (a `pending`
 button, an `asChild` card title, an alert that derives its own icon), the reason sits in a
 comment beside it.
 
-A feature that grows past a screen splits the same way the homepage does: `sections/` for the
-bands of the page, `components/` for the pieces they share, `content/` for one copy module per
-section, and `presentation.ts` for the visuals keyed by content id. Nothing in `components/`
-imports a feature; a shared component that needs feature data takes it as a prop.
+`pnpm check:styles` enforces all of it, along with the 300-line component limit, the shared
+components' independence from features, the single navigation source, the absence of a native
+`<a>` or `<button>` outside the registry, and two audits against dead weight: a theme token
+nothing names, and a file in `public/` no source file names.
 
 ## Images
 
