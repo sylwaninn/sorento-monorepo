@@ -75,7 +75,7 @@ const LegalPage = ({ document }: { document: LegalDocument }) => (
                 {section.title}
               </Heading>
             </CardHeader>
-            <CardContent className="flex flex-col gap-[0.9rem] p-0">
+            <CardContent className="gap-snug flex flex-col p-0">
               {section.paragraphs.map((paragraph) => (
                 <Text key={paragraph} className="max-w-prose leading-[1.75]" tone="muted">
                   {paragraph}

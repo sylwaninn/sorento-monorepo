@@ -62,7 +62,7 @@ export const ProductPreview = () => (
             <article
               key={item.id}
               className={cn(
-                "border-ink/8 bg-card shadow-preview grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.9rem] rounded-[1.1rem] border px-4 py-4",
+                "border-ink/8 bg-card shadow-preview gap-snug grid grid-cols-[auto_minmax(0,1fr)_auto] items-center rounded-[1.1rem] border px-4 py-4",
                 isCompleted && "border-sage-deep/24 bg-surface-done",
               )}
             >
