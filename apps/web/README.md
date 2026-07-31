@@ -43,7 +43,8 @@ the largest asset on the page twice.
 Encode the AVIF variants with libaom (`sharp`, `avifenc`), never with macOS `sips`. Its output
 carries the right dimensions and satisfies `complete`, `naturalWidth` and even `decode()`, and
 Chromium then paints it as a fully transparent surface. The homepage shipped its hero invisible
-on every viewport above 768px that way.
+on every viewport above 768px that way. `public-quality.e2e.ts` samples the painted pixels of
+every image on the page, at each viewport, which is the only check that sees it.
 
 ## Rules that bite here
 

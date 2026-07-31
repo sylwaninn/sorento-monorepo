@@ -25,6 +25,13 @@ export default defineConfig({
   reporter: isCI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  /**
+   * The platform is part of the path because a baseline is a rendering, and a rendering is not
+   * portable: the same page hinted by macOS and by Linux differs by more pixels than any
+   * threshold worth setting. CI is the authority, and its set is the one committed; a developer
+   * machine writes its own beside it or compares against nothing.
+   */
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}-{projectName}-{platform}{ext}",
 
   use: {
     baseURL: APP_URL,
