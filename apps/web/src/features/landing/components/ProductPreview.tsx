@@ -13,6 +13,8 @@ const { progress } = preview;
 
 const WINDOW_DOTS = ["bg-window-close", "bg-window-minimise", "bg-window-expand"] as const;
 
+// The cast restates what the construction guarantees: Object.fromEntries erases the key type,
+// and the entries come from the same members list FamilyMemberId is derived from.
 const memberNameById = Object.fromEntries(
   landingContent.familyStory.crew.members.map((member) => [member.id, member.name]),
 ) as Record<keyof typeof memberPortraitById, string>;
