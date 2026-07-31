@@ -1,16 +1,6 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
-import {
-  Alert,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import { emailChangeSchema, passwordChangeSchema } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
 import { authErrorMessage } from "@/auth/auth-error-messages";
@@ -20,12 +10,18 @@ import { NotificationPreferencesCard } from "@/features/account/NotificationPref
 import { AccountDataCard } from "@/features/account/AccountDataCard";
 import { accountContent } from "@/features/account/content";
 import { sharedContent } from "@/components/content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 export const SettingsPage = () => (
   <div className="flex min-h-screen flex-col items-center gap-6 p-4 py-12">
     <div className="flex w-full max-w-md items-center justify-between">
-      <Typography.Heading level={1}>{accountContent.title}</Typography.Heading>
-      <RouterLink className="link text-sm" to="/mes-dossiers">
+      <Heading level={1}>{accountContent.title}</Heading>
+      <RouterLink className={linkVariants()} to="/mes-dossiers">
         {sharedContent.back}
       </RouterLink>
     </div>
@@ -56,60 +52,61 @@ const EmailChangeCard = () => {
 
   return (
     <Card className="w-full max-w-md">
-      <Card.Header>
-        <Card.Title>{accountContent.email.title}</Card.Title>
-      </Card.Header>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
-          <Alert status="default">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>{accountContent.email.notice}</Alert.Description>
-            </Alert.Content>
+      <CardHeader>
+        <CardTitle>{accountContent.email.title}</CardTitle>
+      </CardHeader>
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
+          <Alert>
+            <AlertIndicator />
+            <AlertDescription>{accountContent.email.notice}</AlertDescription>
           </Alert>
 
           {emailChange.isSuccess ? (
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{accountContent.email.success}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>{accountContent.email.success}</AlertDescription>
             </Alert>
           ) : null}
 
           {emailChange.isError ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{authErrorMessage(emailChange.error)}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertDescription>{authErrorMessage(emailChange.error)}</AlertDescription>
             </Alert>
           ) : null}
 
-          <TextField isDisabled name="currentEmail" value={user?.email ?? ""} onChange={() => {}}>
-            <Label>{accountContent.email.currentLabel}</Label>
-            <Input />
-          </TextField>
+          <Field>
+            <FieldLabel htmlFor="currentEmail">{accountContent.email.currentLabel}</FieldLabel>
+            <Input disabled id="currentEmail" name="currentEmail" value={user?.email ?? ""} />
+          </Field>
 
-          <TextField
-            isRequired
-            name="newEmail"
-            type="email"
-            value={newEmail}
-            onChange={setNewEmail}
-            isInvalid={Boolean(errors["newEmail"])}
-          >
-            <Label>{accountContent.email.newLabel}</Label>
-            <Input placeholder="nouvelle-adresse@exemple.fr" />
+          <Field>
+            <FieldLabel htmlFor="newEmail">{accountContent.email.newLabel}</FieldLabel>
+            <Input
+              id="newEmail"
+              name="newEmail"
+              type="email"
+              required
+              value={newEmail}
+              onChange={(event) => setNewEmail(event.target.value)}
+              aria-invalid={Boolean(errors["newEmail"])}
+              placeholder="nouvelle-adresse@exemple.fr"
+            />
             {errors["newEmail"] ? <FieldError>{errors["newEmail"]}</FieldError> : null}
-          </TextField>
-        </Card.Content>
-        <Card.Footer>
-          <Button type="submit" variant="primary" fullWidth isPending={emailChange.isPending}>
+          </Field>
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="submit"
+            variant="default"
+            className="w-full"
+            pending={emailChange.isPending}
+          >
             {accountContent.email.button}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };
@@ -149,78 +146,89 @@ const PasswordChangeCard = () => {
 
   return (
     <Card className="w-full max-w-md">
-      <Card.Header>
-        <Card.Title>{accountContent.password.title}</Card.Title>
-      </Card.Header>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
+      <CardHeader>
+        <CardTitle>{accountContent.password.title}</CardTitle>
+      </CardHeader>
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
           {passwordChange.isSuccess ? (
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{accountContent.password.success}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>{accountContent.password.success}</AlertDescription>
             </Alert>
           ) : null}
 
           {passwordChange.isError ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{authErrorMessage(passwordChange.error)}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertDescription>{authErrorMessage(passwordChange.error)}</AlertDescription>
             </Alert>
           ) : null}
 
-          <TextField
-            isRequired
-            name="currentPassword"
-            type="password"
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            isInvalid={Boolean(errors["currentPassword"])}
-          >
-            <Label>{accountContent.password.currentLabel}</Label>
-            <Input placeholder="••••••••••••" />
+          <Field>
+            <FieldLabel htmlFor="currentPassword">
+              {accountContent.password.currentLabel}
+            </FieldLabel>
+            <Input
+              id="currentPassword"
+              name="currentPassword"
+              type="password"
+              required
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              aria-invalid={Boolean(errors["currentPassword"])}
+              placeholder="••••••••••••"
+            />
             {errors["currentPassword"] ? (
               <FieldError>{errors["currentPassword"]}</FieldError>
             ) : null}
-          </TextField>
+          </Field>
 
-          <TextField
-            isRequired
-            name="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={setNewPassword}
-            isInvalid={Boolean(errors["newPassword"])}
-          >
-            <Label>{accountContent.password.newLabel}</Label>
-            <Input placeholder="••••••••••••" />
+          <Field>
+            <FieldLabel htmlFor="newPassword">{accountContent.password.newLabel}</FieldLabel>
+            <Input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              required
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              aria-invalid={Boolean(errors["newPassword"])}
+              placeholder="••••••••••••"
+            />
             {errors["newPassword"] ? <FieldError>{errors["newPassword"]}</FieldError> : null}
-          </TextField>
+          </Field>
 
-          <TextField
-            isRequired
-            name="confirmNewPassword"
-            type="password"
-            value={confirmNewPassword}
-            onChange={setConfirmNewPassword}
-            isInvalid={Boolean(errors["confirmNewPassword"])}
-          >
-            <Label>{accountContent.password.confirmLabel}</Label>
-            <Input placeholder="••••••••••••" />
+          <Field>
+            <FieldLabel htmlFor="confirmNewPassword">
+              {accountContent.password.confirmLabel}
+            </FieldLabel>
+            <Input
+              id="confirmNewPassword"
+              name="confirmNewPassword"
+              type="password"
+              required
+              value={confirmNewPassword}
+              onChange={(event) => setConfirmNewPassword(event.target.value)}
+              aria-invalid={Boolean(errors["confirmNewPassword"])}
+              placeholder="••••••••••••"
+            />
             {errors["confirmNewPassword"] ? (
               <FieldError>{errors["confirmNewPassword"]}</FieldError>
             ) : null}
-          </TextField>
-        </Card.Content>
-        <Card.Footer>
-          <Button type="submit" variant="primary" fullWidth isPending={passwordChange.isPending}>
+          </Field>
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="submit"
+            variant="default"
+            className="w-full"
+            pending={passwordChange.isPending}
+          >
             {accountContent.password.button}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

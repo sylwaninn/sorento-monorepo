@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, Typography } from "@heroui/react";
 import { InlineLoader } from "@/components/PageLoader";
 import { dossierContent } from "@/features/dossier/content";
 import type { DossierContext } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Card, CardContent } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
 
 export interface HistoryTabProps {
   dossierId: string;
@@ -24,11 +25,11 @@ export const HistoryTab = ({ dossierId, procedureId, access }: HistoryTabProps) 
 
   return (
     <Card>
-      <Card.Content className="flex flex-col gap-3 py-4">
+      <CardContent className="flex flex-col gap-3 py-4">
         {entries.length === 0 ? (
-          <Typography.Paragraph color="muted" size="sm">
+          <Text tone="muted" size="sm">
             {dossierContent.procedureDetail.history.empty}
-          </Typography.Paragraph>
+          </Text>
         ) : (
           entries.map((entry) => (
             <div key={entry.id} className="flex justify-between text-sm">
@@ -39,13 +40,11 @@ export const HistoryTab = ({ dossierId, procedureId, access }: HistoryTabProps) 
                   : access.firstNameOf(entry.actorId)}{" "}
                 {dossierContent.activity.actionLabels[entry.actionType]}
               </span>
-              <Typography color="muted">
-                {new Date(entry.createdAt).toLocaleString("fr-FR")}
-              </Typography>
+              <Text tone="muted">{new Date(entry.createdAt).toLocaleString("fr-FR")}</Text>
             </div>
           ))
         )}
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 };

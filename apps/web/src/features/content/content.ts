@@ -14,8 +14,8 @@ export const contentPagesContent = {
   cta: {
     title: "Savoir ce qui vous concerne, vous",
     description:
-      "Le diagnostic est gratuit, sans compte, et vous dit quelles démarches et quelles aides s'appliquent à votre situation.",
-    button: "Commencer mon diagnostic",
+      "Répondez à quelques questions, gratuitement et sans compte : vous découvrez les démarches et les aides qui pourraient s'appliquer à votre situation.",
+    button: "Faire le point sur ma situation",
   },
 
   articles,

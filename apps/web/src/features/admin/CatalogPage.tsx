@@ -1,54 +1,45 @@
+import { linkVariants } from "@/components/ui/link";
 import { Link as RouterLink } from "react-router";
-import { Tabs, Typography } from "@heroui/react";
 import { sharedContent } from "@/components/content";
 import { adminContent } from "@/features/admin/content";
 import { BenefitsTab } from "@/features/admin/catalog/BenefitsTab";
 import { ConditionsTab } from "@/features/admin/catalog/ConditionsTab";
 import { LetterTemplatesTab } from "@/features/admin/catalog/LetterTemplatesTab";
 import { ProceduresTab } from "@/features/admin/catalog/ProceduresTab";
+import { Heading } from "@/components/ui/typography";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const CatalogPage = () => (
   <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
     <div className="flex items-center justify-between">
-      <Typography.Heading level={1}>{adminContent.catalog.title}</Typography.Heading>
-      <RouterLink className="link text-sm" to="/admin">
+      <Heading level={1}>{adminContent.catalog.title}</Heading>
+      <RouterLink className={linkVariants()} to="/admin">
         {sharedContent.back}
       </RouterLink>
     </div>
 
-    <Tabs>
-      <Tabs.ListContainer>
-        <Tabs.List aria-label={adminContent.catalog.title}>
-          <Tabs.Tab id="procedures">
-            {adminContent.catalog.tabs.procedures}
-            <Tabs.Indicator />
-          </Tabs.Tab>
-          <Tabs.Tab id="benefits">
-            {adminContent.catalog.tabs.benefits}
-            <Tabs.Indicator />
-          </Tabs.Tab>
-          <Tabs.Tab id="conditions">
-            {adminContent.catalog.tabs.conditions}
-            <Tabs.Indicator />
-          </Tabs.Tab>
-          <Tabs.Tab id="letterTemplates">
-            {adminContent.catalog.tabs.letterTemplates}
-            <Tabs.Indicator />
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs.ListContainer>
-      <Tabs.Panel className="pt-4" id="procedures">
+    {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
+    <Tabs defaultValue="procedures">
+      <TabsList aria-label={adminContent.catalog.title}>
+        <TabsTrigger value="procedures">{adminContent.catalog.tabs.procedures}</TabsTrigger>
+        <TabsTrigger value="benefits">{adminContent.catalog.tabs.benefits}</TabsTrigger>
+        <TabsTrigger value="conditions">{adminContent.catalog.tabs.conditions}</TabsTrigger>
+        <TabsTrigger value="letterTemplates">
+          {adminContent.catalog.tabs.letterTemplates}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent className="pt-4" value="procedures">
         <ProceduresTab />
-      </Tabs.Panel>
-      <Tabs.Panel className="pt-4" id="benefits">
+      </TabsContent>
+      <TabsContent className="pt-4" value="benefits">
         <BenefitsTab />
-      </Tabs.Panel>
-      <Tabs.Panel className="pt-4" id="conditions">
+      </TabsContent>
+      <TabsContent className="pt-4" value="conditions">
         <ConditionsTab />
-      </Tabs.Panel>
-      <Tabs.Panel className="pt-4" id="letterTemplates">
+      </TabsContent>
+      <TabsContent className="pt-4" value="letterTemplates">
         <LetterTemplatesTab />
-      </Tabs.Panel>
+      </TabsContent>
     </Tabs>
   </div>
 );

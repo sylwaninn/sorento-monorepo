@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
 afterEach(() => {
   cleanup();
@@ -9,11 +9,20 @@ afterEach(() => {
 
 // The app reads its Supabase configuration at module load; tests never reach the network,
 // they mock the repositories, but the client still has to be constructible.
-vi.stubEnv("VITE_SUPABASE_URL", "http://localhost:57321");
-vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
+const stubConfiguration = () => {
+  vi.stubEnv("VITE_SUPABASE_URL", "http://localhost:57321");
+  vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
+};
+
+// Once at import time, because a test file's own imports are evaluated before any hook runs,
+// and again before each test, because a test exercising its own variable calls
+// vi.unstubAllEnvs() and would otherwise take the client's configuration down with it. A
+// developer machine has a real .env and never notices; CI has none and fails on the next import.
+stubConfiguration();
+beforeEach(stubConfiguration);
 
 /**
- * Browser APIs jsdom does not implement but HeroUI measures with. Without them a component
+ * Browser APIs jsdom does not implement but the component library measures with. Without them a component
  * throws on mount into React's error boundary, which reads as a rendered page: the test passes
  * while the screen is broken. Stubs, not fakes: nothing here asserts on layout.
  */
@@ -24,8 +33,13 @@ class ObserverStub {
   takeRecords = (): [] => [];
 }
 
-Object.defineProperty(globalThis, "ResizeObserver", { writable: true, value: ObserverStub });
-Object.defineProperty(globalThis, "IntersectionObserver", { writable: true, value: ObserverStub });
+// Configurable, so a test with something to say about visibility can put its own recorder in
+// place through vi.stubGlobal and have it restored afterwards.
+const stubGlobal = (name: string, value: unknown) =>
+  Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+
+stubGlobal("ResizeObserver", ObserverStub);
+stubGlobal("IntersectionObserver", ObserverStub);
 
 Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
@@ -51,6 +65,22 @@ if (!globalThis.HTMLElement.prototype.scrollTo) {
  */
 if (!globalThis.Element.prototype.getAnimations) {
   globalThis.Element.prototype.getAnimations = (): Animation[] => [];
+}
+
+/**
+ * Pointer capture and scrolling, which the registry's select calls the moment its trigger is
+ * pressed. jsdom implements neither, and the throw lands outside React: the listbox never opens
+ * and the test reads as "the option is not there" rather than as "the environment is missing an
+ * API". Answering false is what a mouse that has captured nothing would answer.
+ */
+if (!globalThis.Element.prototype.hasPointerCapture) {
+  globalThis.Element.prototype.hasPointerCapture = (): boolean => false;
+  globalThis.Element.prototype.setPointerCapture = (): void => {};
+  globalThis.Element.prototype.releasePointerCapture = (): void => {};
+}
+
+if (!globalThis.Element.prototype.scrollIntoView) {
+  globalThis.Element.prototype.scrollIntoView = (): void => {};
 }
 
 /**

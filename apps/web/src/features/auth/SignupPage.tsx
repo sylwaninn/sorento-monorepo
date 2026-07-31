@@ -1,18 +1,6 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink, useNavigate } from "react-router";
-import {
-  Alert,
-  Button,
-  Card,
-  Checkbox,
-  Description,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import { signupSchema } from "@sorento/domain";
 import { env } from "@/lib/env";
 import { fieldErrors } from "@/lib/zod-form-errors";
@@ -20,6 +8,20 @@ import { authErrorMessage } from "@/auth/auth-error-messages";
 import { useDevSignupMutation, useSignupMutation } from "@/auth/use-auth-mutations";
 import { attachDiagnosticFromSession } from "@/features/diagnostic/attach-diagnostic";
 import { authContent } from "@/features/auth/content";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -65,107 +67,109 @@ export const SignupPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{authContent.signup.title}</Card.Title>
-          <Card.Description>{authContent.signup.description}</Card.Description>
-        </Card.Header>
+        <CardHeader>
+          <CardTitle>{authContent.signup.title}</CardTitle>
+          <CardDescription>{authContent.signup.description}</CardDescription>
+        </CardHeader>
         {/*
-          Zod owns this form's validation, so native validation must not also run: it blocks the
-          submit before onSubmit fires, and the required checkbox's real input is hidden behind
-          HeroUI's control, leaving the browser's message nothing to point at. Pressing the button
-          with the terms unticked did nothing at all, with no explanation on screen.
+          Zod owns this form's validation, so the browser's must not also run: it blocks the
+          submit before onSubmit fires, and the terms checkbox is a button rather than a native
+          input, leaving the browser's message nothing to point at. Pressing the button with the
+          terms unticked did nothing at all, with no explanation on screen.
         */}
-        <Form className="flex flex-col gap-4" validationBehavior="aria" onSubmit={onSubmit}>
-          <Card.Content className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" noValidate onSubmit={onSubmit}>
+          <CardContent className="flex flex-col gap-4">
             {submitError ? (
-              <Alert status="danger">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{authErrorMessage(submitError)}</Alert.Description>
-                </Alert.Content>
+              <Alert variant="destructive">
+                <AlertIndicator />
+                <AlertDescription>{authErrorMessage(submitError)}</AlertDescription>
               </Alert>
             ) : null}
 
-            <TextField
-              isRequired
-              name="email"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              isInvalid={Boolean(errors["email"])}
-            >
-              <Label>{authContent.signup.emailLabel}</Label>
-              <Input placeholder="vous@exemple.fr" />
+            <Field>
+              <FieldLabel htmlFor="email">{authContent.signup.emailLabel}</FieldLabel>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(errors["email"])}
+                placeholder="vous@exemple.fr"
+              />
               {errors["email"] ? <FieldError>{errors["email"]}</FieldError> : null}
-            </TextField>
+            </Field>
 
-            <TextField
-              isRequired
-              name="password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              isInvalid={Boolean(errors["password"])}
-            >
-              <Label>{authContent.signup.passwordLabel}</Label>
-              <Input placeholder="••••••••••••" />
+            <Field>
+              <FieldLabel htmlFor="password">{authContent.signup.passwordLabel}</FieldLabel>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                aria-invalid={Boolean(errors["password"])}
+                placeholder="••••••••••••"
+              />
               {errors["password"] ? (
                 <FieldError>{errors["password"]}</FieldError>
               ) : (
-                <Description>{authContent.signup.passwordHint}</Description>
+                <FieldDescription>{authContent.signup.passwordHint}</FieldDescription>
               )}
-            </TextField>
+            </Field>
 
-            <Checkbox
-              isRequired
-              isSelected={acceptTerms}
-              onChange={setAcceptTerms}
-              name="acceptTerms"
-              isInvalid={Boolean(errors["acceptTerms"])}
-            >
-              <Checkbox.Content>
-                <Checkbox.Control>
-                  <Checkbox.Indicator />
-                </Checkbox.Control>
-                {authContent.signup.termsLabel}
-              </Checkbox.Content>
+            <Field>
+              <Field orientation="horizontal">
+                <Checkbox
+                  aria-invalid={Boolean(errors["acceptTerms"])}
+                  checked={acceptTerms}
+                  id="acceptTerms"
+                  name="acceptTerms"
+                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                  required
+                />
+                <FieldLabel htmlFor="acceptTerms">{authContent.signup.termsLabel}</FieldLabel>
+              </Field>
               {errors["acceptTerms"] ? <FieldError>{errors["acceptTerms"]}</FieldError> : null}
-            </Checkbox>
+            </Field>
 
             {env.isDevelopment ? (
-              <Checkbox
-                isSelected={skipEmailConfirmation}
-                onChange={setSkipEmailConfirmation}
-                name="skipEmailConfirmation"
-              >
-                <Checkbox.Content>
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  {authContent.signup.devSkipConfirmationLabel}
-                </Checkbox.Content>
-                <Description>{authContent.signup.devSkipConfirmationHint}</Description>
-              </Checkbox>
+              <Field>
+                <Field orientation="horizontal">
+                  <Checkbox
+                    checked={skipEmailConfirmation}
+                    id="skipEmailConfirmation"
+                    name="skipEmailConfirmation"
+                    onCheckedChange={(checked) => setSkipEmailConfirmation(checked === true)}
+                  />
+                  <FieldLabel htmlFor="skipEmailConfirmation">
+                    {authContent.signup.devSkipConfirmationLabel}
+                  </FieldLabel>
+                </Field>
+                <FieldDescription>{authContent.signup.devSkipConfirmationHint}</FieldDescription>
+              </Field>
             ) : null}
-          </Card.Content>
+          </CardContent>
 
-          <Card.Footer className="flex flex-col gap-3">
+          <CardFooter className="flex flex-col gap-3">
             <Button
               type="submit"
-              variant="primary"
-              fullWidth
-              isPending={signup.isPending || devSignup.isPending}
+              variant="default"
+              className="w-full"
+              pending={signup.isPending || devSignup.isPending}
             >
               {authContent.signup.submitButton}
             </Button>
-            <Typography.Paragraph align="center" size="sm">
+            <Text align="center" size="sm">
               {authContent.signup.alreadyHaveAccount}{" "}
-              <RouterLink className="link" to="/connexion">
+              <RouterLink className={linkVariants({ size: "inherit" })} to="/connexion">
                 {authContent.signup.loginLink}
               </RouterLink>
-            </Typography.Paragraph>
-          </Card.Footer>
-        </Form>
+            </Text>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );

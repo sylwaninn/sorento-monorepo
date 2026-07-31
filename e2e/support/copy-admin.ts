@@ -16,6 +16,7 @@ export const copyAdmin = {
   linkHistory: mirrors("features/admin/content.ts", "Historique des modifications"),
   linkTesting: mirrors("features/admin/content.ts", "Test de profil"),
   linkMetrics: mirrors("features/admin/content.ts", "Statistiques"),
+  linkDesignSystem: mirrors("features/admin/content.ts", "Design system"),
 
   catalogTitle: mirrors("features/admin/content.ts", "Référentiel"),
   tabProcedures: mirrors("features/admin/content.ts", "Démarches"),
@@ -68,6 +69,8 @@ export const copyAdmin = {
   metricsTotalDossiers: mirrors("features/admin/content.ts", "Dossiers"),
   metricsDossiersByStatus: mirrors("features/admin/content.ts", "Dossiers par statut"),
   metricsStatusPreparation: mirrors("features/admin/content.ts", "Préparation"),
+
+  designSystemTitle: mirrors("features/admin/content.ts", "Design system"),
 
   maritalStatusQuestion: mirrors(
     "features/diagnostic/content.ts",

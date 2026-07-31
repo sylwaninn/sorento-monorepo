@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useRef } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, Typography } from "@heroui/react";
 import { ALLOWED_MIME_TYPES } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
 import { ErrorAlert } from "@/components/ErrorAlert";
@@ -12,6 +12,10 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
 
 const DEFAULT_CATEGORY = "general";
 
@@ -77,27 +81,25 @@ export const DocumentsPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.documents.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.documents.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{dossierContent.documents.notice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{dossierContent.documents.notice}</AlertDescription>
       </Alert>
 
       <ErrorAlert message={upload.errorMessage ?? remove.errorMessage ?? download.errorMessage} />
 
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {documents.length === 0 ? (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {dossierContent.documents.empty}
-            </Typography.Paragraph>
+            </Text>
           ) : (
             documents.map((document_) => (
               <div
@@ -106,16 +108,16 @@ export const DocumentsPage = () => {
               >
                 <div className="flex flex-col">
                   <span>{document_.originalName}</span>
-                  <Typography color="muted">
+                  <Text tone="muted">
                     {document_.category} · {dossierContent.documents.addedBy}{" "}
                     {access.firstNameOf(document_.addedBy)}
-                  </Typography>
+                  </Text>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onPress={() =>
+                    onClick={() =>
                       download.mutate({
                         storagePath: document_.storagePath,
                         originalName: document_.originalName,
@@ -127,7 +129,7 @@ export const DocumentsPage = () => {
                   {/* Owners remove anything; a collaborator only what they added themselves. */}
                   {access.can("documents:deleteAny") ||
                   (access.can("documents:deleteOwn") && document_.addedBy === user?.id) ? (
-                    <Button variant="ghost" size="sm" onPress={() => remove.mutate(document_.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => remove.mutate(document_.id)}>
                       {dossierContent.documents.deleteButton}
                     </Button>
                   ) : null}
@@ -135,7 +137,7 @@ export const DocumentsPage = () => {
               </div>
             ))
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       {canAdd ? (
@@ -148,9 +150,9 @@ export const DocumentsPage = () => {
             onChange={onFileSelected}
           />
           <Button
-            variant="primary"
-            isPending={upload.isPending}
-            onPress={() => fileInputRef.current?.click()}
+            variant="default"
+            pending={upload.isPending}
+            onClick={() => fileInputRef.current?.click()}
           >
             {dossierContent.documents.uploadButton}
           </Button>

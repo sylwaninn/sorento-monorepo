@@ -6,20 +6,29 @@ French post-bereavement support web app. A conditional rules engine (no AI)
 that generates a personalised journey of procedures, benefits and letters.
 Central entity: the dossier (states PREPARATION / ACTIVE), a collaborative
 space shared between relatives (roles owner / collaborator / viewer /
-trusted_contact). Web only. Mobile comes later: never build a mobile app, but
-keep the packages reusable.
+trusted_contact). Web only: there is no mobile app, no mobile code and no
+mobile workspace here, and none is to be added.
 
 ## ABSOLUTE rules (no exceptions, ever)
 
 ### UI
 
-- HeroUI components ONLY. No custom UI component that reimplements a HeroUI
-  equivalent. Composing HeroUI components is allowed and encouraged;
-  reimplementing them is forbidden.
-- Check every component's API through the HeroUI MCP before using it.
-  Never guess a prop.
-- Tailwind for layout/spacing only, never to rebuild components or to
-  override HeroUI's internal styles.
+- shadcn/ui components ONLY, installed into apps/web/src/components/ui through
+  the shadcn CLI. No custom UI component that reimplements one of them.
+  Composing them is allowed and encouraged; reimplementing them is forbidden.
+- Check a component's API through the shadcn MCP before using it, and prefer
+  adding it with the CLI over hand-writing it. Never guess a prop.
+- The registry files stay close to upstream: theme them through the tokens,
+  and only extend their API when the whole app needs it (a `pending` button,
+  an `asChild` title). Every deviation carries a comment saying why.
+- Tailwind everywhere else, driven by the tokens in apps/web/src/index.css.
+  That file is the ONLY authored stylesheet: it holds `@theme`, the brand
+  tokens and a minimal base layer. Every other style is a utility on the
+  element.
+- A colour is always a semantic token (`bg-card`, `text-muted-foreground`,
+  `bg-sage`), never a raw Tailwind palette utility and never a literal.
+  A recurring size, radius, shadow or type scale earns a token rather than an
+  arbitrary value repeated across files.
 
 ### Architecture
 

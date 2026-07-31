@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, Switch, Typography } from "@heroui/react";
 import {
   defaultNotificationPreference,
   notificationTypeSchema,
@@ -11,6 +10,10 @@ import { supabase } from "@/lib/supabase-client";
 import { repositories } from "@/lib/repositories";
 import { notificationsContent } from "@/features/notifications/content";
 import { queryKeys } from "@/lib/query-keys";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
+import { Switch } from "@/components/ui/switch";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 // "invitation" isn't a real per-user toggle in this implementation: invite-member emails
 // the invitee directly, it never creates a notifications row for an existing user.
@@ -58,11 +61,11 @@ export const NotificationPreferencesCard = () => {
 
   return (
     <Card className="w-full max-w-md">
-      <Card.Header>
-        <Card.Title>{notificationsContent.preferences.title}</Card.Title>
-        <Card.Description>{notificationsContent.preferences.description}</Card.Description>
-      </Card.Header>
-      <Card.Content className="flex flex-col gap-4">
+      <CardHeader>
+        <CardTitle>{notificationsContent.preferences.title}</CardTitle>
+        <CardDescription>{notificationsContent.preferences.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
         {CONFIGURABLE_TYPES.map((type) => {
           const roleDefault = defaultNotificationPreference(type, viewerOnly === true);
           const effective = overridesByType.get(type) ?? {
@@ -72,37 +75,35 @@ export const NotificationPreferencesCard = () => {
 
           return (
             <div key={type} className="flex flex-col gap-2 border-b pb-3">
-              <Typography type="body-sm" weight="medium">
+              <Text size="sm" className="font-medium">
                 {notificationsContent.typeLabels[type]}
-              </Typography>
+              </Text>
               <div className="flex gap-6">
-                <Switch
-                  isSelected={effective.inApp}
-                  onChange={(inApp) => setPreference(type, inApp, effective.email)}
-                >
-                  <Switch.Content>
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
+                <Field orientation="horizontal">
+                  <Switch
+                    checked={effective.inApp}
+                    id={`${type}-inApp`}
+                    onCheckedChange={(inApp) => setPreference(type, inApp, effective.email)}
+                  />
+                  <FieldLabel htmlFor={`${type}-inApp`}>
                     {notificationsContent.preferences.inAppColumn}
-                  </Switch.Content>
-                </Switch>
-                <Switch
-                  isSelected={effective.email}
-                  onChange={(email) => setPreference(type, effective.inApp, email)}
-                >
-                  <Switch.Content>
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
+                  </FieldLabel>
+                </Field>
+                <Field orientation="horizontal">
+                  <Switch
+                    checked={effective.email}
+                    id={`${type}-email`}
+                    onCheckedChange={(email) => setPreference(type, effective.inApp, email)}
+                  />
+                  <FieldLabel htmlFor={`${type}-email`}>
                     {notificationsContent.preferences.emailColumn}
-                  </Switch.Content>
-                </Switch>
+                  </FieldLabel>
+                </Field>
               </div>
             </div>
           );
         })}
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 };

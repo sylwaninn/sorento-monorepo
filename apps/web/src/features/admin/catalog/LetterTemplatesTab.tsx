@@ -1,18 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Select,
-  ListBox,
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextArea,
-  TextField,
-  Typography,
-} from "@heroui/react";
 import {
   letterTemplateInputSchema,
   type LetterTemplate,
@@ -27,6 +14,20 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // The admin list and the list every dossier reads are two cache entries of the same data.
 const INVALIDATES = [queryKeys.catalog.allLetterTemplates(), queryKeys.catalog.letterTemplates()];
@@ -59,7 +60,7 @@ export const LetterTemplatesTab = () => {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {templatesQuery.data && templatesQuery.data.length > 0 ? (
             templatesQuery.data.map((template) => (
               <div
@@ -67,16 +68,16 @@ export const LetterTemplatesTab = () => {
                 className="flex items-center justify-between gap-3 border-b pb-3"
               >
                 <div className="flex flex-col">
-                  <Typography weight="medium">{template.title}</Typography>
-                  <Typography type="body-sm" color="muted">
+                  <Text className="font-medium">{template.title}</Text>
+                  <Text size="sm" tone="muted">
                     {proceduresById.get(template.procedureId)?.title ?? template.procedureId}
-                  </Typography>
+                  </Text>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onPress={() => {
+                    onClick={() => {
                       setEditing(template);
                       setIsFormOpen(true);
                     }}
@@ -91,11 +92,11 @@ export const LetterTemplatesTab = () => {
               </div>
             ))
           ) : (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {adminContent.catalog.letterTemplates.empty}
-            </Typography.Paragraph>
+            </Text>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       {isFormOpen ? (
@@ -113,8 +114,8 @@ export const LetterTemplatesTab = () => {
         />
       ) : (
         <Button
-          variant="primary"
-          onPress={() => {
+          variant="default"
+          onClick={() => {
             setEditing(null);
             setIsFormOpen(true);
           }}
@@ -157,6 +158,9 @@ const LetterTemplateForm = ({
     onSuccess: onDone,
   });
 
+  // The trigger is what carries the name, so the visible label has to point at it.
+  const procedureFieldId = useId();
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const input: LetterTemplateInput = {
@@ -181,42 +185,39 @@ const LetterTemplateForm = ({
 
   return (
     <Card>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
           <ErrorAlert message={save.errorMessage} />
 
-          <Select value={procedureId} onChange={(value) => setProcedureId(String(value))}>
-            <Label>{c.procedureLabel}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {procedures.map((procedure) => (
-                  <ListBox.Item key={procedure.id} id={procedure.id} textValue={procedure.title}>
-                    {procedure.title}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
+          <Select value={procedureId} onValueChange={(value) => setProcedureId(String(value))}>
+            <Label htmlFor={procedureFieldId}>{c.procedureLabel}</Label>
+            <SelectTrigger id={procedureFieldId}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {procedures.map((procedure) => (
+                <SelectItem key={procedure.id} value={procedure.id} textValue={procedure.title}>
+                  {procedure.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
 
-          <TextField
-            isRequired
-            value={title}
-            onChange={setTitle}
-            isInvalid={Boolean(errors["title"])}
-          >
-            <Label>{c.titleLabel}</Label>
-            <Input />
+          <Field>
+            <FieldLabel htmlFor="title">{c.titleLabel}</FieldLabel>
+            <Input
+              id="title"
+              required
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              aria-invalid={Boolean(errors["title"])}
+            />
             {errors["title"] ? <FieldError>{errors["title"]}</FieldError> : null}
-          </TextField>
+          </Field>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="letter-body">{c.bodyTemplateLabel}</Label>
-            <TextArea
+            <Textarea
               id="letter-body"
               aria-label={c.bodyTemplateLabel}
               value={bodyTemplate}
@@ -225,31 +226,41 @@ const LetterTemplateForm = ({
             {errors["bodyTemplate"] ? <FieldError>{errors["bodyTemplate"]}</FieldError> : null}
           </div>
 
-          <TextField value={variablesText} onChange={setVariablesText}>
-            <Label>{c.variablesLabel}</Label>
-            <Input placeholder="senderName, recipientName" />
-          </TextField>
+          <Field>
+            <FieldLabel htmlFor="variablesText">{c.variablesLabel}</FieldLabel>
+            <Input
+              id="variablesText"
+              value={variablesText}
+              onChange={(event) => setVariablesText(event.target.value)}
+              placeholder="senderName, recipientName"
+            />
+          </Field>
 
-          <TextField value={sourceUrl} onChange={setSourceUrl}>
-            <Label>{c.sourceUrlLabel}</Label>
-            <Input type="url" />
-          </TextField>
+          <Field>
+            <FieldLabel htmlFor="sourceUrl">{c.sourceUrlLabel}</FieldLabel>
+            <Input
+              id="sourceUrl"
+              value={sourceUrl}
+              onChange={(event) => setSourceUrl(event.target.value)}
+              type="url"
+            />
+          </Field>
 
           <DateFieldPicker
             label={c.lastVerifiedDateLabel}
             value={lastVerifiedDate}
             onChange={setLastVerifiedDate}
           />
-        </Card.Content>
-        <Card.Footer className="flex gap-2">
-          <Button type="submit" variant="primary" isPending={save.isPending}>
+        </CardContent>
+        <CardFooter className="flex gap-2">
+          <Button type="submit" variant="default" pending={save.isPending}>
             {adminContent.catalog.saveButton}
           </Button>
-          <Button variant="ghost" onPress={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {adminContent.catalog.cancelButton}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

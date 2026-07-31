@@ -1,5 +1,6 @@
-import { Card, Link as HeroLink } from "@heroui/react";
 import { sharedContent } from "@/components/content";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "@/components/ui/link";
 
 export interface CatalogNoticeProps {
   /** Required, not optional: no catalog data may be displayed without its provenance. */
@@ -34,17 +35,17 @@ export const CatalogNotice = ({
   lastVerifiedDate,
   referenceProfession,
 }: CatalogNoticeProps) => (
-  <Card>
-    <Card.Content className="text-muted flex flex-col gap-1 py-3 text-sm">
-      <HeroLink href={sourceUrl} target="_blank" rel="noreferrer noopener">
+  <Card className="py-3">
+    <CardContent className="text-muted-foreground flex flex-col items-start gap-1 text-sm">
+      <Link href={sourceUrl} target="_blank" rel="noreferrer noopener">
         {sharedContent.catalogNotice.sourceLabel}
-      </HeroLink>
+      </Link>
       <span>
         {sharedContent.catalogNotice.verifiedAtPrefix} {formatDate(lastVerifiedDate)}
       </span>
       <span>
         {sharedContent.catalogNotice.professionPrefix} {professionPhrase(referenceProfession)}.
       </span>
-    </Card.Content>
+    </CardContent>
   </Card>
 );

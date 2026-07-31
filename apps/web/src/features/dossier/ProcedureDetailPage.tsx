@@ -1,6 +1,6 @@
+import { linkVariants } from "@/components/ui/link";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Tabs, Typography } from "@heroui/react";
 import type { TrackingStatus } from "@sorento/domain";
 import { CatalogNotice } from "@/components/CatalogNotice";
 import { PageLoader } from "@/components/PageLoader";
@@ -14,6 +14,9 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading } from "@/components/ui/typography";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
   { id: "procedure", label: dossierContent.procedureDetail.tabs.procedure },
@@ -67,11 +70,9 @@ export const ProcedureDetailPage = () => {
   if (!procedure || !tracking) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <Alert status="danger">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{dossierContent.procedureDetail.notFound}</Alert.Description>
-          </Alert.Content>
+        <Alert variant="destructive">
+          <AlertIndicator />
+          <AlertDescription>{dossierContent.procedureDetail.notFound}</AlertDescription>
         </Alert>
       </div>
     );
@@ -80,25 +81,22 @@ export const ProcedureDetailPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{procedure.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{procedure.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Tabs>
-        <Tabs.ListContainer>
-          <Tabs.List aria-label={dossierContent.procedureDetail.tabsLabel}>
-            {TABS.map((tab) => (
-              <Tabs.Tab key={tab.id} id={tab.id}>
-                {tab.label}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-
-        <Tabs.Panel id="procedure">
+      {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
+      <Tabs defaultValue="procedure">
+        <TabsList aria-label={dossierContent.procedureDetail.tabsLabel}>
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="procedure">
           <ProcedureTab
             procedure={procedure}
             tracking={tracking}
@@ -106,24 +104,24 @@ export const ProcedureDetailPage = () => {
             statusMutation={statusMutation}
             assigneeMutation={assigneeMutation}
           />
-        </Tabs.Panel>
+        </TabsContent>
 
-        <Tabs.Panel id="letter">
+        <TabsContent value="letter">
           <LetterTab
             dossierId={dossierId}
             procedureId={procedureId}
             dossier={access.dossier}
             canGenerate={access.can("letters:generate")}
           />
-        </Tabs.Panel>
+        </TabsContent>
 
-        <Tabs.Panel id="comments">
+        <TabsContent value="comments">
           <CommentsTab dossierId={dossierId} procedureId={procedureId} access={access} />
-        </Tabs.Panel>
+        </TabsContent>
 
-        <Tabs.Panel id="history">
+        <TabsContent value="history">
           <HistoryTab dossierId={dossierId} procedureId={procedureId} access={access} />
-        </Tabs.Panel>
+        </TabsContent>
       </Tabs>
 
       <CatalogNotice

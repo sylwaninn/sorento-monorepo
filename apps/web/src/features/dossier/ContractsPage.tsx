@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, FieldError, Form, Input, Label, TextField, Typography } from "@heroui/react";
 import { contractInputSchema, type Contract, type ContractInput } from "@sorento/domain";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
@@ -12,6 +12,11 @@ import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Heading, Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 export const ContractsPage = () => {
   const { dossierId = "" } = useParams();
@@ -36,8 +41,8 @@ export const ContractsPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.contracts.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.contracts.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
@@ -45,7 +50,7 @@ export const ContractsPage = () => {
       <ErrorAlert message={remove.errorMessage} />
 
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {contractsQuery.data && contractsQuery.data.length > 0 ? (
             contractsQuery.data.map((contract) => (
               <div
@@ -53,18 +58,18 @@ export const ContractsPage = () => {
                 className="flex items-center justify-between gap-3 border-b pb-3"
               >
                 <div className="flex flex-col">
-                  <Typography weight="medium">
+                  <Text className="font-medium">
                     {contract.contractType} · {contract.company}
-                  </Typography>
+                  </Text>
                   {contract.contractNumber ? (
-                    <Typography type="body-sm" color="muted">
+                    <Text size="sm" tone="muted">
                       {contract.contractNumber}
-                    </Typography>
+                    </Text>
                   ) : null}
                   {contract.knownBeneficiaries ? (
-                    <Typography type="body-sm" color="muted">
+                    <Text size="sm" tone="muted">
                       {contract.knownBeneficiaries}
-                    </Typography>
+                    </Text>
                   ) : null}
                 </div>
                 {access.can("contracts:edit") ? (
@@ -72,14 +77,14 @@ export const ContractsPage = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onPress={() => {
+                      onClick={() => {
                         setEditing(contract);
                         setIsFormOpen(true);
                       }}
                     >
                       {dossierContent.contracts.editButton}
                     </Button>
-                    <Button variant="ghost" size="sm" onPress={() => remove.mutate(contract.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => remove.mutate(contract.id)}>
                       {dossierContent.contracts.deleteButton}
                     </Button>
                   </div>
@@ -87,11 +92,11 @@ export const ContractsPage = () => {
               </div>
             ))
           ) : (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {dossierContent.contracts.empty}
-            </Typography.Paragraph>
+            </Text>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       {access.can("contracts:edit") ? (
@@ -109,7 +114,7 @@ export const ContractsPage = () => {
             }}
           />
         ) : (
-          <Button variant="primary" onPress={() => setIsFormOpen(true)}>
+          <Button variant="default" onClick={() => setIsFormOpen(true)}>
             {dossierContent.contracts.addButton}
           </Button>
         )
@@ -162,57 +167,70 @@ const ContractForm = ({
 
   return (
     <Card>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
           <ErrorAlert message={save.errorMessage} />
 
-          <TextField
-            isRequired
-            name="contractType"
-            value={contractType}
-            onChange={setContractType}
-            isInvalid={Boolean(errors["contractType"])}
-          >
-            <Label>{dossierContent.contracts.typeLabel}</Label>
-            <Input placeholder={dossierContent.contracts.typePlaceholder} />
+          <Field>
+            <FieldLabel htmlFor="contractType">{dossierContent.contracts.typeLabel}</FieldLabel>
+            <Input
+              id="contractType"
+              name="contractType"
+              required
+              value={contractType}
+              onChange={(event) => setContractType(event.target.value)}
+              aria-invalid={Boolean(errors["contractType"])}
+              placeholder={dossierContent.contracts.typePlaceholder}
+            />
             {errors["contractType"] ? <FieldError>{errors["contractType"]}</FieldError> : null}
-          </TextField>
+          </Field>
 
-          <TextField
-            isRequired
-            name="company"
-            value={company}
-            onChange={setCompany}
-            isInvalid={Boolean(errors["company"])}
-          >
-            <Label>{dossierContent.contracts.companyLabel}</Label>
-            <Input />
+          <Field>
+            <FieldLabel htmlFor="company">{dossierContent.contracts.companyLabel}</FieldLabel>
+            <Input
+              id="company"
+              name="company"
+              required
+              value={company}
+              onChange={(event) => setCompany(event.target.value)}
+              aria-invalid={Boolean(errors["company"])}
+            />
             {errors["company"] ? <FieldError>{errors["company"]}</FieldError> : null}
-          </TextField>
+          </Field>
 
-          <TextField name="contractNumber" value={contractNumber} onChange={setContractNumber}>
-            <Label>{dossierContent.contracts.contractNumberLabel}</Label>
-            <Input />
-          </TextField>
+          <Field>
+            <FieldLabel htmlFor="contractNumber">
+              {dossierContent.contracts.contractNumberLabel}
+            </FieldLabel>
+            <Input
+              id="contractNumber"
+              name="contractNumber"
+              value={contractNumber}
+              onChange={(event) => setContractNumber(event.target.value)}
+            />
+          </Field>
 
-          <TextField
-            name="knownBeneficiaries"
-            value={knownBeneficiaries}
-            onChange={setKnownBeneficiaries}
-          >
-            <Label>{dossierContent.contracts.beneficiariesLabel}</Label>
-            <Input />
-          </TextField>
-        </Card.Content>
-        <Card.Footer className="flex gap-2">
-          <Button type="submit" variant="primary" isPending={save.isPending}>
+          <Field>
+            <FieldLabel htmlFor="knownBeneficiaries">
+              {dossierContent.contracts.beneficiariesLabel}
+            </FieldLabel>
+            <Input
+              id="knownBeneficiaries"
+              name="knownBeneficiaries"
+              value={knownBeneficiaries}
+              onChange={(event) => setKnownBeneficiaries(event.target.value)}
+            />
+          </Field>
+        </CardContent>
+        <CardFooter className="flex gap-2">
+          <Button type="submit" variant="default" pending={save.isPending}>
             {dossierContent.contracts.saveButton}
           </Button>
-          <Button variant="ghost" onPress={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {dossierContent.contracts.cancelButton}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

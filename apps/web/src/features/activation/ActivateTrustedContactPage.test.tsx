@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ActivateTrustedContactPage } from "@/features/activation/ActivateTrustedContactPage";
 import { activationContent } from "@/features/activation/content";
@@ -63,10 +63,11 @@ describe("ActivateTrustedContactPage", () => {
     renderPage();
     await screen.findByText(activationContent.activate.notice);
 
-    // HeroUI's DateField renders one spinbutton per segment; the first is the day.
-    const dayField = must(screen.getAllByRole("spinbutton")[0], "day segment of the date field");
-    await userEvent.click(dayField);
-    await userEvent.keyboard("15012026");
+    const deathDate = must(
+      document.querySelector<HTMLInputElement>('input[name="deathDate"]'),
+      "death date input",
+    );
+    fireEvent.change(deathDate, { target: { value: "2026-01-15" } });
 
     const submit = screen.getByRole("button", { name: activationContent.activate.submitButton });
     await waitFor(() => expect(submit).toBeEnabled());
