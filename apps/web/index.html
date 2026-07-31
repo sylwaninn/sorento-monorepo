@@ -37,6 +37,22 @@
          Safari 26 ignores the tag entirely and samples fixed elements instead, which is what
          BrowserChromeTint is for. -->
     <meta name="theme-color" content="#f5f6f2" />
+    <!--
+      The hero photograph is the largest thing the first screen paints, and the browser cannot
+      find it until React has mounted, so it is asked for here instead. The two candidate lists
+      have to be the ones the element itself will use, or the preload picks a different file and
+      the page downloads the photograph twice. presentation.test.ts compares them against
+      landingPictures.hero and fails on a drift of a single character.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      href="/images/hero-sorento-1280.avif"
+      type="image/avif"
+      imagesrcset="/images/hero-sorento-768.avif 768w, /images/hero-sorento-1280.avif 1280w, /images/hero-sorento-1728.avif 1728w"
+      imagesizes="(max-width: 767px) 100vw, min(88rem, calc(100vw - 2.5rem))"
+      fetchpriority="high"
+    />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Sorento</title>
   </head>

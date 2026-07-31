@@ -16,6 +16,14 @@ import { copyPublic } from "#e2e/support/copy-public";
 const ENTRY_FUNNEL = ["/", "/diagnostic"] as const;
 
 /**
+ * The moving parts of the aid section, addressed by the slot they carry: the journeys import
+ * nothing from the app, and a class name copied over here would be a second, silent copy of a
+ * styling decision.
+ */
+const MONEY_STREAMS = '[data-slot="money-streams"]';
+const MONEY_TRACK = '[data-slot="money-track"]';
+
+/**
  * A dossier id that belongs to nobody. A signed-out visitor must be turned away by the shape of
  * the URL alone, before anything is looked up, so an id that existed would prove nothing extra.
  */
@@ -84,7 +92,6 @@ test.describe("what a visitor sees before they trust anyone", () => {
 
     await expect(page.getByRole("heading", { name: copyPublic.heroTitle })).toBeVisible();
     await expect(page.getByRole("link", { name: copy.landingCta })).toBeVisible();
-    await expect(page.getByText(copyPublic.ctaHint)).toBeVisible();
     await expect(page.getByText(copyPublic.howItWorksTitle, { exact: true })).toBeVisible();
 
     // The scope section is the promise a grieving visitor is owed before anything is asked of
@@ -92,9 +99,8 @@ test.describe("what a visitor sees before they trust anyone", () => {
     // money the family recovers, and information rather than individual legal advice. Someone
     // arriving in grief must not be sold to.
     await expect(page.getByText(copyPublic.scopeTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(copyPublic.scopeDescription, { exact: true })).toBeVisible();
     await expect(page.getByText(copyPublic.takesNoCommission)).toBeVisible();
-    await expect(page.getByText(copyPublic.givesNoLegalAdvice)).toBeVisible();
-    await expect(page.getByText(copyPublic.replacesNoProfessional)).toBeVisible();
 
     await expect(page.getByText(copyPublic.reassuranceTitle, { exact: true })).toBeVisible();
     await expect(page.getByText(copyPublic.freeForFamilies, { exact: true })).toBeVisible();
@@ -104,6 +110,63 @@ test.describe("what a visitor sees before they trust anyone", () => {
     // The same sentence the diagnostic result carries, and it belongs here too: a visitor has to
     // know what this service is before answering a single question about a death.
     await expect(page.getByText(copyPublic.generalInformationNotice)).toBeVisible();
+  });
+
+  /**
+   * A track sitting at transform: none reads back as the string "none", which DOMMatrix refuses.
+   * That is the reduced-motion case, and treating it as the origin is what makes it comparable
+   * to a moving track rather than a crash.
+   */
+  const trackPositions = (page: Page) =>
+    page.locator(MONEY_TRACK).evaluateAll((elements) =>
+      elements.map((element) => {
+        const { transform } = getComputedStyle(element);
+        return transform === "none" ? 0 : new DOMMatrix(transform).m42;
+      }),
+    );
+
+  test("the aid and capital streams run only while they are on screen", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/");
+
+    const streams = page.locator(MONEY_STREAMS);
+    await expect(page.locator(MONEY_TRACK)).toHaveCount(2);
+    await expect(streams).toHaveAttribute("data-animation", "paused");
+
+    await streams.scrollIntoViewIfNeeded();
+    await expect(streams).toHaveAttribute("data-animation", "running");
+
+    const initialPositions = await trackPositions(page);
+
+    await expect
+      .poll(() => trackPositions(page), {
+        message: "the two aid streams should keep moving",
+        timeout: 2_000,
+      })
+      .not.toEqual(initialPositions);
+
+    const nextPositions = await trackPositions(page);
+    expect(nextPositions[0]).toBeLessThan(initialPositions[0] ?? 0);
+    expect(nextPositions[1]).toBeGreaterThan(initialPositions[1] ?? 0);
+  });
+
+  /**
+   * There is no pause control on the page, so the system setting is the whole of the answer for
+   * a reader that motion costs. If it ever stopped being honoured, nothing else would say so.
+   */
+  test("the aid and capital streams stand still for a reader who asks for less motion", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+
+    await page.locator(MONEY_STREAMS).scrollIntoViewIfNeeded();
+    const initialPositions = await trackPositions(page);
+    expect(initialPositions).toHaveLength(2);
+
+    await page.waitForTimeout(500);
+
+    expect(await trackPositions(page)).toEqual(initialPositions);
   });
 
   test("the three legal documents are reachable from the landing page, and each is its own", async ({
@@ -222,12 +285,12 @@ test.describe("what a visitor sees before they trust anyone", () => {
 
   for (const route of ENTRY_FUNNEL) {
     test(`${route} names its main region`, async ({ page }) => {
-      // Known defect, deliberately recorded rather than deleted. No screen in the app renders a
-      // main landmark or a skip link: pages compose their own container div, and the only shared
-      // wrapper is RequireAuth, which covers the signed-in half. Giving every route a main means
+      // Known defect, deliberately recorded rather than deleted. The rebuilt homepage and the
+      // legal pages carry a main landmark now; the diagnostic still composes its own container
+      // div, like every signed-in screen behind RequireAuth. Giving every route a main means
       // restructuring the route table around a layout, which is a change worth reviewing on its
       // own rather than buried here. Playwright fails the run the day this starts passing.
-      test.fail();
+      if (route !== "/") test.fail();
       // A screen reader user, and every browser's own reader mode, find the content of a page
       // through its main landmark. Without one, the only way past the repeated furniture is to
       // read the document from the top every time, which is the cost this keeps off people who
@@ -263,17 +326,31 @@ test.describe("what a visitor sees before they trust anyone", () => {
     });
   }
 
-  test("the landing page puts its first tab stop on the way in", async ({ page }) => {
+  /**
+   * The budget: three tab stops from a fresh page to the way in.
+   *
+   * It used to be one, because the page opened straight onto its call to action. The redesign
+   * gave the homepage a header, so the brand and the login link now stand in front of it, and
+   * this number moved with the design rather than the assertion being dropped. Anyone using a
+   * keyboard, a switch or a screen reader arrives at the top of the document with no way to skip
+   * the furniture, so how much furniture there is is the whole of their first impression.
+   */
+  const TAB_STOPS_TO_THE_WAY_IN = 3;
+
+  test("the landing page puts the way in within reach of the keyboard", async ({ page }) => {
     await page.goto("/");
 
-    // One tab from a fresh page has to reach the thing the page exists for. Anyone using a
-    // keyboard, a switch or a screen reader arrives at the top of the document with no way to
-    // skip the furniture, so what comes first is the whole of their first impression.
-    await page.keyboard.press("Tab");
-    await expect(page.getByRole("link", { name: copy.landingCta })).toBeFocused();
+    for (let stop = 0; stop < TAB_STOPS_TO_THE_WAY_IN; stop += 1) {
+      await page.keyboard.press("Tab");
+      const focused = page.locator(":focus");
+      if ((await focused.getAttribute("href")) === "/diagnostic") {
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(/\/diagnostic$/);
+        return;
+      }
+    }
 
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/diagnostic$/);
+    throw new Error(`No way into the diagnostic within ${TAB_STOPS_TO_THE_WAY_IN} tab stops`);
   });
 
   test("the diagnostic can be answered with the keyboard alone", async ({ page }) => {
