@@ -214,20 +214,21 @@ All commands run from the repository root.
 
 <!-- sync-docs:env -->
 
-| Variable                    | Scope  | Description                                                                                                     |
-| --------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`         | Client | Supabase project URL, exposed to the browser.                                                                   |
-| `VITE_SUPABASE_ANON_KEY`    | Client | Supabase anonymous key. Safe client-side: RLS does the guarding.                                                |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server | Bypasses RLS. Edge Functions and server-side scripts only: never client-side, never committed.                  |
-| `SUPABASE_DB_URL`           | Server | Direct Postgres connection, used by the integration tests.                                                      |
-| `RESEND_API_KEY`            | Server | Transactional email provider key.                                                                               |
-| `RESEND_FROM_EMAIL`         | Server | Sender address for transactional emails.                                                                        |
-| `SITE_URL`                  | Server | Base URL the Edge Functions use to build links (invitations, activation).                                       |
-| `CRON_SECRET`               | Server | Shared secret protecting the cron-invoked functions; mirrored in Vault (`cron_secret`).                         |
-| `SUPPORT_EMAIL`             | Server | Recipient of activation objections. Unset, the function logs a warning instead of pretending it warned someone. |
-| `APP_ENV`                   | Server | `development` unlocks the dev-only endpoints. Absent in staging and production: door closed.                    |
-| `TURNSTILE_SITE_KEY`        | Client | Captcha (hook planned, not enabled in V1).                                                                      |
-| `TURNSTILE_SECRET_KEY`      | Server | Captcha (hook planned, not enabled in V1).                                                                      |
+| Variable                    | Scope  | Description                                                                                                                     |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`         | Client | Supabase project URL, exposed to the browser.                                                                                   |
+| `VITE_SUPABASE_ANON_KEY`    | Client | Supabase anonymous key. Safe client-side: RLS does the guarding.                                                                |
+| `VITE_SITE_URL`             | Client | Public origin of the deployed site. Unset, the build ships no sitemap.xml and no canonical link rather than an invented domain. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server | Bypasses RLS. Edge Functions and server-side scripts only: never client-side, never committed.                                  |
+| `SUPABASE_DB_URL`           | Server | Direct Postgres connection, used by the integration tests.                                                                      |
+| `RESEND_API_KEY`            | Server | Transactional email provider key.                                                                                               |
+| `RESEND_FROM_EMAIL`         | Server | Sender address for transactional emails.                                                                                        |
+| `SITE_URL`                  | Server | Base URL the Edge Functions use to build links (invitations, activation).                                                       |
+| `CRON_SECRET`               | Server | Shared secret protecting the cron-invoked functions; mirrored in Vault (`cron_secret`).                                         |
+| `SUPPORT_EMAIL`             | Server | Recipient of activation objections. Unset, the function logs a warning instead of pretending it warned someone.                 |
+| `APP_ENV`                   | Server | `development` unlocks the dev-only endpoints. Absent in staging and production: door closed.                                    |
+| `TURNSTILE_SITE_KEY`        | Client | Captcha (hook planned, not enabled in V1).                                                                                      |
+| `TURNSTILE_SECRET_KEY`      | Server | Captcha (hook planned, not enabled in V1).                                                                                      |
 
 <!-- /sync-docs:env -->
 

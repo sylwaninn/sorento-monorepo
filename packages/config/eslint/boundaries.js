@@ -120,4 +120,18 @@ export const boundariesConfig = [
       },
     ],
   ),
+
+  /**
+   * An app's build configuration cannot address its neighbours through the "@" alias, because
+   * declaring that alias is one of the things it does: Vite loads the config through Node, which
+   * knows nothing of it. That reaches one module further than the config file itself, since
+   * src/seo.ts is read at build time to emit robots.txt and sitemap.xml. Relative imports are
+   * allowed in those two, and nowhere else; every other restriction still stands.
+   */
+  {
+    files: ["**/apps/*/vite.config.ts", "**/apps/*/src/seo.ts"],
+    rules: {
+      "no-restricted-imports": ["error", { paths: [SUPABASE_JS], patterns: [APP_IMPORTS] }],
+    },
+  },
 ];
