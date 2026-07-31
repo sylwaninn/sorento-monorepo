@@ -20,7 +20,9 @@ mobile workspace here, and none is to be added.
   adding it with the CLI over hand-writing it. Never guess a prop.
 - The registry files stay close to upstream: theme them through the tokens,
   and only extend their API when the whole app needs it (a `pending` button,
-  an `asChild` title). Every deviation carries a comment saying why.
+  an `asChild` title). Every deviation carries a comment saying why, and a row
+  in apps/web/src/components/ui/REGISTRY.md, which also states the update
+  procedure. pnpm check:styles compares the manifest against the directory.
 - Tailwind everywhere else, driven by the tokens in apps/web/src/index.css.
   That file is the ONLY authored stylesheet: it holds `@theme`, the brand
   tokens and a minimal base layer. Every other style is a utility on the
@@ -28,7 +30,8 @@ mobile workspace here, and none is to be added.
 - A colour is always a semantic token (`bg-card`, `text-muted-foreground`,
   `bg-sage`), never a raw Tailwind palette utility and never a literal.
   A recurring size, radius, shadow or type scale earns a token rather than an
-  arbitrary value repeated across files.
+  arbitrary value repeated across files. Enforced by pnpm check:styles: the
+  same bracketed utility appearing in two files fails the build.
 - A photograph ships as an AVIF and a JPEG at each width, declared in the feature's
   presentation catalog and rendered through OptimizedPicture, never as a bare `<img>`.
   Encode the AVIF with libaom (sharp, avifenc), never with macOS `sips`: its output carries
@@ -59,6 +62,9 @@ mobile workspace here, and none is to be added.
 - A component file stays under 300 lines. Past that it is doing more than one
   job, and the split is cheaper now than after the next change. Enforced by
   pnpm check:styles, which exempts tests and the shadcn registry.
+- A screen never writes its own page scaffolding: the signed-in column with
+  its title-and-back header is layout/PageShell, the one-card-in-the-middle
+  ground is layout/CenteredShell. A page owns what is inside the shell only.
 - One kind of thing per module, and a file is exactly one of them: a `content/`
   module holds French copy and nothing else, `presentation.ts` maps a content
   id to an icon or a tone, `sections/` and `components/` hold declarative
