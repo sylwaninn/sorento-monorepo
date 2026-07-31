@@ -1,9 +1,9 @@
+import { PageShell } from "@/layout/PageShell";
 import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useAuth } from "@/auth/useAuth";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { TrackedItemCard } from "@/features/dossier/TrackedItemCard";
 import { useDossier } from "@/hooks/use-dossier";
@@ -44,17 +44,15 @@ export const DossierDashboardPage = () => {
     assignedTo === null ? null : access.firstNameOf(assignedTo);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>
+    <PageShell
+      backTo="/mes-dossiers"
+      title={
+        <>
           {dossierContent.dashboard.title} · {access.dossier?.subjectFirstName}{" "}
           {access.dossier?.subjectLastName}
-        </Heading>
-        <RouterLink className={linkVariants()} to="/mes-dossiers">
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+        </>
+      }
+    >
       <Card>
         <CardContent className="flex flex-col gap-2 py-4">
           <Progress
@@ -158,6 +156,6 @@ export const DossierDashboardPage = () => {
           ))}
         </Accordion>
       )}
-    </div>
+    </PageShell>
   );
 };

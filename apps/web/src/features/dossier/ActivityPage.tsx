@@ -1,6 +1,6 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useMemo, useState } from "react";
-import { useParams, Link as RouterLink } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { activityLogTypeSchema } from "@sorento/domain";
 import { repositories } from "@/lib/repositories";
@@ -9,7 +9,7 @@ import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import {
   Select,
   SelectContent,
@@ -47,14 +47,7 @@ export const ActivityPage = () => {
   const actionTypes = activityLogTypeSchema.options;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.activity.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.activity.title}>
       <div className="flex gap-3">
         <Select value={typeFilter} onValueChange={(value) => setTypeFilter(String(value))}>
           {/* No visible label beside a filter row, so the trigger names itself. */}
@@ -112,6 +105,6 @@ export const ActivityPage = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 };

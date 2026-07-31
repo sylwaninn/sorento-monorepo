@@ -1,12 +1,11 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useRef } from "react";
-import { useParams, Link as RouterLink } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ALLOWED_MIME_TYPES } from "@sorento/domain";
 import { useAuth } from "@/auth/useAuth";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
@@ -15,7 +14,7 @@ import { repositories } from "@/lib/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 
 const DEFAULT_CATEGORY = "general";
 
@@ -79,14 +78,7 @@ export const DocumentsPage = () => {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.documents.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.documents.title}>
       <Alert>
         <AlertIndicator />
         <AlertDescription>{dossierContent.documents.notice}</AlertDescription>
@@ -158,6 +150,6 @@ export const DocumentsPage = () => {
           </Button>
         </>
       ) : null}
-    </div>
+    </PageShell>
   );
 };

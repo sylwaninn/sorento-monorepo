@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
@@ -21,7 +22,7 @@ export const LoginPage = () => {
   const [mode, setMode] = useState<"password" | "magic-link">("password");
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{authContent.login.title}</CardTitle>
@@ -49,7 +50,7 @@ export const LoginPage = () => {
           </Text>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };
 

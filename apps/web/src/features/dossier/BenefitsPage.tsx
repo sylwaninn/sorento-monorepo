@@ -1,6 +1,6 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useMemo } from "react";
-import { useParams, Link as RouterLink } from "react-router";
+import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { eligibleBenefits } from "@sorento/core";
 import type { Benefit, DiagnosticAnswers } from "@sorento/domain";
@@ -8,7 +8,6 @@ import { CatalogNotice } from "@/components/CatalogNotice";
 import { CautionNotice } from "@/components/CautionNotice";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
@@ -23,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Link } from "@/components/ui/link";
 
 export const BenefitsPage = () => {
@@ -84,14 +83,7 @@ export const BenefitsPage = () => {
   );
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.benefits.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.benefits.title}>
       <ErrorAlert message={addToTracking.errorMessage} />
 
       {eligible.length === 0 ? (
@@ -144,6 +136,6 @@ export const BenefitsPage = () => {
           </div>
         ))
       )}
-    </div>
+    </PageShell>
   );
 };

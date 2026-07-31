@@ -1,12 +1,10 @@
-import { linkVariants } from "@/components/ui/link";
-import { Link as RouterLink } from "react-router";
+import { PageShell } from "@/layout/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { dossierStatusSchema } from "@sorento/domain";
 import { AdminMetricsRepository } from "@sorento/supabase-client";
 import { supabase } from "@/lib/supabase-client";
 import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
 import { Heading, Text } from "@/components/ui/typography";
@@ -29,14 +27,7 @@ export const MetricsPage = () => {
   });
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{adminContent.metrics.title}</Heading>
-        <RouterLink className={linkVariants()} to="/admin">
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo="/admin" title={adminContent.metrics.title}>
       <Alert>
         <AlertIndicator />
         <AlertDescription>{adminContent.metrics.notice}</AlertDescription>
@@ -88,6 +79,6 @@ export const MetricsPage = () => {
           </CardContent>
         </Card>
       ) : null}
-    </div>
+    </PageShell>
   );
 };

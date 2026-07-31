@@ -1,10 +1,9 @@
-import { linkVariants } from "@/components/ui/link";
-import { useParams, Link as RouterLink } from "react-router";
+import { PageShell } from "@/layout/PageShell";
+import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { CatalogNotice } from "@/components/CatalogNotice";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
@@ -20,7 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/components/ui/link";
 
@@ -68,14 +67,7 @@ export const ForgottenMoneyPage = () => {
   const contracts = contractsQuery?.data ?? [];
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.forgottenMoney.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.forgottenMoney.title}>
       <Alert>
         <AlertIndicator />
         <AlertDescription>{dossierContent.forgottenMoney.notice}</AlertDescription>
@@ -148,6 +140,6 @@ export const ForgottenMoneyPage = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 };

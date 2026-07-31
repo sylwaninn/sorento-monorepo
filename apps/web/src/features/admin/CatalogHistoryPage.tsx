@@ -1,14 +1,12 @@
-import { linkVariants } from "@/components/ui/link";
-import { Link as RouterLink } from "react-router";
+import { PageShell } from "@/layout/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { CatalogHistoryRepository } from "@sorento/supabase-client";
 import type { CatalogHistoryAction } from "@sorento/domain";
 import { supabase } from "@/lib/supabase-client";
 import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 
 const ACTION_COLOR: Record<CatalogHistoryAction, "secondary" | "default" | "destructive"> = {
@@ -24,14 +22,7 @@ export const CatalogHistoryPage = () => {
   });
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{adminContent.history.title}</Heading>
-        <RouterLink className={linkVariants()} to="/admin">
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo="/admin" title={adminContent.history.title}>
       {historyQuery.isPending ? (
         <InlineLoader />
       ) : (
@@ -65,6 +56,6 @@ export const CatalogHistoryPage = () => {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageShell>
   );
 };

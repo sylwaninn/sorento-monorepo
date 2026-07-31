@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { cn } from "@/lib/utils";
 import { useEffect, useState, type FormEvent } from "react";
@@ -35,7 +36,7 @@ export const PasswordResetConfirmPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{authContent.passwordResetConfirm.title}</CardTitle>
@@ -59,7 +60,7 @@ export const PasswordResetConfirmPage = () => {
           <NewPasswordForm />
         )}
       </Card>
-    </div>
+    </CenteredShell>
   );
 };
 
