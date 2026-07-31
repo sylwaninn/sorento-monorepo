@@ -78,12 +78,7 @@ const EmailChangeCard = () => {
 
           <Field>
             <FieldLabel htmlFor="currentEmail">{accountContent.email.currentLabel}</FieldLabel>
-            <Input
-              id="currentEmail"
-              name="currentEmail"
-              value={user?.email ?? ""}
-              onChange={() => {}}
-            />
+            <Input disabled id="currentEmail" name="currentEmail" value={user?.email ?? ""} />
           </Field>
 
           <Field>

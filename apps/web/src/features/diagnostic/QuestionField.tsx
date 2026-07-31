@@ -30,10 +30,14 @@ interface ChoiceFieldProps {
 
 const ChoiceField = ({ id, title, options, selected, error, onSelect }: ChoiceFieldProps) => (
   <Field>
-    <FieldLabel htmlFor={id}>{title}</FieldLabel>
+    {/*
+      aria-labelledby, not htmlFor: the group is a div, which a label cannot point at, so the
+      htmlFor association would silently do nothing and leave the radiogroup unnamed.
+    */}
+    <FieldLabel id={`${id}-label`}>{title}</FieldLabel>
     <RadioGroup
       aria-invalid={Boolean(error)}
-      id={id}
+      aria-labelledby={`${id}-label`}
       name={id}
       onValueChange={onSelect}
       required

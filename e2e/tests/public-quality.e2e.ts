@@ -31,6 +31,11 @@ const HEADER_ACTION = 'header [data-slot="public-action"][href="/diagnostic"]';
  */
 const HEADER_ACTION_MAX_WIDTH = 160;
 const HERO_ACTION = `${HERO_SECTION} [data-slot="public-action"]`;
+/**
+ * The same kind of ceiling for the hero's primary action, which has more room than the header's
+ * but still shares its row with the quiet action from md up: past this the pair wraps.
+ */
+const HERO_ACTION_MAX_WIDTH = 240;
 const LEGAL_BACK_ACTION = 'header [data-slot="public-action"][data-direction="back"]';
 
 const waitForStablePage = async (page: Page): Promise<void> => {
@@ -131,7 +136,7 @@ test.describe("public quality contracts", () => {
           .locator(HERO_ACTION)
           .first()
           .evaluate((element) => element.getBoundingClientRect().width);
-        expect(heroActionWidth).toBeLessThanOrEqual(240);
+        expect(heroActionWidth).toBeLessThanOrEqual(HERO_ACTION_MAX_WIDTH);
       }
 
       if (viewport.name === "mobile") {
