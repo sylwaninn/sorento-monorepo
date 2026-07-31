@@ -1,19 +1,10 @@
-import { linkVariants } from "@/components/ui/link";
 import { Link as RouterLink } from "react-router";
 import { adminContent } from "@/features/admin/content";
-import { sharedContent } from "@/components/content";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heading } from "@/components/ui/typography";
+import { PageShell } from "@/layout/PageShell";
 
 export const AdminHomePage = () => (
-  <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-    <div className="flex items-center justify-between">
-      <Heading level={1}>{adminContent.home.title}</Heading>
-      <RouterLink className={linkVariants()} to="/mes-dossiers">
-        {sharedContent.back}
-      </RouterLink>
-    </div>
-
+  <PageShell backTo="/mes-dossiers" title={adminContent.home.title}>
     <div className="flex flex-col gap-3">
       <RouterLink to="/admin/referentiel">
         <Card className="hover:bg-muted/50 transition-colors">
@@ -41,5 +32,5 @@ export const AdminHomePage = () => (
         </Card>
       </RouterLink>
     </div>
-  </div>
+  </PageShell>
 );

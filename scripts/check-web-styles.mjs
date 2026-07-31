@@ -181,31 +181,34 @@ for (const file of walk(WEB_SOURCE)) {
     }
   }
 
-  if (
-    projectPath.startsWith("apps/web/src/features/landing/") &&
-    extname(file) === ".tsx" &&
-    !projectPath.endsWith(".test.tsx")
-  ) {
-    const landingChecks = [
-      {
-        pattern: /<Card(?:\s|>)/,
-        message: "direct Card root; use PublicCard so the shared tone contract stays enforced",
-      },
+  // The whole public surface, not only the landing feature: a shared component or a legal page
+  // ships the same French to the same reader, and a string written inline there is just as
+  // invisible to the copy review and to the E2E mirrors.
+  if (isPublicSurface && !isTest && extname(file) === ".tsx") {
+    const copyChecks = [
       {
         pattern: /\baria-label\s*=\s*["'][^"']+["']/,
-        message: "hard-coded accessible copy; move it to the landing content catalog",
+        message: "hard-coded accessible copy; move it to the feature's content catalog",
       },
       {
         pattern: /\balt\s*=\s*["'][^"']+["']/,
-        message: "hard-coded image copy; move it to the landing content catalog",
+        message: "hard-coded image copy; move it to the feature's content catalog",
       },
       {
         pattern: />\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’ -]*\s*</,
-        message: "hard-coded visible copy; move it to the landing content catalog",
+        message: "hard-coded visible copy; move it to the feature's content catalog",
       },
     ];
 
-    for (const check of landingChecks) {
+    // Landing only: the tone contract is the landing's own, stated by PublicCard.
+    if (projectPath.startsWith("apps/web/src/features/landing/")) {
+      copyChecks.unshift({
+        pattern: /<Card(?:\s|>)/,
+        message: "direct Card root; use PublicCard so the shared tone contract stays enforced",
+      });
+    }
+
+    for (const check of copyChecks) {
       const match = check.pattern.exec(source);
       if (match) {
         failures.push(`${matchAddress(projectPath, source, match.index)}: ${check.message}`);
@@ -269,6 +272,7 @@ for (const asset of walk(PUBLIC_ASSETS)) {
  * to. Longest namespace first: `--font-weight-strong` belongs to `--font-weight-`, not `--font-`.
  */
 const THEME_NAMESPACES = [
+  ["--grid-template-columns-", ["grid-cols-"]],
   ["--font-weight-", ["font-"]],
   ["--container-", ["max-w-", "min-w-", "w-"]],
   ["--tracking-", ["tracking-"]],
@@ -326,6 +330,72 @@ if (/export const \w*Icons?\s*=\s*\[/.test(landingPresentation)) {
   failures.push(
     "apps/web/src/features/landing/presentation.ts: icon arrays couple visuals to content order; use an ID-keyed record",
   );
+}
+
+/**
+ * A recurring arbitrary value is a token someone declined to name.
+ *
+ * A one-off `min-h-[calc(100svh-5rem)]` beside the comment explaining it is fine: that is what
+ * arbitrary values are for. The same bracketed utility appearing in two files is the moment the
+ * rule in CLAUDE.md fires ("a recurring size earns a token"), and nothing else would ever say
+ * so: each file looks reasonable on its own. Variants are stripped first so `md:p-[2rem]` and
+ * `p-[2rem]` count as the same decision. The registry is exempt: its classes are upstream's.
+ */
+const arbitraryUsage = new Map();
+
+for (const file of walk(WEB_SOURCE)) {
+  const projectPath = relative(ROOT, file);
+  if (!CODE_EXTENSIONS.has(extname(file))) continue;
+  if (projectPath.startsWith(REGISTRY)) continue;
+  if (projectPath.endsWith(".test.ts") || projectPath.endsWith(".test.tsx")) continue;
+
+  const source = readFileSync(file, "utf8");
+  for (const [, quoted] of source.matchAll(/["'`]([^"'`]*)["'`]/g)) {
+    for (const utility of quoted.split(/\s+/)) {
+      if (!/^[\w!:*&>~[\]/().,%#-]+-\[[^\]]+\]$/.test(utility)) continue;
+      const bracketAt = utility.indexOf("[");
+      const variantEnd = utility.slice(0, bracketAt).lastIndexOf(":");
+      const canonical = variantEnd === -1 ? utility : utility.slice(variantEnd + 1);
+      const users = arbitraryUsage.get(canonical) ?? new Set();
+      users.add(projectPath);
+      arbitraryUsage.set(canonical, users);
+    }
+  }
+}
+
+for (const [utility, users] of arbitraryUsage) {
+  if (users.size < 2) continue;
+  failures.push(
+    `${[...users].sort().join(", ")}: the arbitrary value ${utility} recurs; a recurring size earns a token in ${THEME_ENTRY}`,
+  );
+}
+
+/**
+ * The registry manifest and the registry directory, compared in both directions.
+ *
+ * The registry is a copy of code that lives upstream, and a copy drifts silently: a file added
+ * by hand, or deleted without its row, is a decision nobody wrote down. REGISTRY.md is where it
+ * is written down, with the deviations upstream will overwrite on the next `shadcn diff` pass.
+ */
+const REGISTRY_MANIFEST = join(ROOT, REGISTRY, "REGISTRY.md");
+const manifestEntries = [...readFileSync(REGISTRY_MANIFEST, "utf8").matchAll(/^\| `([^`]+)`/gm)]
+  .map((match) => match[1])
+  .filter((name) => name !== "File");
+const registryFiles = walk(join(ROOT, REGISTRY))
+  .map((file) => relative(join(ROOT, REGISTRY), file).split(sep).join("/"))
+  .filter((name) => name !== "REGISTRY.md");
+
+for (const name of registryFiles) {
+  if (!manifestEntries.includes(name)) {
+    failures.push(
+      `${REGISTRY}${name}: in the registry but not in REGISTRY.md; declare where it comes from and how it deviates`,
+    );
+  }
+}
+for (const name of manifestEntries) {
+  if (!registryFiles.includes(name)) {
+    failures.push(`${REGISTRY}REGISTRY.md: names ${name}, which is gone; drop the row`);
+  }
 }
 
 if (failures.length > 0) {

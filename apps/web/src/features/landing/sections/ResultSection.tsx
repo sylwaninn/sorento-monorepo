@@ -24,10 +24,7 @@ export const ResultSection = () => (
           {landingContent.result.features.map((feature) => {
             const ResultIcon = resultIconById[feature.id];
             return (
-              <li
-                key={feature.id}
-                className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-5 py-5"
-              >
+              <li key={feature.id} className="grid-cols-icon-row grid items-start gap-5 py-5">
                 <IconTile>
                   <ResultIcon aria-hidden="true" strokeWidth={1.5} />
                 </IconTile>

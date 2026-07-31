@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { cn } from "@/lib/utils";
 import { useNavigate, Link as RouterLink } from "react-router";
@@ -47,7 +48,7 @@ export const DiagnosticResultPage = () => {
 
   if (!isDiagnosticComplete(answers)) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <CenteredShell>
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col gap-4 py-6">
             <Alert>
@@ -59,7 +60,7 @@ export const DiagnosticResultPage = () => {
             </RouterLink>
           </CardContent>
         </Card>
-      </div>
+      </CenteredShell>
     );
   }
 
@@ -90,7 +91,7 @@ export const DiagnosticResultPage = () => {
   })).filter((entry) => entry.count > 0);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{diagnosticContent.result.title}</CardTitle>
@@ -166,6 +167,6 @@ export const DiagnosticResultPage = () => {
           )}
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };

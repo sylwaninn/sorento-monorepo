@@ -1,11 +1,10 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useState, type FormEvent } from "react";
-import { useParams, Link as RouterLink } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { contractInputSchema, type Contract, type ContractInput } from "@sorento/domain";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
@@ -14,7 +13,7 @@ import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
@@ -39,14 +38,7 @@ export const ContractsPage = () => {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.contracts.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.contracts.title}>
       <ErrorAlert message={remove.errorMessage} />
 
       <Card>
@@ -119,7 +111,7 @@ export const ContractsPage = () => {
           </Button>
         )
       ) : null}
-    </div>
+    </PageShell>
   );
 };
 

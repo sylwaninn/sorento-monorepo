@@ -15,7 +15,7 @@ src/
 ├── features/      # One directory per feature: account, activation, admin, auth,
 │                  # content, diagnostic, dossier(s), landing, legal, notifications
 ├── hooks/         # Shared hooks
-├── layout/        # App shell
+├── layout/        # App shell: header, PageShell and CenteredShell page scaffolding
 ├── lib/           # Framework glue (query client, supabase wiring, helpers)
 ├── index.css      # The only authored stylesheet: @theme tokens and the base layer
 ├── navigation.ts  # Public URLs and homepage anchors
@@ -26,6 +26,10 @@ A feature that grows past a screen splits the same way the homepage does: `secti
 bands of the page, `components/` for the pieces they share, `content/` for one copy module per
 section, and `presentation.ts` for the visuals keyed by content id. Nothing in `components/`
 imports a feature; a shared component that needs feature data takes it as a prop.
+
+A signed-in screen never writes its own page scaffolding: `PageShell` carries the centred
+column and the header row pairing the level 1 heading with the way back, and `CenteredShell`
+carries the one-card-in-the-middle ground the auth and activation flows float on.
 
 ## Styling
 
@@ -38,12 +42,16 @@ the element, and a colour is always a semantic token (`bg-card`, `text-muted-for
 `components/ui/` is the shadcn registry, added through its CLI and kept close to upstream: the
 theme is what makes it ours. Where a component gained an API the whole app needs (a `pending`
 button, an `asChild` card title, an alert that derives its own icon), the reason sits in a
-comment beside it.
+comment beside it. Every file there is declared in `components/ui/REGISTRY.md` with its source
+and its deviations, and the manifest is compared against the directory by the gate; updating
+the upstream components goes through `npx shadcn@latest diff`, as the manifest describes.
 
 `pnpm check:styles` enforces all of it, along with the 300-line component limit, the shared
 components' independence from features, the single navigation source, the absence of a native
-`<a>` or `<button>` outside the registry, and two audits against dead weight: a theme token
-nothing names, and a file in `public/` no source file names.
+`<a>` or `<button>` outside the registry, an arbitrary value recurring across files (a one-off
+`h-[calc(...)]` beside its comment is fine; the same bracketed utility in two files earns a
+token), hard-coded copy anywhere on the public surface, and two audits against dead weight: a
+theme token nothing names, and a file in `public/` no source file names.
 
 ## Images
 

@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
 import { todayIso } from "@/lib/dates";
@@ -39,7 +40,7 @@ export const ActivateTrustedContactPage = () => {
   const effectiveAt = requestActivation.data?.effectiveAt ?? null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{activationContent.activate.title}</CardTitle>
@@ -116,6 +117,6 @@ export const ActivateTrustedContactPage = () => {
           </RouterLink>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };

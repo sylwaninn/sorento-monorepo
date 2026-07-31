@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { useQuery } from "@tanstack/react-query";
 import { Link as RouterLink } from "react-router";
@@ -27,7 +28,7 @@ export const DossiersPage = () => {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Mes dossiers</CardTitle>
@@ -72,6 +73,6 @@ export const DossiersPage = () => {
           </Button>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };

@@ -1,4 +1,4 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useState } from "react";
 import { todayIso } from "@/lib/dates";
 import { useParams, Link as RouterLink } from "react-router";
@@ -11,11 +11,10 @@ import { repositories } from "@/lib/repositories";
 import { useDossier } from "@/hooks/use-dossier";
 import { dossierContent } from "@/features/dossier/content";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Progress } from "@/components/ui/progress";
@@ -104,17 +103,15 @@ export const PreparationDashboardPage = () => {
   const doneCount = blocks.filter((block) => block.done).length;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>
+    <PageShell
+      backTo="/mes-dossiers"
+      title={
+        <>
           {dossierContent.preparation.title} · {access.dossier?.subjectFirstName}{" "}
           {access.dossier?.subjectLastName}
-        </Heading>
-        <RouterLink className={linkVariants()} to="/mes-dossiers">
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+        </>
+      }
+    >
       <Text tone="muted" size="sm">
         {dossierContent.preparation.intro}
       </Text>
@@ -158,7 +155,7 @@ export const PreparationDashboardPage = () => {
       </div>
 
       {access.can("dossier:update") ? <DeclareDeathDialog dossierId={dossierId} /> : null}
-    </div>
+    </PageShell>
   );
 };
 

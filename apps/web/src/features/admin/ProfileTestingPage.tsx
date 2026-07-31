@@ -1,7 +1,6 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useMemo, useState } from "react";
 import { todayIso } from "@/lib/dates";
-import { Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { AnswerValue, DiagnosticAnswers } from "@sorento/domain";
 import { applicableQuestions, evaluateJourney } from "@sorento/core";
@@ -11,11 +10,10 @@ import { QuestionField } from "@/features/diagnostic/QuestionField";
 import { questionContentFor } from "@/features/diagnostic/content";
 import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading, Text } from "@/components/ui/typography";
+import { Text } from "@/components/ui/typography";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 
@@ -77,14 +75,7 @@ export const ProfileTestingPage = () => {
   ]);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{adminContent.testing.title}</Heading>
-        <RouterLink className={linkVariants()} to="/admin">
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo="/admin" title={adminContent.testing.title}>
       <Alert>
         <AlertIndicator />
         <AlertDescription>{adminContent.testing.notice}</AlertDescription>
@@ -162,6 +153,6 @@ export const ProfileTestingPage = () => {
           </Card>
         </>
       )}
-    </div>
+    </PageShell>
   );
 };

@@ -72,12 +72,16 @@ test(web): cover the landing header hook and the crawler files
 
 1. Stage only the relevant files: `git add <specific-files>` (never `git add .` or `git add -A`)
 2. Create commit following **MANDATORY** rules:
-   - Follow `.claude/rules/commits.md`, the single source for format,
-     types, scope vocabulary and examples: `type(scope): description`,
-     one line only, imperative, lowercase, scope from that file's list
-   - Two examples, the rest live in commits.md:
-     - `feat(web): add dossier activation screen`
+   - Format: `type(scope): description`
+   - **ONE LINE ONLY**, multiline commits are forbidden
+   - Types: feat, fix, docs, style, refactor, test, chore
+   - Scope: the workspace the change belongs to (web, supabase, core, domain, client, e2e, config, deps)
+   - Description: lowercase, no period at end, start with a verb
+   - Examples:
+     - `feat(web): add PIN verification flow`
      - `fix(supabase): escape user-supplied text in outbound emails`
+     - `refactor(core): extract the eligibility window into its own rule`
+     - `chore(web): move the landing copy into one module per section`
 
 3. **NEVER use `--no-verify`**, all commits must pass pre-commit hooks
 4. If hooks fail, fix the issues and retry
@@ -220,6 +224,18 @@ After creation:
 - Fill all template sections appropriately
 - Add relevant labels if applicable
 - Request reviewers if needed
+
+## Commit Message Examples
+
+```
+feat(web): add the trusted contact activation screen
+fix(supabase): escape user-supplied text in outbound emails
+refactor(core): extract the eligibility window into its own rule
+docs(security): record the grace period the activation flow enforces
+style(web): drop the theme tokens nothing names
+test(e2e): drive every public screen the way a person drives it
+chore(deps): update dependency X to v5
+```
 
 ## PR Title Guidelines
 

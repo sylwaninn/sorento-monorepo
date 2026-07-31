@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { InvitationRepository, TrustedContactRepository } from "@sorento/supabase-client";
@@ -61,7 +62,7 @@ export const VerifyEmailPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{authContent.verifyEmail.title}</CardTitle>
@@ -101,7 +102,7 @@ export const VerifyEmailPage = () => {
           </Button>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };
 

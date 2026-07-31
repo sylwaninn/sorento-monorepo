@@ -147,6 +147,11 @@
   --spacing-gutter: clamp(1.25rem, 3vw, 2.5rem);
   --spacing-shell-gutter: clamp(1.25rem, 3vw, 3rem);
   --spacing-card: clamp(1.5rem, 4vw, 2.5rem);
+  /* The rhythm of a dense list or paragraph stack: one step tighter than gap-4. */
+  --spacing-snug: 0.9rem;
+
+  /* An icon seated beside copy that may wrap: the copy column absorbs the width. */
+  --grid-template-columns-icon-row: auto minmax(0, 1fr);
 
   /*
    * A named type scale keeps the clamp() curves in one place. Sizes that always travel with a

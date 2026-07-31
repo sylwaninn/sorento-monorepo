@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link as RouterLink } from "react-router";
@@ -49,7 +50,7 @@ export const AcceptInvitationPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{dossierContent.acceptInvitation.title}</CardTitle>
@@ -116,6 +117,6 @@ export const AcceptInvitationPage = () => {
           </RouterLink>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };

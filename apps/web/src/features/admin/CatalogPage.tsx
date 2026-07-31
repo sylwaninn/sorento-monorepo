@@ -1,23 +1,13 @@
-import { linkVariants } from "@/components/ui/link";
-import { Link as RouterLink } from "react-router";
-import { sharedContent } from "@/components/content";
 import { adminContent } from "@/features/admin/content";
 import { BenefitsTab } from "@/features/admin/catalog/BenefitsTab";
 import { ConditionsTab } from "@/features/admin/catalog/ConditionsTab";
 import { LetterTemplatesTab } from "@/features/admin/catalog/LetterTemplatesTab";
 import { ProceduresTab } from "@/features/admin/catalog/ProceduresTab";
-import { Heading } from "@/components/ui/typography";
+import { PageShell } from "@/layout/PageShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const CatalogPage = () => (
-  <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-    <div className="flex items-center justify-between">
-      <Heading level={1}>{adminContent.catalog.title}</Heading>
-      <RouterLink className={linkVariants()} to="/admin">
-        {sharedContent.back}
-      </RouterLink>
-    </div>
-
+  <PageShell backTo="/admin" title={adminContent.catalog.title}>
     {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
     <Tabs defaultValue="procedures">
       <TabsList aria-label={adminContent.catalog.title}>
@@ -41,5 +31,5 @@ export const CatalogPage = () => (
         <LetterTemplatesTab />
       </TabsContent>
     </Tabs>
-  </div>
+  </PageShell>
 );

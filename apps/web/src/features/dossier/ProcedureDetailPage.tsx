@@ -1,10 +1,10 @@
-import { linkVariants } from "@/components/ui/link";
-import { useParams, Link as RouterLink } from "react-router";
+import { CenteredShell } from "@/layout/CenteredShell";
+import { PageShell } from "@/layout/PageShell";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { TrackingStatus } from "@sorento/domain";
 import { CatalogNotice } from "@/components/CatalogNotice";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { CommentsTab } from "@/features/dossier/procedure-detail/CommentsTab";
 import { HistoryTab } from "@/features/dossier/procedure-detail/HistoryTab";
@@ -15,7 +15,6 @@ import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading } from "@/components/ui/typography";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
@@ -69,24 +68,17 @@ export const ProcedureDetailPage = () => {
 
   if (!procedure || !tracking) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <CenteredShell>
         <Alert variant="destructive">
           <AlertIndicator />
           <AlertDescription>{dossierContent.procedureDetail.notFound}</AlertDescription>
         </Alert>
-      </div>
+      </CenteredShell>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{procedure.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={procedure.title}>
       {/* Uncontrolled tabs open on nothing without this: the panel is chosen by value, not by order. */}
       <Tabs defaultValue="procedure">
         <TabsList aria-label={dossierContent.procedureDetail.tabsLabel}>
@@ -129,6 +121,6 @@ export const ProcedureDetailPage = () => {
         lastVerifiedDate={procedure.lastVerifiedDate}
         referenceProfession={procedure.referenceProfession}
       />
-    </div>
+    </PageShell>
   );
 };

@@ -1,10 +1,9 @@
-import { linkVariants } from "@/components/ui/link";
+import { PageShell } from "@/layout/PageShell";
 import { useEffect, useState, type FormEvent } from "react";
-import { useParams, Link as RouterLink } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
-import { sharedContent } from "@/components/content";
 import { dossierContent } from "@/features/dossier/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
@@ -13,7 +12,6 @@ import { repositories } from "@/lib/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Heading } from "@/components/ui/typography";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -58,14 +56,7 @@ export const WishesPage = () => {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
-      <div className="flex items-center justify-between">
-        <Heading level={1}>{dossierContent.wishes.title}</Heading>
-        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
-          {sharedContent.back}
-        </RouterLink>
-      </div>
-
+    <PageShell backTo={`/dossiers/${dossierId}`} title={dossierContent.wishes.title}>
       <Alert>
         <AlertIndicator />
         <AlertDescription>{dossierContent.wishes.notice}</AlertDescription>
@@ -126,6 +117,6 @@ export const WishesPage = () => {
           ) : null}
         </form>
       </Card>
-    </div>
+    </PageShell>
   );
 };

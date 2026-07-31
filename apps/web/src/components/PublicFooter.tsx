@@ -53,7 +53,7 @@ export const PublicFooter = ({ anchorPrefix = "" }: PublicFooterProps) => (
 
       {/* The scope promise, small but on every public page: what Sorento does, what it never
           claims to be, and the general-information notice compliance asks for. */}
-      <div className="border-line mt-12 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 border-t pt-6">
+      <div className="border-line grid-cols-icon-row mt-12 grid gap-x-3 gap-y-1.5 border-t pt-6">
         <ShieldCheck
           aria-hidden="true"
           className="text-sage-deep mt-0.5 size-4"

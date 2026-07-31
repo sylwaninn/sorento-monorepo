@@ -1,3 +1,4 @@
+import { CenteredShell } from "@/layout/CenteredShell";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
@@ -73,7 +74,7 @@ export const DiagnosticWizardPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <CenteredShell>
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col gap-3">
           <Progress
@@ -108,6 +109,6 @@ export const DiagnosticWizardPage = () => {
           </Button>
         </CardFooter>
       </Card>
-    </div>
+    </CenteredShell>
   );
 };
