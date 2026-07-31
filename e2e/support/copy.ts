@@ -7,7 +7,7 @@ import { mirrors } from "#e2e/support/mirrors";
  * same file. See mirrors.ts for why any of this is repeated at all.
  */
 export const copy = {
-  landingCta: mirrors("features/landing/content.ts", "Commencer mon diagnostic gratuit"),
+  landingCta: mirrors("features/landing/content/hero.ts", "Organiser les démarches"),
 
   modeDeath: mirrors("features/diagnostic/content.ts", "Un proche est décédé"),
   modePreparation: mirrors("features/diagnostic/content.ts", "Je prépare ma situation"),

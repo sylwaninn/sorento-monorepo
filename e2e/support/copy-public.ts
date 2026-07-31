@@ -7,44 +7,38 @@ import { mirrors } from "#e2e/support/mirrors";
  */
 export const copyPublic = {
   heroTitle: mirrors(
-    "features/landing/content.ts",
-    "Après un décès, on ne devrait pas avoir à deviner",
+    "features/landing/content/hero.ts",
+    "Après un décès, un chemin clair pour vous et vos proches.",
   ),
-  ctaHint: mirrors("features/landing/content.ts", "Sans compte, en quelques minutes."),
-  howItWorksTitle: mirrors("features/landing/content.ts", "Comment ça marche"),
-  scopeTitle: mirrors(
-    "features/landing/content.ts",
-    "Ce que nous faisons, et ce que nous ne faisons pas",
+  howItWorksTitle: mirrors(
+    "features/landing/content/how-it-works.ts",
+    "Un chemin simple, en trois étapes.",
   ),
-  reassuranceTitle: mirrors("features/landing/content.ts", "Ce que vous devez savoir"),
+  scopeTitle: mirrors("components/content.ts", "Sorento informe et organise. Vous gardez la main."),
+  scopeDescription: mirrors(
+    "components/content.ts",
+    "Sorento ne réalise pas les démarches à votre place et ne remplace ni un notaire, ni un avocat, ni un conseiller. Les courriers proposés restent des modèles que vous relisez et signez.",
+  ),
+  reassuranceTitle: mirrors(
+    "features/landing/content/reassurance.ts",
+    "Des engagements clairs envers votre famille.",
+  ),
 
-  // The four promises a bereaved visitor is owed before anything is asked of them. CLAUDE.md
-  // makes two of them compliance rules rather than marketing: no commission, and information
-  // rather than individual legal advice.
   takesNoCommission: mirrors(
-    "features/landing/content.ts",
-    "Prélever une commission sur les sommes que vous récupérez",
+    "features/landing/content/reassurance.ts",
+    "Sorento ne prend rien sur les sommes éventuellement versées à votre famille.",
   ),
-  givesNoLegalAdvice: mirrors(
-    "features/landing/content.ts",
-    "Donner un conseil juridique adapté à votre cas particulier",
-  ),
-  replacesNoProfessional: mirrors(
-    "features/landing/content.ts",
-    "Remplacer un notaire, un avocat ou un conseiller",
-  ),
-  freeForFamilies: mirrors("features/landing/content.ts", "Gratuit pour les familles"),
-  noCommissionTitle: mirrors("features/landing/content.ts", "Aucune commission"),
+  freeForFamilies: mirrors("features/landing/content/reassurance.ts", "Gratuit pour les familles"),
+  noCommissionTitle: mirrors("features/landing/content/reassurance.ts", "Aucune commission"),
   noCommissionDetail: mirrors(
-    "features/landing/content.ts",
-    "Les services de recherche de sommes non réclamées (Ciclade, AGIRA) sont publics et gratuits. Nous ne prenons rien dessus.",
+    "features/landing/content/reassurance.ts",
+    "Les services AGIRA et Ciclade sont publics et gratuits. Sorento ne prend rien sur les sommes éventuellement versées à votre famille.",
   ),
-
-  footerLegalNotice: mirrors("features/landing/content.ts", "Mentions légales"),
-  footerPrivacy: mirrors("features/landing/content.ts", "Confidentialité"),
-  footerTerms: mirrors("features/landing/content.ts", "Conditions générales d'utilisation"),
-  footerLogin: mirrors("features/landing/content.ts", "J'ai déjà un compte"),
-  footerSignup: mirrors("features/landing/content.ts", "Créer un compte"),
+  footerLegalNotice: mirrors("components/content.ts", "Mentions légales"),
+  footerPrivacy: mirrors("components/content.ts", "Confidentialité"),
+  footerTerms: mirrors("components/content.ts", "Conditions générales d’utilisation"),
+  footerLogin: mirrors("components/content.ts", "J’ai déjà un compte"),
+  footerSignup: mirrors("components/content.ts", "Créer un compte"),
 
   generalInformationNotice: mirrors(
     "components/content.ts",

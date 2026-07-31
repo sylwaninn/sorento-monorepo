@@ -57,7 +57,7 @@ export const legalContent = {
         title: "Données traitées",
         paragraphs: [
           "Données de compte : adresse email, prénom affiché aux autres membres du dossier.",
-          "Données de dossier : identité de la personne concernée, date du décès, réponses au questionnaire de diagnostic, avancement des démarches, notes, commentaires, documents déposés, contrats inventoriés et volontés saisies en mode préparation.",
+          "Données de dossier : identité de la personne concernée, date du décès, réponses au questionnaire, avancement des démarches, notes, commentaires, documents déposés, contrats inventoriés et volontés saisies en mode préparation.",
           "Données techniques : journaux de connexion et d'activité nécessaires à la sécurité du service.",
         ],
       },

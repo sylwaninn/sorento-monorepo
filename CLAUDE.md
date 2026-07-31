@@ -29,6 +29,15 @@ mobile workspace here, and none is to be added.
   `bg-sage`), never a raw Tailwind palette utility and never a literal.
   A recurring size, radius, shadow or type scale earns a token rather than an
   arbitrary value repeated across files.
+- A photograph ships as an AVIF and a JPEG at each width, declared in the feature's
+  presentation catalog and rendered through OptimizedPicture, never as a bare `<img>`.
+  Encode the AVIF with libaom (sharp, avifenc), never with macOS `sips`: its output carries
+  the right dimensions and satisfies `complete`, `naturalWidth` and `decode()`, and Chromium
+  then paints it as a fully transparent surface.
+- No eyebrow or kicker label above a heading, ever: the parenthesised
+  uppercase "( LABEL )" line with its coloured dot was removed deliberately
+  and must never come back, nor any small tracked-out uppercase label
+  introducing a section or card. A section opens with its title.
 
 ### Architecture
 
@@ -103,6 +112,9 @@ mobile workspace here, and none is to be added.
 
 ### Domain and compliance (sensitive context: bereavement)
 
+- Every user-facing French string follows WORDING.md: the lexicon around
+  death and money, the Organiser/Préparer journey naming, the CTA rules.
+  Read it before writing or editing any copy.
 - Cautious wording about entitlements and amounts: "people in a situation
   like yours may be entitled to…", never "you are entitled to".
 - Systematic referrals to regulated professionals (notaire, lawyer) on
