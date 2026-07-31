@@ -279,3 +279,5 @@ started from nothing, mutation testing, a build, and a secret scan.
 - **A photograph**: add every width to the feature's presentation catalog, render it through
   `OptimizedPicture`, and regenerate the screenshot baselines. The painted-pixel assertion covers
   it automatically; nothing else will notice an image that loads and paints nothing.
+- **A theme token**: use it in the same commit. `check:styles` refuses one nothing names, which
+  is also what keeps the type scale in `lib/theme.ts` from drifting from the stylesheet.
