@@ -1,10 +1,11 @@
-import { INVALIDATES } from "@/features/admin/catalog/ProceduresTab";
 import { useState, type FormEvent } from "react";
 import { procedureInputSchema, type Procedure, type ProcedureInput } from "@sorento/domain";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { adminContent } from "@/features/admin/content";
 import { DateFieldPicker, TimeWindowSelect } from "@/features/admin/catalog/shared";
 import { useAppMutation } from "@/hooks/use-app-mutation";
+import { todayIso } from "@/lib/dates";
+import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
+
+// The admin list and the list every dossier reads are two cache entries of the same data.
+// Declared here rather than in ProceduresTab: the tab imports this form, so the other direction
+// would close an import cycle.
+export const INVALIDATES = [queryKeys.catalog.allProcedures(), queryKeys.catalog.procedures()];
 
 const EMPTY_PROCEDURE_INPUT: ProcedureInput = {
   code: "",
@@ -25,7 +31,7 @@ const EMPTY_PROCEDURE_INPUT: ProcedureInput = {
   delayDays: null,
   referenceProfession: null,
   sourceUrl: "",
-  lastVerifiedDate: new Date().toISOString().slice(0, 10),
+  lastVerifiedDate: todayIso(),
   active: true,
 };
 

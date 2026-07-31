@@ -15,7 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
-import { Text } from "@/components/ui/typography";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -109,9 +108,9 @@ export const AccountDataCard = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>{accountContent.deleteAccount.confirmTitle}</AlertDialogTitle>
               </AlertDialogHeader>
+              {/* The warning belongs before the irreversible action, not after it. */}
               <AlertDialogDescription>
-                {/* The warning belongs before the irreversible action, not after it. */}
-                <Text size="sm">{accountContent.deleteAccount.confirmDescription}</Text>
+                {accountContent.deleteAccount.confirmDescription}
               </AlertDialogDescription>
               <AlertDialogFooter>
                 <AlertDialogCancel>{sharedContent.cancel}</AlertDialogCancel>
