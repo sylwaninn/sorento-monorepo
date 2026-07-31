@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Alert, Button, Card } from "@heroui/react";
 import { InvitationRepository, TrustedContactRepository } from "@sorento/supabase-client";
 import { useAuth } from "@/auth/useAuth";
 import { useResendConfirmationMutation } from "@/auth/use-auth-mutations";
@@ -17,6 +16,16 @@ import {
 } from "@/features/activation/pending-consent";
 import { authContent } from "@/features/auth/content";
 import { PageLoader } from "@/components/PageLoader";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -54,49 +63,43 @@ export const VerifyEmailPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{authContent.verifyEmail.title}</Card.Title>
-          <Card.Description>{authContent.verifyEmail.description}</Card.Description>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-4">
-          <Alert status="default">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>{authContent.verifyEmail.diagnosticKept}</Alert.Description>
-            </Alert.Content>
+        <CardHeader>
+          <CardTitle>{authContent.verifyEmail.title}</CardTitle>
+          <CardDescription>{authContent.verifyEmail.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Alert>
+            <AlertIndicator />
+            <AlertDescription>{authContent.verifyEmail.diagnosticKept}</AlertDescription>
           </Alert>
 
           {resend.isSuccess ? (
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{authContent.verifyEmail.emailResent}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>{authContent.verifyEmail.emailResent}</AlertDescription>
             </Alert>
           ) : null}
 
           {resend.isError ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{authErrorMessage(resend.error)}</Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertDescription>{authErrorMessage(resend.error)}</AlertDescription>
             </Alert>
           ) : null}
-        </Card.Content>
-        <Card.Footer>
+        </CardContent>
+        <CardFooter>
           <Button
             variant="outline"
-            fullWidth
-            isDisabled={!email || secondsLeft > 0}
-            isPending={resend.isPending}
-            onPress={resendEmail}
+            className="w-full"
+            disabled={!email || secondsLeft > 0}
+            pending={resend.isPending}
+            onClick={resendEmail}
           >
             {secondsLeft > 0
               ? `${authContent.verifyEmail.cooldownPrefix} ${secondsLeft}${authContent.verifyEmail.seconds}`
               : authContent.verifyEmail.resendButton}
           </Button>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );

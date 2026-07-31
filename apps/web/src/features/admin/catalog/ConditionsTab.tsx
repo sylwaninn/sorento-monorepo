@@ -1,17 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import {
-  Button,
-  Card,
-  FieldError,
-  Form,
-  Label,
-  ListBox,
-  Select,
-  TextArea,
-  Typography,
-} from "@heroui/react";
 import {
   conditionInputSchema,
   type Benefit,
@@ -27,6 +16,19 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
 import { fieldErrors } from "@/lib/zod-form-errors";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // The admin list and the list every dossier reads are two cache entries of the same data.
 const INVALIDATES = [queryKeys.catalog.conditions()];
@@ -67,7 +69,7 @@ export const ConditionsTab = () => {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <Card.Content className="flex flex-col gap-3 py-4">
+        <CardContent className="flex flex-col gap-3 py-4">
           {conditionsQuery.data && conditionsQuery.data.length > 0 ? (
             conditionsQuery.data.map((condition) => {
               const targetLabel = condition.procedureId
@@ -79,12 +81,12 @@ export const ConditionsTab = () => {
                   className="flex items-center justify-between gap-3 border-b pb-3"
                 >
                   <div className="flex flex-col">
-                    <Typography weight="medium">
+                    <Text className="font-medium">
                       {condition.procedureId
                         ? adminContent.catalog.conditions.targetProcedure
                         : adminContent.catalog.conditions.targetBenefit}{" "}
                       : {targetLabel}
-                    </Typography>
+                    </Text>
                     <span className="text-muted max-w-md truncate text-sm">
                       {JSON.stringify(condition.expression)}
                     </span>
@@ -93,7 +95,7 @@ export const ConditionsTab = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onPress={() => {
+                      onClick={() => {
                         setEditing(condition);
                         setIsFormOpen(true);
                       }}
@@ -109,11 +111,11 @@ export const ConditionsTab = () => {
               );
             })
           ) : (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {adminContent.catalog.conditions.empty}
-            </Typography.Paragraph>
+            </Text>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       {isFormOpen ? (
@@ -132,8 +134,8 @@ export const ConditionsTab = () => {
         />
       ) : (
         <Button
-          variant="primary"
-          onPress={() => {
+          variant="default"
+          onClick={() => {
             setEditing(null);
             setIsFormOpen(true);
           }}
@@ -169,6 +171,9 @@ const ConditionForm = ({
     condition ? JSON.stringify(condition.expression, null, 2) : "",
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // The trigger is what carries the name, so the visible label has to point at it.
+  const targetTypeFieldId = useId();
+  const targetFieldId = useId();
 
   const save = useAppMutation({
     mutationFn: (payload: ConditionInput) =>
@@ -208,57 +213,50 @@ const ConditionForm = ({
 
   return (
     <Card>
-      <Form onSubmit={onSubmit}>
-        <Card.Content className="flex flex-col gap-4">
+      <form onSubmit={onSubmit}>
+        <CardContent className="flex flex-col gap-4">
           <ErrorAlert message={save.errorMessage} />
 
           <Select
             value={targetType}
-            onChange={(value) => {
+            onValueChange={(value) => {
               setTargetType(targetTypeSchema.parse(value));
               setTargetId("");
             }}
           >
-            <Label>{c.targetLabel}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="procedure" textValue={c.targetProcedure}>
-                  {c.targetProcedure}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="benefit" textValue={c.targetBenefit}>
-                  {c.targetBenefit}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              </ListBox>
-            </Select.Popover>
+            <Label htmlFor={targetTypeFieldId}>{c.targetLabel}</Label>
+            <SelectTrigger id={targetTypeFieldId}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="procedure" textValue={c.targetProcedure}>
+                {c.targetProcedure}
+              </SelectItem>
+              <SelectItem value="benefit" textValue={c.targetBenefit}>
+                {c.targetBenefit}
+              </SelectItem>
+            </SelectContent>
           </Select>
 
-          <Select value={targetId} onChange={(value) => setTargetId(String(value))}>
-            <Label>{targetType === "procedure" ? c.targetProcedure : c.targetBenefit}</Label>
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {targets.map((target) => (
-                  <ListBox.Item key={target.id} id={target.id} textValue={target.title}>
-                    {target.title}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
+          <Select value={targetId} onValueChange={(value) => setTargetId(String(value))}>
+            <Label htmlFor={targetFieldId}>
+              {targetType === "procedure" ? c.targetProcedure : c.targetBenefit}
+            </Label>
+            <SelectTrigger id={targetFieldId}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {targets.map((target) => (
+                <SelectItem key={target.id} value={target.id} textValue={target.title}>
+                  {target.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="condition-expression">{c.expressionLabel}</Label>
-            <TextArea
+            <Textarea
               id="condition-expression"
               aria-label={c.expressionLabel}
               className="font-mono text-xs"
@@ -268,16 +266,16 @@ const ConditionForm = ({
             />
             {errors["expression"] ? <FieldError>{errors["expression"]}</FieldError> : null}
           </div>
-        </Card.Content>
-        <Card.Footer className="flex gap-2">
-          <Button type="submit" variant="primary" isPending={save.isPending} isDisabled={!targetId}>
+        </CardContent>
+        <CardFooter className="flex gap-2">
+          <Button type="submit" variant="default" pending={save.isPending} disabled={!targetId}>
             {adminContent.catalog.saveButton}
           </Button>
-          <Button variant="ghost" onPress={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {adminContent.catalog.cancelButton}
           </Button>
-        </Card.Footer>
-      </Form>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

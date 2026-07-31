@@ -1,6 +1,6 @@
+import { linkVariants } from "@/components/ui/link";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQueries } from "@tanstack/react-query";
-import { Alert, Button, Card, Chip, Link as HeroLink, Typography } from "@heroui/react";
 import { CatalogNotice } from "@/components/CatalogNotice";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
@@ -10,6 +10,19 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "@/components/ui/link";
 
 const FORGOTTEN_MONEY_PROCEDURE_CODES = ["ciclade_search", "agira_request"] as const;
 
@@ -57,17 +70,15 @@ export const ForgottenMoneyPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.forgottenMoney.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.forgottenMoney.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{dossierContent.forgottenMoney.notice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{dossierContent.forgottenMoney.notice}</AlertDescription>
       </Alert>
 
       <ErrorAlert message={addToTracking.errorMessage} />
@@ -75,35 +86,33 @@ export const ForgottenMoneyPage = () => {
       {blocks.map(({ procedure, entry }) => (
         <div key={procedure.id} className="flex flex-col gap-2">
           <Card>
-            <Card.Header>
-              <Card.Title>{procedure.title}</Card.Title>
-            </Card.Header>
-            <Card.Content className="flex flex-col gap-3">
+            <CardHeader>
+              <CardTitle>{procedure.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
               <p>{procedure.description}</p>
-              <HeroLink href={procedure.sourceUrl} target="_blank" rel="noreferrer noopener">
+              <Link href={procedure.sourceUrl} target="_blank" rel="noreferrer noopener">
                 {dossierContent.forgottenMoney.officialLink}
-              </HeroLink>
-              <Alert status="default">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{dossierContent.forgottenMoney.blockNotice}</Alert.Description>
-                </Alert.Content>
+              </Link>
+              <Alert>
+                <AlertIndicator />
+                <AlertDescription>{dossierContent.forgottenMoney.blockNotice}</AlertDescription>
               </Alert>
-            </Card.Content>
-            <Card.Footer>
+            </CardContent>
+            <CardFooter>
               {entry ? (
-                <Chip color="default">{dossierContent.statusLabels[entry.status]}</Chip>
+                <Badge variant="secondary">{dossierContent.statusLabels[entry.status]}</Badge>
               ) : (
                 <Button
-                  variant="primary"
-                  isDisabled={!access.can("tracking:update")}
-                  isPending={addToTracking.isPending && addToTracking.variables === procedure.id}
-                  onPress={() => addToTracking.mutate(procedure.id)}
+                  variant="default"
+                  disabled={!access.can("tracking:update")}
+                  pending={addToTracking.isPending && addToTracking.variables === procedure.id}
+                  onClick={() => addToTracking.mutate(procedure.id)}
                 >
                   {dossierContent.forgottenMoney.addButton}
                 </Button>
               )}
-            </Card.Footer>
+            </CardFooter>
           </Card>
           <CatalogNotice
             sourceUrl={procedure.sourceUrl}
@@ -115,15 +124,15 @@ export const ForgottenMoneyPage = () => {
 
       {/* Third block of E17: what the preparation phase inventoried, now to be checked. */}
       <Card>
-        <Card.Header>
-          <Card.Title>{dossierContent.forgottenMoney.contractsTitle}</Card.Title>
-          <Card.Description>{dossierContent.forgottenMoney.contractsIntro}</Card.Description>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-2">
+        <CardHeader>
+          <CardTitle>{dossierContent.forgottenMoney.contractsTitle}</CardTitle>
+          <CardDescription>{dossierContent.forgottenMoney.contractsIntro}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
           {contracts.length === 0 ? (
-            <Typography.Paragraph color="muted" size="sm">
+            <Text tone="muted" size="sm">
               {dossierContent.forgottenMoney.contractsEmpty}
-            </Typography.Paragraph>
+            </Text>
           ) : (
             contracts.map((contract) => (
               <div
@@ -133,11 +142,11 @@ export const ForgottenMoneyPage = () => {
                 <span>
                   {contract.contractType} · {contract.company}
                 </span>
-                <Typography color="muted">{contract.contractNumber ?? ""}</Typography>
+                <Text tone="muted">{contract.contractNumber ?? ""}</Text>
               </div>
             ))
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
     </div>
   );

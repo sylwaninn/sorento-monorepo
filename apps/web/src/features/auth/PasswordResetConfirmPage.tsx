@@ -1,16 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
+import { cn } from "@/lib/utils";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link as RouterLink } from "react-router";
-import {
-  Alert,
-  Button,
-  Card,
-  Description,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  TextField,
-} from "@heroui/react";
 import { passwordResetConfirmSchema } from "@sorento/domain";
 import { supabase } from "@/lib/supabase-client";
 import { fieldErrors } from "@/lib/zod-form-errors";
@@ -18,6 +9,11 @@ import { authErrorMessage } from "@/auth/auth-error-messages";
 import { usePasswordResetConfirmMutation } from "@/auth/use-auth-mutations";
 import { authContent } from "@/features/auth/content";
 import { InlineLoader } from "@/components/PageLoader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 
 type LinkState = "loading" | "valid" | "invalid";
 
@@ -41,26 +37,24 @@ export const PasswordResetConfirmPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{authContent.passwordResetConfirm.title}</Card.Title>
-        </Card.Header>
+        <CardHeader>
+          <CardTitle>{authContent.passwordResetConfirm.title}</CardTitle>
+        </CardHeader>
         {linkState === "loading" ? (
           <InlineLoader />
         ) : linkState === "invalid" ? (
-          <Card.Content className="flex flex-col gap-4">
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{authContent.passwordResetConfirm.invalidLinkTitle}</Alert.Title>
-                <Alert.Description>
-                  {authContent.passwordResetConfirm.invalidLinkDescription}
-                </Alert.Description>
-              </Alert.Content>
+          <CardContent className="flex flex-col gap-4">
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertTitle>{authContent.passwordResetConfirm.invalidLinkTitle}</AlertTitle>
+              <AlertDescription>
+                {authContent.passwordResetConfirm.invalidLinkDescription}
+              </AlertDescription>
             </Alert>
-            <RouterLink className="link text-center text-sm" to="/mot-de-passe-oublie">
+            <RouterLink className={cn(linkVariants(), "text-center")} to="/mot-de-passe-oublie">
               {authContent.passwordResetConfirm.requestNewLink}
             </RouterLink>
-          </Card.Content>
+          </CardContent>
         ) : (
           <NewPasswordForm />
         )}
@@ -88,67 +82,71 @@ const NewPasswordForm = () => {
 
   if (confirm.isSuccess) {
     return (
-      <Card.Content className="flex flex-col gap-4">
-        <Alert status="success">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>{authContent.passwordResetConfirm.success}</Alert.Description>
-          </Alert.Content>
+      <CardContent className="flex flex-col gap-4">
+        <Alert variant="success">
+          <AlertIndicator />
+          <AlertDescription>{authContent.passwordResetConfirm.success}</AlertDescription>
         </Alert>
-        <RouterLink className="link text-center text-sm" to="/mes-dossiers">
+        <RouterLink className={cn(linkVariants(), "text-center")} to="/mes-dossiers">
           {authContent.passwordResetConfirm.loginLink}
         </RouterLink>
-      </Card.Content>
+      </CardContent>
     );
   }
 
   return (
-    <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
-      <Card.Content className="flex flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <CardContent className="flex flex-col gap-4">
         {confirm.isError ? (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>{authErrorMessage(confirm.error)}</Alert.Description>
-            </Alert.Content>
+          <Alert variant="destructive">
+            <AlertIndicator />
+            <AlertDescription>{authErrorMessage(confirm.error)}</AlertDescription>
           </Alert>
         ) : null}
 
-        <TextField
-          isRequired
-          name="password"
-          type="password"
-          value={password}
-          onChange={setPassword}
-          isInvalid={Boolean(errors["password"])}
-        >
-          <Label>{authContent.passwordResetConfirm.passwordLabel}</Label>
-          <Input placeholder="••••••••••••" />
+        <Field>
+          <FieldLabel htmlFor="password">
+            {authContent.passwordResetConfirm.passwordLabel}
+          </FieldLabel>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            aria-invalid={Boolean(errors["password"])}
+            placeholder="••••••••••••"
+          />
           {errors["password"] ? (
             <FieldError>{errors["password"]}</FieldError>
           ) : (
-            <Description>{authContent.passwordResetConfirm.passwordHint}</Description>
+            <FieldDescription>{authContent.passwordResetConfirm.passwordHint}</FieldDescription>
           )}
-        </TextField>
+        </Field>
 
-        <TextField
-          isRequired
-          name="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={setConfirmPassword}
-          isInvalid={Boolean(errors["confirmPassword"])}
-        >
-          <Label>{authContent.passwordResetConfirm.confirmLabel}</Label>
-          <Input placeholder="••••••••••••" />
+        <Field>
+          <FieldLabel htmlFor="confirmPassword">
+            {authContent.passwordResetConfirm.confirmLabel}
+          </FieldLabel>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            aria-invalid={Boolean(errors["confirmPassword"])}
+            placeholder="••••••••••••"
+          />
           {errors["confirmPassword"] ? <FieldError>{errors["confirmPassword"]}</FieldError> : null}
-        </TextField>
-      </Card.Content>
-      <Card.Footer>
-        <Button type="submit" variant="primary" fullWidth isPending={confirm.isPending}>
+        </Field>
+      </CardContent>
+      <CardFooter>
+        <Button type="submit" variant="default" className="w-full" pending={confirm.isPending}>
           {authContent.passwordResetConfirm.submitButton}
         </Button>
-      </Card.Footer>
-    </Form>
+      </CardFooter>
+    </form>
   );
 };

@@ -1,6 +1,6 @@
-import type { ReactElement } from "react";
+import { createElement, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import type { RouteObject } from "react-router";
 
 vi.mock("@sorento/supabase-client", async (importOriginal) => {
@@ -31,13 +31,30 @@ import { signedInSession } from "@/test/supabase-stub";
 
 interface Screen {
   path: string;
-  element: ReactElement;
+  loadElement: () => Promise<ReactElement>;
 }
 
 const collectScreens = (table: readonly RouteObject[]): Screen[] =>
   table.flatMap((route) => [
-    ...(route.path !== undefined && route.element !== undefined
-      ? [{ path: route.path, element: route.element as ReactElement }]
+    ...(route.path !== undefined && (route.element !== undefined || route.lazy !== undefined)
+      ? [
+          {
+            path: route.path,
+            loadElement: async () => {
+              if (route.element !== undefined) return route.element as ReactElement;
+
+              if (typeof route.lazy !== "function") {
+                throw new Error(`Lazy route ${route.path ?? "(without path)"} is not loadable`);
+              }
+              const loadedRoute = await route.lazy();
+              const Component = loadedRoute?.Component;
+              if (Component === undefined || Component === null) {
+                throw new Error(`Lazy route ${route.path ?? "(without path)"} has no Component`);
+              }
+              return createElement(Component);
+            },
+          },
+        ]
       : []),
     ...(route.children === undefined ? [] : collectScreens(route.children)),
   ]);
@@ -69,9 +86,10 @@ describe("route table", () => {
 const FATAL_RENDER =
   /The above error occurred|caught the following error|Rendered (more|fewer) hooks/;
 
-describe.each(screens)("$path", ({ path, element }) => {
-  it("mounts", () => {
+describe.each(screens)("$path", ({ path, loadElement }) => {
+  it("mounts", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const element = await loadElement();
 
     const { container } = renderWithProviders(element, {
       route: visitable(path),
@@ -79,14 +97,18 @@ describe.each(screens)("$path", ({ path, element }) => {
       auth: { session: signedInSession(), user: signedInSession().user, loading: false },
     });
 
-    const renderFailures = consoleError.mock.calls
-      .map((call) => call.map(String).join(" "))
-      .filter((message) => FATAL_RENDER.test(message));
+    await waitFor(() => {
+      const renderFailures = consoleError.mock.calls
+        .map((call) => call.map(String).join(" "))
+        .filter((message) => FATAL_RENDER.test(message));
 
-    expect(renderFailures).toEqual([]);
-    // The catch-all in renderWithProviders means the route did not match, so the screen under
-    // test never mounted and the assertion below would pass on an empty page.
-    expect(screen.queryByTestId("elsewhere")).toBeNull();
-    expect(container).not.toBeEmptyDOMElement();
+      expect(renderFailures).toEqual([]);
+      // The catch-all in renderWithProviders means the route did not match, so the screen under
+      // test never mounted and the assertion below would pass on an empty page.
+      expect(screen.queryByTestId("elsewhere")).toBeNull();
+      expect(container).not.toBeEmptyDOMElement();
+    });
+
+    consoleError.mockRestore();
   });
 });

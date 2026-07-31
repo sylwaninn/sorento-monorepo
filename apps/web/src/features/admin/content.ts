@@ -6,7 +6,84 @@ export const adminContent = {
       history: "Historique des modifications",
       testing: "Test de profil",
       metrics: "Statistiques",
+      designSystem: "Design system",
     },
+  },
+  designSystem: {
+    title: "Design system",
+    description:
+      "Catalogue interne des fondations et composants partagés utilisés sur les pages publiques.",
+    back: "Retour à l’administration",
+    interactionHint:
+      "Survolez les composants et parcourez-les au clavier pour vérifier leurs états interactifs.",
+    sections: {
+      colors: {
+        title: "Couleurs sémantiques",
+        description:
+          "Les composants consomment ces rôles partagés, jamais une couleur propre à une page.",
+      },
+      typography: {
+        title: "Typographie",
+        description: "Une hiérarchie commune pour les titres, introductions et textes courants.",
+        display: "Titre éditorial",
+        heading: "Titre de section",
+        body: "Texte courant lisible sur toutes les tailles d’écran.",
+      },
+      actions: {
+        title: "Actions",
+        description:
+          "Le bouton du système couvre les actions applicatives. Le lien d’action partagé couvre la navigation publique.",
+      },
+      cards: {
+        title: "Cartes",
+        description: "Une même surface, déclinée par intentions visuelles typées.",
+      },
+      alerts: {
+        title: "Messages",
+        description: "Les statuts donnent une structure constante aux messages importants.",
+      },
+      icons: {
+        title: "Icônes",
+        description: "Un conteneur partagé garantit taille, centrage et contraste.",
+      },
+    },
+    colors: [
+      { id: "ink", label: "Texte principal" },
+      { id: "cream", label: "Fond de page" },
+      { id: "sage", label: "Surface douce" },
+      { id: "leaf", label: "Action principale" },
+      { id: "danger", label: "Danger" },
+    ],
+    actions: {
+      primary: "Action principale",
+      outline: "Action secondaire",
+      ghost: "Action discrète",
+      disabled: "Action indisponible",
+      forward: "Continuer",
+      back: "Revenir",
+      light: "Action sur fond sombre",
+    },
+    cards: {
+      surface: {
+        title: "Surface",
+        description: "Carte standard pour un contenu neutre.",
+      },
+      sage: {
+        title: "Sauge",
+        description: "Carte douce pour mettre un contenu en avant.",
+      },
+      inverse: {
+        title: "Inversée",
+        description: "Carte contrastée pour les sections sombres.",
+      },
+    },
+    alerts: {
+      default: "Information générale",
+      success: "Opération réussie",
+      warning: "Point d’attention",
+      danger: "Action impossible",
+    },
+    iconLabel: "Repère visuel",
   },
   timeWindowLabels: {
     "24h": "Dans les 24 heures",

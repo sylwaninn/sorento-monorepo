@@ -1,8 +1,11 @@
 import { Link as RouterLink } from "react-router";
-import { Avatar, Card, Chip, Typography } from "@heroui/react";
 import { dueDateCategory, type CalendarDate, type TrackedItem } from "@sorento/core";
 import type { TrackingStatus } from "@sorento/domain";
 import { dossierContent } from "@/features/dossier/content";
+import { Card, CardContent } from "@/components/ui/card";
+import { Text } from "@/components/ui/typography";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const STATUS_COLOR: Record<TrackingStatus, "default" | "accent" | "success" | "warning"> = {
   todo: "default",
@@ -55,30 +58,32 @@ export const TrackedItemCard = ({
   return (
     <RouterLink to={href}>
       <Card className="hover:bg-muted/50 transition-colors">
-        <Card.Content className="flex items-center justify-between gap-3 py-3">
+        <CardContent className="flex items-center justify-between gap-3 py-3">
           <div className="flex flex-col gap-1">
-            <Typography weight="medium">{entry.item.title}</Typography>
-            <Typography type="body-sm" color="muted">
+            <Text className="font-medium">{entry.item.title}</Text>
+            <Text size="sm" tone="muted">
               {entry.item.organization}
-            </Typography>
-            <Typography type="body-sm" color="muted">
+            </Text>
+            <Text size="sm" tone="muted">
               {deadlineLabel(entry.dueDate, today)}
-            </Typography>
+            </Text>
           </div>
           <div className="flex items-center gap-3">
             {commentCount > 0 ? (
-              <Chip color="default">{dossierContent.dashboard.commentsBadge(commentCount)}</Chip>
+              <Badge variant="secondary">
+                {dossierContent.dashboard.commentsBadge(commentCount)}
+              </Badge>
             ) : null}
-            <Chip color={STATUS_COLOR[entry.tracking.status]}>
+            <Badge variant={STATUS_COLOR[entry.tracking.status]}>
               {dossierContent.statusLabels[entry.tracking.status]}
-            </Chip>
+            </Badge>
             {assigneeFirstName === null ? null : (
               <Avatar size="sm">
-                <Avatar.Fallback>{assigneeFirstName.slice(0, 2).toUpperCase()}</Avatar.Fallback>
+                <AvatarFallback>{assigneeFirstName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
             )}
           </div>
-        </Card.Content>
+        </CardContent>
       </Card>
     </RouterLink>
   );

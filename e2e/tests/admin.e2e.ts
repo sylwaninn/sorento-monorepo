@@ -26,6 +26,7 @@ const ADMIN_SCREENS = [
   { path: "/admin/historique", heading: copyAdmin.historyTitle },
   { path: "/admin/test-profil", heading: copyAdmin.testingTitle },
   { path: "/admin/statistiques", heading: copyAdmin.metricsTitle },
+  { path: "/admin/design-system", heading: copyAdmin.designSystemTitle },
 ] as const;
 
 let sequence = 0;
@@ -133,6 +134,7 @@ test.describe("the back office", () => {
       copyAdmin.linkHistory,
       copyAdmin.linkTesting,
       copyAdmin.linkMetrics,
+      copyAdmin.linkDesignSystem,
     ]) {
       await expect(page.getByRole("link", { name: label })).toBeVisible();
     }
@@ -304,10 +306,8 @@ test.describe("the back office", () => {
     await expect(page.getByText(copyAdmin.testingProceduresTitle)).toBeVisible();
     await expect(page.getByText(copyAdmin.testingBenefitsTitle)).toBeVisible();
 
-    // The locale is pinned to fr-FR, so the segments read day, month, year and eight digits
-    // typed into the first one fill all three.
-    await page.getByRole("spinbutton").first().click();
-    await page.keyboard.type("01012026");
+    // A native date input takes the ISO value whatever the displayed locale is.
+    await page.locator('input[type="date"]').first().fill("2026-01-01");
 
     // The tool is worth having only if it answers a change of situation with a change of
     // journey. A survivor pension is the clearest case: it belongs to a spouse and to nobody

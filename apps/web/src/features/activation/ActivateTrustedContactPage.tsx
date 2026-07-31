@@ -1,19 +1,24 @@
+import { linkVariants } from "@/components/ui/link";
 import { useState } from "react";
+import { todayIso } from "@/lib/dates";
 import { useSearchParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, DateField, Label } from "@heroui/react";
-import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
 import { activationContent } from "@/features/activation/content";
 import { useAppMutation } from "@/hooks/use-app-mutation";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 export const ActivateTrustedContactPage = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const [deathDate, setDeathDate] = useState<DateValue | null>(null);
+  const [deathDate, setDeathDate] = useState("");
 
   const resolveQuery = useQuery({
     queryKey: ["resolve-trusted-contact-activation", token],
@@ -29,49 +34,41 @@ export const ActivateTrustedContactPage = () => {
   });
 
   const submit = () => {
-    if (deathDate) requestActivation.mutate(deathDate.toString());
+    if (deathDate) requestActivation.mutate(deathDate);
   };
   const effectiveAt = requestActivation.data?.effectiveAt ?? null;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>{activationContent.activate.title}</Card.Title>
-        </Card.Header>
-        <Card.Content className="flex flex-col gap-4">
+        <CardHeader>
+          <CardTitle>{activationContent.activate.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
           {resolveQuery.isPending ? (
             <InlineLoader />
           ) : resolveQuery.isError || !resolveQuery.data ? (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{activationContent.activate.invalidTitle}</Alert.Title>
-                <Alert.Description>
-                  {activationContent.activate.invalidDescription}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="destructive">
+              <AlertIndicator />
+              <AlertTitle>{activationContent.activate.invalidTitle}</AlertTitle>
+              <AlertDescription>{activationContent.activate.invalidDescription}</AlertDescription>
             </Alert>
           ) : resolveQuery.data.hasPendingActivation ? (
-            <Alert status="warning">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>{activationContent.activate.alreadyPendingTitle}</Alert.Title>
-                <Alert.Description>
-                  {activationContent.activate.alreadyPendingDescription}
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="warning">
+              <AlertIndicator />
+              <AlertTitle>{activationContent.activate.alreadyPendingTitle}</AlertTitle>
+              <AlertDescription>
+                {activationContent.activate.alreadyPendingDescription}
+              </AlertDescription>
             </Alert>
           ) : effectiveAt ? (
-            <Alert status="success">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>
-                  {activationContent.activate.submitted}{" "}
-                  {activationContent.activate.effectiveAtPrefix}{" "}
-                  {new Date(effectiveAt).toLocaleString("fr-FR")}.
-                </Alert.Description>
-              </Alert.Content>
+            <Alert variant="success">
+              <AlertIndicator />
+              <AlertDescription>
+                {activationContent.activate.submitted}{" "}
+                {activationContent.activate.effectiveAtPrefix}{" "}
+                {new Date(effectiveAt).toLocaleString("fr-FR")}.
+              </AlertDescription>
             </Alert>
           ) : (
             <>
@@ -80,45 +77,44 @@ export const ActivateTrustedContactPage = () => {
                 {resolveQuery.data.subjectLastName}.
               </p>
 
-              <Alert status="default">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{activationContent.activate.notice}</Alert.Description>
-                </Alert.Content>
+              <Alert>
+                <AlertIndicator />
+                <AlertDescription>{activationContent.activate.notice}</AlertDescription>
               </Alert>
 
               <ErrorAlert message={requestActivation.errorMessage} />
 
-              <DateField
-                maxValue={today(getLocalTimeZone())}
-                value={deathDate}
-                onChange={(v) => setDeathDate(v ?? null)}
-              >
-                <Label>{activationContent.activate.deathDateLabel}</Label>
-                <DateField.Group>
-                  <DateField.Input>
-                    {(segment) => <DateField.Segment segment={segment} />}
-                  </DateField.Input>
-                </DateField.Group>
-              </DateField>
+              <Field>
+                <FieldLabel htmlFor="deathDate">
+                  {activationContent.activate.deathDateLabel}
+                </FieldLabel>
+                <Input
+                  id="deathDate"
+                  max={todayIso()}
+                  name="deathDate"
+                  onChange={(event) => setDeathDate(event.target.value)}
+                  type="date"
+                  value={deathDate}
+                />
+              </Field>
 
               <Button
-                variant="primary"
-                fullWidth
-                isDisabled={!deathDate}
-                isPending={requestActivation.isPending}
-                onPress={submit}
+                variant="default"
+                className="w-full"
+                disabled={!deathDate}
+                pending={requestActivation.isPending}
+                onClick={submit}
               >
                 {activationContent.activate.submitButton}
               </Button>
             </>
           )}
-        </Card.Content>
-        <Card.Footer>
-          <RouterLink className="link text-sm" to="/">
+        </CardContent>
+        <CardFooter>
+          <RouterLink className={linkVariants()} to="/">
             {sharedContent.backHome}
           </RouterLink>
-        </Card.Footer>
+        </CardFooter>
       </Card>
     </div>
   );

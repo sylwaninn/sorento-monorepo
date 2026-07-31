@@ -1,8 +1,8 @@
+import { linkVariants } from "@/components/ui/link";
 import { useMemo, useState } from "react";
+import { todayIso } from "@/lib/dates";
 import { Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Card, DateField, Label, Typography } from "@heroui/react";
-import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 import type { AnswerValue, DiagnosticAnswers } from "@sorento/domain";
 import { applicableQuestions, evaluateJourney } from "@sorento/core";
 import { CatalogRepository } from "@sorento/supabase-client";
@@ -13,6 +13,11 @@ import { adminContent } from "@/features/admin/content";
 import { InlineLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
 import { pruneInapplicableAnswers } from "@/features/diagnostic/prune-inapplicable-answers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading, Text } from "@/components/ui/typography";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 // mode/fullName/deathDate are bootstrap-only questions from the anonymous diagnostic;
 // this sandbox has its own death-date field and doesn't create an account or a dossier.
@@ -27,7 +32,7 @@ const PROFILE_QUESTION_IDS = new Set([
 
 export const ProfileTestingPage = () => {
   const [answers, setAnswers] = useState<DiagnosticAnswers>({});
-  const [deathDate, setDeathDate] = useState<DateValue | null>(null);
+  const [deathDate, setDeathDate] = useState("");
 
   const proceduresQuery = useQuery({
     queryKey: ["catalog-procedures"],
@@ -60,7 +65,7 @@ export const ProfileTestingPage = () => {
       benefits: benefitsQuery.data ?? [],
       conditions: conditionsQuery.data ?? [],
       answers,
-      deathDate: deathDate ? deathDate.toString() : null,
+      deathDate: deathDate || null,
     });
   }, [
     isLoading,
@@ -74,17 +79,15 @@ export const ProfileTestingPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{adminContent.testing.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to="/admin">
+        <Heading level={1}>{adminContent.testing.title}</Heading>
+        <RouterLink className={linkVariants()} to="/admin">
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{adminContent.testing.notice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{adminContent.testing.notice}</AlertDescription>
       </Alert>
 
       {isLoading ? (
@@ -92,19 +95,18 @@ export const ProfileTestingPage = () => {
       ) : (
         <>
           <Card>
-            <Card.Content className="flex flex-col gap-4 py-4">
-              <DateField
-                maxValue={today(getLocalTimeZone())}
-                value={deathDate}
-                onChange={(v) => setDeathDate(v ?? null)}
-              >
-                <Label>{adminContent.testing.deathDateLabel}</Label>
-                <DateField.Group>
-                  <DateField.Input>
-                    {(segment) => <DateField.Segment segment={segment} />}
-                  </DateField.Input>
-                </DateField.Group>
-              </DateField>
+            <CardContent className="flex flex-col gap-4 py-4">
+              <Field>
+                <FieldLabel htmlFor="deathDate">{adminContent.testing.deathDateLabel}</FieldLabel>
+                <Input
+                  id="deathDate"
+                  max={todayIso()}
+                  name="deathDate"
+                  onChange={(event) => setDeathDate(event.target.value)}
+                  type="date"
+                  value={deathDate}
+                />
+              </Field>
 
               {profileQuestions.map((question) => (
                 <QuestionField
@@ -115,50 +117,48 @@ export const ProfileTestingPage = () => {
                   onChange={(value) => onAnswerChange(question.id, value)}
                 />
               ))}
-            </Card.Content>
+            </CardContent>
           </Card>
 
           <Card>
-            <Card.Header>
-              <Card.Title>{adminContent.testing.resultTitle}</Card.Title>
-            </Card.Header>
-            <Card.Content className="flex flex-col gap-4 py-4">
+            <CardHeader>
+              <CardTitle>{adminContent.testing.resultTitle}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 py-4">
               <div className="flex flex-col gap-2">
-                <Typography weight="medium">{adminContent.testing.proceduresTitle}</Typography>
+                <Text className="font-medium">{adminContent.testing.proceduresTitle}</Text>
                 {result && result.procedures.length > 0 ? (
                   result.procedures.map((procedure) => (
                     <div key={procedure.id} className="flex items-center justify-between text-sm">
                       <span>{procedure.title}</span>
-                      <Typography color="muted">
+                      <Text tone="muted">
                         {adminContent.timeWindowLabels[procedure.timeWindow]}
-                      </Typography>
+                      </Text>
                     </div>
                   ))
                 ) : (
-                  <Typography.Paragraph color="muted" size="sm">
+                  <Text tone="muted" size="sm">
                     {adminContent.testing.noProcedures}
-                  </Typography.Paragraph>
+                  </Text>
                 )}
               </div>
 
               <div className="flex flex-col gap-2 border-t pt-4">
-                <Typography weight="medium">{adminContent.testing.benefitsTitle}</Typography>
+                <Text className="font-medium">{adminContent.testing.benefitsTitle}</Text>
                 {result && result.benefits.length > 0 ? (
                   result.benefits.map((benefit) => (
                     <div key={benefit.id} className="flex items-center justify-between text-sm">
                       <span>{benefit.title}</span>
-                      <Typography color="muted">
-                        {adminContent.timeWindowLabels[benefit.timeWindow]}
-                      </Typography>
+                      <Text tone="muted">{adminContent.timeWindowLabels[benefit.timeWindow]}</Text>
                     </div>
                   ))
                 ) : (
-                  <Typography.Paragraph color="muted" size="sm">
+                  <Text tone="muted" size="sm">
                     {adminContent.testing.noBenefits}
-                  </Typography.Paragraph>
+                  </Text>
                 )}
               </div>
-            </Card.Content>
+            </CardContent>
           </Card>
         </>
       )}

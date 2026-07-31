@@ -1,5 +1,5 @@
-import { Spinner } from "@heroui/react";
 import { sharedContent } from "@/components/content";
+import { Spinner } from "@/components/ui/spinner";
 
 /** The one full-page loading state of the app: it used to be copy-pasted into every screen. */
 export const PageLoader = () => (

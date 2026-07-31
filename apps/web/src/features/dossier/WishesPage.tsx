@@ -1,7 +1,7 @@
+import { linkVariants } from "@/components/ui/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, Link as RouterLink } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, Form, Label, TextArea, Typography } from "@heroui/react";
 import { ErrorAlert } from "@/components/ErrorAlert";
 import { PageLoader } from "@/components/PageLoader";
 import { sharedContent } from "@/components/content";
@@ -10,6 +10,12 @@ import { useAppMutation } from "@/hooks/use-app-mutation";
 import { useDossier } from "@/hooks/use-dossier";
 import { queryKeys } from "@/lib/query-keys";
 import { repositories } from "@/lib/repositories";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertIndicator } from "@/components/ui/alert";
+import { Heading } from "@/components/ui/typography";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export const WishesPage = () => {
   const { dossierId = "" } = useParams();
@@ -54,35 +60,31 @@ export const WishesPage = () => {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-4 py-8">
       <div className="flex items-center justify-between">
-        <Typography.Heading level={1}>{dossierContent.wishes.title}</Typography.Heading>
-        <RouterLink className="link text-sm" to={`/dossiers/${dossierId}`}>
+        <Heading level={1}>{dossierContent.wishes.title}</Heading>
+        <RouterLink className={linkVariants()} to={`/dossiers/${dossierId}`}>
           {sharedContent.back}
         </RouterLink>
       </div>
 
-      <Alert status="default">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Description>{dossierContent.wishes.notice}</Alert.Description>
-        </Alert.Content>
+      <Alert>
+        <AlertIndicator />
+        <AlertDescription>{dossierContent.wishes.notice}</AlertDescription>
       </Alert>
 
       <Card>
-        <Form onSubmit={onSubmit}>
-          <Card.Content className="flex flex-col gap-4">
+        <form onSubmit={onSubmit}>
+          <CardContent className="flex flex-col gap-4">
             <ErrorAlert message={save.errorMessage} />
             {save.isSuccess ? (
-              <Alert status="success">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Description>{dossierContent.wishes.saved}</Alert.Description>
-                </Alert.Content>
+              <Alert variant="success">
+                <AlertIndicator />
+                <AlertDescription>{dossierContent.wishes.saved}</AlertDescription>
               </Alert>
             ) : null}
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="funeral-wishes">{dossierContent.wishes.funeralWishesLabel}</Label>
-              <TextArea
+              <Textarea
                 id="funeral-wishes"
                 disabled={!access.can("wishes:edit")}
                 aria-label={dossierContent.wishes.funeralWishesLabel}
@@ -93,7 +95,7 @@ export const WishesPage = () => {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="people-to-notify">{dossierContent.wishes.peopleToNotifyLabel}</Label>
-              <TextArea
+              <Textarea
                 id="people-to-notify"
                 disabled={!access.can("wishes:edit")}
                 aria-label={dossierContent.wishes.peopleToNotifyLabel}
@@ -106,7 +108,7 @@ export const WishesPage = () => {
               <Label htmlFor="document-location">
                 {dossierContent.wishes.documentLocationLabel}
               </Label>
-              <TextArea
+              <Textarea
                 id="document-location"
                 disabled={!access.can("wishes:edit")}
                 aria-label={dossierContent.wishes.documentLocationLabel}
@@ -114,15 +116,15 @@ export const WishesPage = () => {
                 onChange={(event) => setDocumentLocation(event.target.value)}
               />
             </div>
-          </Card.Content>
+          </CardContent>
           {access.can("wishes:edit") ? (
-            <Card.Footer>
-              <Button type="submit" variant="primary" isPending={save.isPending}>
+            <CardFooter>
+              <Button type="submit" variant="default" pending={save.isPending}>
                 {dossierContent.wishes.saveButton}
               </Button>
-            </Card.Footer>
+            </CardFooter>
           ) : null}
-        </Form>
+        </form>
       </Card>
     </div>
   );
