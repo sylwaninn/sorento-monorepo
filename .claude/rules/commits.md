@@ -8,21 +8,23 @@ type(scope): description
 
 - **ONE LINE ONLY** - Multiline commits are forbidden
 - **Types**: feat, fix, docs, style, refactor, test, chore
-- **Scope**: The workspace the change belongs to: web, supabase, core, domain,
-  client, e2e, config, deps
+- **Scope**: Required when the change targets one workspace or area: web,
+  core, domain, supabase-client, config, supabase (migrations, Edge
+  Functions), e2e, ci, deps. Omit only for genuinely cross-cutting changes.
+  Never invent a scope that is not a workspace or area of this repo.
 - **Description**: Lowercase, no period, imperative mood
 - **Start with a verb**: add, fix, update, remove, configure, refactor, etc. Never a bare noun list
 
 ## Examples
 
 ```
-feat(auth): add PIN verification flow
-fix(ui): resolve button alignment issue
-refactor(services): extract user profile logic
-chore(deps): update dependency X to v5
-docs(readme): add setup instructions
-test(auth): add login service tests
-style(components): apply consistent spacing
+feat(core): add surviving spouse pension eligibility rule
+feat(web): add dossier activation screen
+fix(supabase): escape user-supplied text in outbound emails
+refactor(domain): extract procedure status schema
+test(e2e): cover the trusted contact activation journey
+chore(deps): update heroui packages
+docs: reflect activation grace period in security model
 ```
 
 ## Branch Naming
@@ -36,7 +38,9 @@ style(components): apply consistent spacing
 
 ## Pre-commit Hooks (ABSOLUTE)
 
-- **ALL** commits must pass `pnpm verify`
+- Pre-commit (husky) runs gitleaks, lint-staged (ESLint + Prettier),
+  `pnpm check:tests` and typecheck; pre-push runs `pnpm verify`
+- **ALL** commits must also pass `pnpm verify` before the task is done
 - **NEVER** use `--no-verify`
 - **NEVER** bypass hooks for any reason
 - If hooks fail → fix the issue, don't skip it

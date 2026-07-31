@@ -124,6 +124,16 @@ To revisit if the service gains a backend of its own: move sessions to
   `seed.sql`, which never runs on a hosted environment, pins it to a known
   value so that local jobs work.
 - `gitleaks` blocks any commit containing a secret (pre-commit and CI).
+- The Claude Code `PreToolUse` hook (`.claude/hooks/protect-env.sh`) blocks
+  any agent tool call whose target names a `.env` path, leaving only the
+  committed `.env.example` templates and the dummy fixture
+  `supabase/functions/.env.test` accessible. It is a guardrail against
+  accidental reads, not a sandbox: a command that resolves the name at run
+  time is out of its reach, and a local `settings.local.json` can override
+  the hook, so it complements `gitleaks` rather than replacing care.
+  `gitleaks` keeps a secret out of the history; the hook keeps it out of an
+  agent's context, where it could be echoed into a transcript, a diff or a
+  generated file. Values come from the user, never from the file.
 
 ## Development-only endpoints
 
