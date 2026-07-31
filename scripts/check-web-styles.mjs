@@ -181,31 +181,34 @@ for (const file of walk(WEB_SOURCE)) {
     }
   }
 
-  if (
-    projectPath.startsWith("apps/web/src/features/landing/") &&
-    extname(file) === ".tsx" &&
-    !projectPath.endsWith(".test.tsx")
-  ) {
-    const landingChecks = [
-      {
-        pattern: /<Card(?:\s|>)/,
-        message: "direct Card root; use PublicCard so the shared tone contract stays enforced",
-      },
+  // The whole public surface, not only the landing feature: a shared component or a legal page
+  // ships the same French to the same reader, and a string written inline there is just as
+  // invisible to the copy review and to the E2E mirrors.
+  if (isPublicSurface && !isTest && extname(file) === ".tsx") {
+    const copyChecks = [
       {
         pattern: /\baria-label\s*=\s*["'][^"']+["']/,
-        message: "hard-coded accessible copy; move it to the landing content catalog",
+        message: "hard-coded accessible copy; move it to the feature's content catalog",
       },
       {
         pattern: /\balt\s*=\s*["'][^"']+["']/,
-        message: "hard-coded image copy; move it to the landing content catalog",
+        message: "hard-coded image copy; move it to the feature's content catalog",
       },
       {
         pattern: />\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’ -]*\s*</,
-        message: "hard-coded visible copy; move it to the landing content catalog",
+        message: "hard-coded visible copy; move it to the feature's content catalog",
       },
     ];
 
-    for (const check of landingChecks) {
+    // Landing only: the tone contract is the landing's own, stated by PublicCard.
+    if (projectPath.startsWith("apps/web/src/features/landing/")) {
+      copyChecks.unshift({
+        pattern: /<Card(?:\s|>)/,
+        message: "direct Card root; use PublicCard so the shared tone contract stays enforced",
+      });
+    }
+
+    for (const check of copyChecks) {
       const match = check.pattern.exec(source);
       if (match) {
         failures.push(`${matchAddress(projectPath, source, match.index)}: ${check.message}`);
