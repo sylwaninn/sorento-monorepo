@@ -60,24 +60,56 @@ Web only, by design. A mobile app may come later: the packages stay reusable, bu
 ## Architecture
 
 ```mermaid
-graph TD
-  web["apps/web<br/>React SPA (assembly only)"]
-  core["packages/core<br/>pure business rules"]
-  domain["packages/domain<br/>Zod schemas + types"]
-  client["packages/supabase-client<br/>repositories & mappers"]
-  functions["supabase/functions<br/>Deno Edge Functions"]
-  db[("Supabase<br/>Postgres + RLS")]
+%%{init: {"flowchart": {"curve": "basis", "nodeSpacing": 45, "rankSpacing": 60}}}%%
+flowchart TB
+    subgraph assembly[" Assembly "]
+        web["apps/web<br/><br/>React SPA, shadcn/ui screens<br/>no business rule"]
+    end
 
-  web --> core
-  web --> domain
-  web --> client
-  core --> domain
-  client --> domain
-  client --> db
-  functions --> core
-  functions --> domain
-  functions --> db
+    subgraph callers[" Callers "]
+        functions["supabase/functions<br/><br/>Deno Edge Functions"]
+        client["packages/supabase-client<br/><br/>repositories, row mappers"]
+    end
+
+    subgraph pure[" Pure logic "]
+        core["packages/core<br/><br/>journey engine, permissions,<br/>deadlines, injected clock"]
+        domain["packages/domain<br/><br/>Zod schemas, inferred types"]
+    end
+
+    subgraph platform[" Platform "]
+        db[("Supabase Postgres<br/><br/>RLS on every table")]
+    end
+
+    web --> client
+    web --> core
+    web --> domain
+    functions --> core
+    functions --> domain
+    client --> domain
+    core --> domain
+
+    client -. "caller JWT" .-> db
+    functions -. "service_role" .-> db
+
+    domain ~~~ platform
+
+    classDef ui fill:#E8F0FE,stroke:#3B6FD4,color:#10233F
+    classDef rules fill:#E7F6EE,stroke:#2E9E68,color:#0E2E1F
+    classDef access fill:#FBF0E4,stroke:#C97B33,color:#3B2410
+    classDef store fill:#F1EAFB,stroke:#7A55C2,color:#291842
+
+    class web ui
+    class core,domain rules
+    class client,functions access
+    class db store
+
+    style assembly fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style callers fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style pure fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style platform fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
 ```
+
+Solid arrows are imports. Dotted arrows are runtime database access, labelled with the identity the request carries: the caller's own JWT from the browser, so RLS decides what it sees, or `service_role` from an Edge Function, which bypasses RLS and therefore never runs client-side.
 
 <!-- sync-docs:packages -->
 
