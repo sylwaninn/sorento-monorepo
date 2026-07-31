@@ -89,6 +89,10 @@ const walk = (directory) =>
     return entry.isDirectory() ? walk(path) : [path];
   });
 
+/** Where a match sits, as path:line, so a failure is a clickable address rather than a hunt. */
+const matchAddress = (projectPath, source, index) =>
+  `${projectPath}:${source.slice(0, index).split("\n").length}`;
+
 for (const file of walk(WEB_SOURCE)) {
   const projectPath = relative(ROOT, file);
 
@@ -129,7 +133,8 @@ for (const file of walk(WEB_SOURCE)) {
 
   for (const check of checks) {
     if (check.skipRegistry === true && isRegistry) continue;
-    if (check.pattern.test(source)) failures.push(`${projectPath}: ${check.message}`);
+    const match = check.pattern.exec(source);
+    if (match) failures.push(`${matchAddress(projectPath, source, match.index)}: ${check.message}`);
   }
 
   const isTest = projectPath.endsWith(".test.ts") || projectPath.endsWith(".test.tsx");
@@ -146,10 +151,10 @@ for (const file of walk(WEB_SOURCE)) {
   // Shared components are imported by every feature. One import the other way and the graph has
   // a cycle: the thing everyone depends on now depends on one of them.
   if (projectPath.startsWith(SHARED_COMPONENTS) && !isTest) {
-    const featureImport = source.match(/from "(@\/features\/[^"]+)"/);
+    const featureImport = /from "(@\/features\/[^"]+)"/.exec(source);
     if (featureImport) {
       failures.push(
-        `${projectPath}: imports ${featureImport[1]}; a shared component cannot depend on a feature, pass the value in or move it to the shared catalog`,
+        `${matchAddress(projectPath, source, featureImport.index)}: imports ${featureImport[1]}; a shared component cannot depend on a feature, pass the value in or move it to the shared catalog`,
       );
     }
   }
@@ -158,19 +163,20 @@ for (const file of walk(WEB_SOURCE)) {
     PUBLIC_SURFACE.some((directory) => projectPath.startsWith(directory)) && !isRegistry;
 
   if (isPublicSurface && !isTest) {
-    const literalHref = source.match(/\b(?:href|to)=["'](?:\/|#)[^"']*["']/);
+    const literalHref = /\b(?:href|to)=["'](?:\/|#)[^"']*["']/.exec(source);
     if (literalHref) {
       failures.push(
-        `${projectPath}: hard-coded destination ${literalHref[0]}; every public URL and anchor comes from @/navigation`,
+        `${matchAddress(projectPath, source, literalHref.index)}: hard-coded destination ${literalHref[0]}; every public URL and anchor comes from @/navigation`,
       );
     }
 
     // A native anchor is a full page reload, which throws away the bundle the visitor has already
     // downloaded and undoes the route-level splitting in routes.tsx. The registry is exempt: it is
     // where the anchor and the button primitives legitimately live.
-    if (projectPath !== ROUTE_LINK && /<(?:a|button)[\s>]/.test(source)) {
+    const nativeElement = projectPath === ROUTE_LINK ? null : /<(?:a|button)[\s>]/.exec(source);
+    if (nativeElement) {
       failures.push(
-        `${projectPath}: native <a> or <button>; use RouteLink, RouteAnchor, Link or Button so the destination and the public tone stay in one place`,
+        `${matchAddress(projectPath, source, nativeElement.index)}: native <a> or <button>; use RouteLink, RouteAnchor, Link or Button so the destination and the public tone stay in one place`,
       );
     }
   }
@@ -200,7 +206,10 @@ for (const file of walk(WEB_SOURCE)) {
     ];
 
     for (const check of landingChecks) {
-      if (check.pattern.test(source)) failures.push(`${projectPath}: ${check.message}`);
+      const match = check.pattern.exec(source);
+      if (match) {
+        failures.push(`${matchAddress(projectPath, source, match.index)}: ${check.message}`);
+      }
     }
   }
 }
