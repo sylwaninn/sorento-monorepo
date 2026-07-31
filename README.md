@@ -1,6 +1,11 @@
+<div align="center">
+  <img src="apps/web/public/favicon.svg" alt="Sorento" width="72" height="72" />
+
 # Sorento
 
 **A calm, collaborative companion for the weeks after a bereavement.**
+
+</div>
 
 Sorento is a French web application that turns the administrative maze following a death into a personalised journey: the right procedures in the right order, benefits that may apply, and letter templates ready to review. Everything is driven by a deterministic, conditional rules engine (no AI, no guesswork) inside a **dossier**, a space relatives share and move through together.
 
@@ -55,24 +60,56 @@ Web only, by design. A mobile app may come later: the packages stay reusable, bu
 ## Architecture
 
 ```mermaid
-graph TD
-  web["apps/web<br/>React SPA (assembly only)"]
-  core["packages/core<br/>pure business rules"]
-  domain["packages/domain<br/>Zod schemas + types"]
-  client["packages/supabase-client<br/>repositories & mappers"]
-  functions["supabase/functions<br/>Deno Edge Functions"]
-  db[("Supabase<br/>Postgres + RLS")]
+%%{init: {"flowchart": {"curve": "basis", "nodeSpacing": 45, "rankSpacing": 60}}}%%
+flowchart TB
+    subgraph assembly[" Assembly "]
+        web["apps/web<br/><br/>React SPA, shadcn/ui screens<br/>no business rule"]
+    end
 
-  web --> core
-  web --> domain
-  web --> client
-  core --> domain
-  client --> domain
-  client --> db
-  functions --> core
-  functions --> domain
-  functions --> db
+    subgraph callers[" Callers "]
+        functions["supabase/functions<br/><br/>Deno Edge Functions"]
+        client["packages/supabase-client<br/><br/>repositories, row mappers"]
+    end
+
+    subgraph pure[" Pure logic "]
+        core["packages/core<br/><br/>journey engine, permissions,<br/>deadlines, injected clock"]
+        domain["packages/domain<br/><br/>Zod schemas, inferred types"]
+    end
+
+    subgraph platform[" Platform "]
+        db[("Supabase Postgres<br/><br/>RLS on every table")]
+    end
+
+    web --> client
+    web --> core
+    web --> domain
+    functions --> core
+    functions --> domain
+    client --> domain
+    core --> domain
+
+    client -. "caller JWT" .-> db
+    functions -. "service_role" .-> db
+
+    domain ~~~ platform
+
+    classDef ui fill:#E8F0FE,stroke:#3B6FD4,color:#10233F
+    classDef rules fill:#E7F6EE,stroke:#2E9E68,color:#0E2E1F
+    classDef access fill:#FBF0E4,stroke:#C97B33,color:#3B2410
+    classDef store fill:#F1EAFB,stroke:#7A55C2,color:#291842
+
+    class web ui
+    class core,domain rules
+    class client,functions access
+    class db store
+
+    style assembly fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style callers fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style pure fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
+    style platform fill:transparent,stroke:#C7CDD6,stroke-dasharray:4 4,color:#6B7480
 ```
+
+Solid arrows are imports. Dotted arrows are runtime database access, labelled with the identity the request carries: the caller's own JWT from the browser, so RLS decides what it sees, or `service_role` from an Edge Function, which bypasses RLS and therefore never runs client-side.
 
 <!-- sync-docs:packages -->
 
@@ -243,7 +280,7 @@ Integration and E2E suites need the local stack up (`supabase start`). Every new
 
 The same bar is enforced three times, closest gate first:
 
-1. **Pre-commit** (husky): gitleaks secret scan, `lint-staged` (ESLint + Prettier), `pnpm typecheck`. `--no-verify` is not used, ever.
+1. **Pre-commit** (husky): gitleaks secret scan, `lint-staged` (ESLint + Prettier), `pnpm check:tests`, `pnpm typecheck`; pre-push replays `pnpm verify`. `--no-verify` is not used, ever.
 2. **`pnpm verify`**: format check, lint, typecheck, Edge Function checks, docs freshness, unit tests with coverage thresholds: the full local gate.
 3. **CI** (`.github/workflows/ci.yml`), on every PR and push to `main`:
 
@@ -254,6 +291,12 @@ The same bar is enforced three times, closest gate first:
 | Mutation    | Stryker on `core` and `domain`, per-package score thresholds |
 | Build       | Full workspace build                                         |
 | Secret scan | gitleaks over the commits the PR adds                        |
+
+Ahead of those deterministic gates, four review agents in `.claude/agents/`
+(security, code practices, design system, test integrity) review every
+change set for regressions before commit or PR; the `/guards` skill in
+`.claude/skills/` runs all four in parallel and merges their findings.
+They report, the developer fixes: enforcement stays with the gates above.
 
 ## Documentation
 
