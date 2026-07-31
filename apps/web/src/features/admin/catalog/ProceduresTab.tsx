@@ -10,10 +10,8 @@ import { repositories } from "@/lib/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/typography";
-import { ProcedureForm } from "@/features/admin/catalog/ProcedureForm";
+import { INVALIDATES, ProcedureForm } from "@/features/admin/catalog/ProcedureForm";
 
-// The admin list and the list every dossier reads are two cache entries of the same data.
-export const INVALIDATES = [queryKeys.catalog.allProcedures(), queryKeys.catalog.procedures()];
 export const ProceduresTab = () => {
   const [editing, setEditing] = useState<Procedure | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
