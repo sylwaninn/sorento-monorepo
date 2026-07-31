@@ -1,6 +1,11 @@
+<div align="center">
+  <img src="apps/web/public/favicon.svg" alt="Sorento" width="72" height="72" />
+
 # Sorento
 
 **A calm, collaborative companion for the weeks after a bereavement.**
+
+</div>
 
 Sorento is a French web application that turns the administrative maze following a death into a personalised journey: the right procedures in the right order, benefits that may apply, and letter templates ready to review. Everything is driven by a deterministic, conditional rules engine (no AI, no guesswork) inside a **dossier**, a space relatives share and move through together.
 
