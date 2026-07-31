@@ -38,6 +38,10 @@ const crawlerFiles = (siteUrl: string | undefined): Plugin => ({
 export default defineConfig(({ mode }) => ({
   plugins: [
     {
+      // Dev server only: the policy's script-src 'self' blocks the inline react-refresh
+      // preamble Vite injects, so no screen renders under it. Removed whole rather than
+      // relaxed, which means development catches no CSP violation; the built document keeps
+      // the real policy untouched, and the E2E suite runs against a build.
       name: "disable-csp-during-development",
       apply: "serve",
       transformIndexHtml(html: string) {
