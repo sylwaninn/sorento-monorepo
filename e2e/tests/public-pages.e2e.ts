@@ -285,9 +285,9 @@ test.describe("what a visitor sees before they trust anyone", () => {
 
   for (const route of ENTRY_FUNNEL) {
     test(`${route} names its main region`, async ({ page }) => {
-      // Known defect, deliberately recorded rather than deleted. No screen in the app renders a
-      // main landmark or a skip link: pages compose their own container div, and the only shared
-      // wrapper is RequireAuth, which covers the signed-in half. Giving every route a main means
+      // Known defect, deliberately recorded rather than deleted. The rebuilt homepage and the
+      // legal pages carry a main landmark now; the diagnostic still composes its own container
+      // div, like every signed-in screen behind RequireAuth. Giving every route a main means
       // restructuring the route table around a layout, which is a change worth reviewing on its
       // own rather than buried here. Playwright fails the run the day this starts passing.
       if (route !== "/") test.fail();

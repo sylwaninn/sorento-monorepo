@@ -10,10 +10,8 @@ import { repositories } from "@/lib/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/typography";
-import { BenefitForm } from "@/features/admin/catalog/BenefitForm";
+import { BenefitForm, INVALIDATES } from "@/features/admin/catalog/BenefitForm";
 
-// The admin list and the list every dossier reads are two cache entries of the same data.
-export const INVALIDATES = [queryKeys.catalog.allBenefits(), queryKeys.catalog.benefits()];
 export const BenefitsTab = () => {
   const [editing, setEditing] = useState<Benefit | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
