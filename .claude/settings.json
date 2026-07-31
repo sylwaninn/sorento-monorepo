@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Bash|Grep|Glob|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-env.sh",
+            "statusMessage": "Checking env file access..."
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

@@ -55,7 +55,8 @@ If not already on a feature branch:
    - Configuration (build, linting, CI, quality gates)
    - Bug fixes
 2. Each group becomes its own commit
-3. Order commits logically: foundational changes first, dependent changes after
+3. Order commits logically: foundational changes first, dependent changes
+   after (domain, then core, then supabase, then web, then e2e)
 
 **Example split for a homepage rework:**
 
@@ -71,16 +72,12 @@ test(web): cover the landing header hook and the crawler files
 
 1. Stage only the relevant files: `git add <specific-files>` (never `git add .` or `git add -A`)
 2. Create commit following **MANDATORY** rules:
-   - Format: `type(scope): description`
-   - **ONE LINE ONLY**, multiline commits are forbidden
-   - Types: feat, fix, docs, style, refactor, test, chore
-   - Scope: the workspace the change belongs to (web, supabase, core, domain, client, e2e, config, deps)
-   - Description: lowercase, no period at end, start with a verb
-   - Examples:
-     - `feat(web): add PIN verification flow`
+   - Follow `.claude/rules/commits.md`, the single source for format,
+     types, scope vocabulary and examples: `type(scope): description`,
+     one line only, imperative, lowercase, scope from that file's list
+   - Two examples, the rest live in commits.md:
+     - `feat(web): add dossier activation screen`
      - `fix(supabase): escape user-supplied text in outbound emails`
-     - `refactor(core): extract the eligibility window into its own rule`
-     - `chore(web): move the landing copy into one module per section`
 
 3. **NEVER use `--no-verify`**, all commits must pass pre-commit hooks
 4. If hooks fail, fix the issues and retry
@@ -118,6 +115,18 @@ pnpm --filter @sorento/e2e exec playwright test tests/public-quality.e2e.ts --up
 A numeric layout budget a journey asserts (a maximum action width, for instance)
 moves with the design that moved it. Never relax one to make a run green without
 saying so in the PR: that is the change under review.
+
+### 4b. Anti-regression Guards (MANDATORY)
+
+Run the four guard agents on the branch diff, in parallel (a single
+message with four Agent calls): `security-regression-guard`,
+`code-practices-guard`, `design-system-guard`, `test-regression-guard`.
+The `/guards` skill does exactly this in one step.
+
+- Fix every critical and high finding, then rerun the affected guard
+  until it is clean.
+- Medium and low findings: fix them, or record why not in the PR
+  description.
 
 ### 5. Update Documentation (MANDATORY check, conditional update)
 
@@ -165,7 +174,7 @@ If the PR introduces changes that affect legal obligations, check whether the th
 - Changes to **data collection** (new personal data fields, new tracking events)
 - Changes to **authentication** flow or required user information
 - New **cookie** or local storage usage
-- Changes to **data retention** or deletion behavior
+- Changes to **data retention** or deletion behavior (soft delete, 30-day bin, account erasure)
 - Changes to the **hosting infrastructure** (new providers)
 - Addition of **paid features** or subscription model
 
@@ -183,78 +192,25 @@ git push -u origin <branch-name>
 
 ### 7. Create Pull Request
 
-**CRITICAL: You MUST use the EXACT template structure below. No exceptions.**
+**CRITICAL: The PR body follows `.github/pull_request_template.md`. Read that file and fill it; the skill embeds no copy, so the template file is the only source of structure.**
 
-Use this exact command structure:
+1. Read `.github/pull_request_template.md`.
+2. Fill every section, keeping the template's headings: Summary (what and
+   why, link related issues), Scope (check the applicable boxes), Changes,
+   How to test. Use "None" or "N/A" when a section does not apply.
+3. Checklist: check a box only after verifying that item on this branch.
+   When one does not hold, leave it unchecked and explain below the list.
+   Every box starts unchecked; checking it is a deliberate act.
+4. Create the PR passing the filled body inline:
 
 ```bash
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Type of Change
-
-- [ ] ✨ New feature
-- [ ] 🐛 Bug fix
-- [ ] 📝 Documentation
-- [ ] 🔧 Configuration
-- [ ] 🤖 CI/CD
-- [ ] ♻️ Refactor
-- [ ] 🎨 Style
-
-## Summary
-
-<Brief description of changes - 1-2 sentences>
-
-## Motivation
-
-<Why are these changes needed? What problem do they solve?>
-
-## Changes
-
-### Main Changes
-
-- <Change 1>
-- <Change 2>
-
-### Additional Changes
-
-- <Change 1 or "None">
-
-## Testing
-
-### Prerequisites
-
-<List any prerequisites or "None">
-
-### Test Steps
-
-1. <Step 1>
-2. <Step 2>
-3. <Expected result>
-
-## Documentation
-
-- [x] No documentation changes needed
-
-## Breaking Changes
-
-- [x] No breaking changes
-
-## Checklist
-
-- [x] All tests pass (`pnpm verify`)
-- [x] TypeScript compiles without errors
-- [x] No console warnings or errors introduced
-- [x] Code follows project conventions
+gh pr create --title "<type(scope): description>" --body "$(cat <<'EOF'
+<the filled template>
 EOF
 )"
 ```
 
-**MANDATORY RULES:**
-
-- The PR description MUST be written in **English**
-- Check ONE or more types of change with `[x]`
-- Fill ALL sections (use "None" or "N/A" if not applicable)
-- Check all applicable items in Checklist
-- Never skip or simplify this template
+The PR description MUST be written in **English**.
 
 ### 8. Update PR Details
 
@@ -265,18 +221,6 @@ After creation:
 - Add relevant labels if applicable
 - Request reviewers if needed
 
-## Commit Message Examples
-
-```
-feat(web): add the trusted contact activation screen
-fix(supabase): escape user-supplied text in outbound emails
-refactor(core): extract the eligibility window into its own rule
-docs(security): record the grace period the activation flow enforces
-style(web): drop the theme tokens nothing names
-test(e2e): drive every public screen the way a person drives it
-chore(deps): update dependency X to v5
-```
-
 ## PR Title Guidelines
 
 - Keep under 70 characters
@@ -284,8 +228,8 @@ chore(deps): update dependency X to v5
 - Be specific about what changes
 - Include scope if helpful
 
-Good: `feat(auth): add PIN code verification`
-Bad: `Updated some auth stuff`
+Good: `feat(web): add dossier activation screen`
+Bad: `Updated some dossier stuff`
 
 ## Checklist Before PR
 
@@ -293,6 +237,7 @@ Bad: `Updated some auth stuff`
 - [ ] All commits follow conventional format
 - [ ] No `--no-verify` was used
 - [ ] `pnpm verify` passes
+- [ ] The four anti-regression guards ran clean on the final diff (step 4b)
 - [ ] `pnpm check:docs` passes (generated README blocks in sync)
 - [ ] README prose updated if env vars, scripts, deps, or structure changed (via `/technical-writer`)
 - [ ] CLAUDE.md / SECURITY.md / TESTING.md audited against the diff by the subagent (step 5.3)

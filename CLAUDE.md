@@ -107,6 +107,12 @@ mobile workspace here, and none is to be added.
   with a notification to every member.
 - The platform admin has no access to users' dossiers, tracking, comments
   or documents.
+- An agent tool call whose target names a .env path is blocked by the
+  PreToolUse hook .claude/hooks/protect-env.sh: a guardrail against
+  accidental access, not a sandbox against a command that resolves the
+  name at run time. The committed .env.example templates and the dummy
+  fixture supabase/functions/.env.test stay accessible. Real values come
+  from the user, never from the file.
 
 ### TypeScript
 
@@ -204,6 +210,11 @@ mobile workspace here, and none is to be added.
 - A dev server started to check a change (pnpm dev, supabase start) stays up
   once the task is done. Never stop or kill it unless asked, it is running
   because the user is using it.
+- Before every commit or PR: the four anti-regression guard agents in
+  .claude/agents (security-regression-guard, code-practices-guard,
+  design-system-guard, test-regression-guard) review the change set,
+  launched in parallel, and their findings are fixed before proceeding.
+  The /guards skill runs the full pass in one command.
 - The full strategy, and what each layer deliberately does not cover, is in
   TESTING.md.
 - Documentation follows the change that makes it stale, in the same PR.
