@@ -328,6 +328,34 @@ if (/export const \w*Icons?\s*=\s*\[/.test(landingPresentation)) {
   );
 }
 
+/**
+ * The registry manifest and the registry directory, compared in both directions.
+ *
+ * The registry is a copy of code that lives upstream, and a copy drifts silently: a file added
+ * by hand, or deleted without its row, is a decision nobody wrote down. REGISTRY.md is where it
+ * is written down, with the deviations upstream will overwrite on the next `shadcn diff` pass.
+ */
+const REGISTRY_MANIFEST = join(ROOT, REGISTRY, "REGISTRY.md");
+const manifestEntries = [...readFileSync(REGISTRY_MANIFEST, "utf8").matchAll(/^\| `([^`]+)`/gm)]
+  .map((match) => match[1])
+  .filter((name) => name !== "File");
+const registryFiles = walk(join(ROOT, REGISTRY))
+  .map((file) => relative(join(ROOT, REGISTRY), file).split(sep).join("/"))
+  .filter((name) => name !== "REGISTRY.md");
+
+for (const name of registryFiles) {
+  if (!manifestEntries.includes(name)) {
+    failures.push(
+      `${REGISTRY}${name}: in the registry but not in REGISTRY.md; declare where it comes from and how it deviates`,
+    );
+  }
+}
+for (const name of manifestEntries) {
+  if (!registryFiles.includes(name)) {
+    failures.push(`${REGISTRY}REGISTRY.md: names ${name}, which is gone; drop the row`);
+  }
+}
+
 if (failures.length > 0) {
   console.error(
     ["Web style audit failed:", ...failures.map((failure) => `- ${failure}`)].join("\n"),
