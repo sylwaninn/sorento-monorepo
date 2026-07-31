@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from "react-router";
+import { CanonicalUrl } from "@/components/CanonicalUrl";
 import { LandingPage } from "@/features/landing/LandingPage";
 import { publicPath } from "@/navigation";
 
@@ -233,6 +234,7 @@ const appRoutes: RouteObject[] = [
 const DocumentLayout = () => (
   <>
     <ScrollRestoration />
+    <CanonicalUrl />
     <Outlet />
   </>
 );
